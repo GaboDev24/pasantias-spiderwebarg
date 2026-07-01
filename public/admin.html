@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | Panel CEO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .admin-nav { margin-bottom: 20px; display: flex; gap: 10px; }
+    .admin-nav .btn { flex: 1; justify-content: center; background: var(--bg-card); border: 1px solid var(--border-color); }
+    .admin-nav .btn.active { background: var(--gradient-danger); border-color: transparent; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+      <div class="navbar-brand">
+        <a href="/" style="text-decoration:none; display:flex; align-items:center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px; margin-right: 10px;"><span style="color:var(--accent-red); background:none; -webkit-text-fill-color:var(--accent-red);">Panel Admin</span></a>
+      </div>
+      <div class="navbar-links">
+        <a href="/dashboard.html">Mi Perfil</a>
+        <a href="#" onclick="window.app.logout(); return false;">Cerrar Sesión</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper container" style="margin-top: 30px;">
+    
+    <div class="admin-nav">
+      <button class="btn active" onclick="switchTab('users')">Pasantes & Tokens</button>
+      <button class="btn" onclick="switchTab('projects')">Proyectos</button>
+      <button class="btn" onclick="switchTab('news')">Noticias</button>
+      <button class="btn" onclick="switchTab('chat')">Comunicaciones</button>
+    </div>
+
+    <!-- TAB: USUARIOS Y TOKENS -->
+    <div id="tab-users" class="tab-content active">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header"><span class="card-title">Generar Token de Validación</span></div>
+        <form id="gen-token-form" class="form-inline">
+          <div class="form-group">
+            <input type="email" id="token-email" class="form-input" placeholder="Email del pasante (Opcional)">
+          </div>
+          <button type="submit" class="btn btn-danger">Generar Token</button>
+        </form>
+        <div id="new-token-display" style="margin-top:15px; font-family:var(--font-mono); color:var(--accent-cyan); font-size:1.2rem; display:none;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Usuarios Pendientes de Validación</span></div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Acción</th></tr></thead>
+            <tbody id="pending-users-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PROYECTOS -->
+    <div id="tab-projects" class="tab-content">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header"><span class="card-title">Publicar Proyecto</span></div>
+        <form id="project-form">
+          <div class="form-group"><label class="form-label">Título</label><input type="text" id="p-title" class="form-input" required></div>
+          <div class="form-group"><label class="form-label">Descripción</label><textarea id="p-desc" class="form-input" rows="3" required></textarea></div>
+          <div class="form-inline">
+            <div class="form-group"><label class="form-label">Inicio</label><input type="datetime-local" id="p-start" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Fin</label><input type="datetime-local" id="p-end" class="form-input" required></div>
+          </div>
+          <div class="form-group"><label class="form-label">Link Conferencia</label><input type="url" id="p-link" class="form-input"></div>
+          <button type="submit" class="btn btn-primary">Publicar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB: NOTICIAS -->
+    <div id="tab-news" class="tab-content">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header"><span class="card-title">Publicar Noticia</span></div>
+        <form id="news-form">
+          <div class="form-group"><label class="form-label">Título</label><input type="text" id="n-title" class="form-input" required></div>
+          <div class="form-group"><label class="form-label">Contenido</label><textarea id="n-content" class="form-input" rows="5" required></textarea></div>
+          <button type="submit" class="btn btn-primary">Publicar Noticia</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB: CHAT -->
+    <div id="tab-chat" class="tab-content">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Chat con Pasantes (Envío de Tokens)</span></div>
+        <div style="display:flex; gap:20px; height: 500px;">
+          <div style="flex:1; border-right:1px solid var(--border-color); overflow-y:auto; padding-right:10px;" id="chat-users-admin"></div>
+          <div style="flex:2; display:flex; flex-direction:column;">
+            <div id="chat-messages-admin" style="flex:1; background:var(--bg-secondary); border-radius:var(--radius-sm); padding:15px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;"></div>
+            <form id="chat-form-admin" style="display:flex; gap:10px;">
+              <input type="text" id="chat-input-admin" class="form-input" placeholder="Escribe un mensaje o pega un token..." required disabled>
+              <button type="submit" class="btn btn-primary" id="chat-btn-admin" disabled>Enviar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let currentChatUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const userStr = localStorage.getItem('sw_user');
+      if (!userStr) return window.location.href = '/login.html';
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin' && user.role !== 'ceo') return window.location.href = '/dashboard.html';
+      
+      loadPendingUsers();
+      loadChatUsers();
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.admin-nav .btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Generar Token
+    document.getElementById('gen-token-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('token-email').value;
+      try {
+        const res = await window.api.fetch('/admin/tokens/generate', { method: 'POST', body: { assigned_to_email: email } });
+        const display = document.getElementById('new-token-display');
+        display.style.display = 'block';
+        display.innerHTML = `Token Generado: <span style="user-select:all; background:#000; padding:5px;">${res.token}</span><br><span style="font-size:0.7rem;color:var(--text-muted);">Cópialo y envíalo por el chat</span>`;
+      } catch (err) { window.app.showToast(err.message, true); }
+    });
+
+    async function loadPendingUsers() {
+      try {
+        const res = await window.api.fetch('/admin/users/pending');
+        const tbody = document.getElementById('pending-users-table');
+        tbody.innerHTML = res.users.map(u => `
+          <tr>
+            <td>${u.name}</td><td>${u.email}</td><td>${new Date(u.created_at).toLocaleDateString()}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="switchTab('chat'); openChat(${u.id}, '${u.name}')">Abrir Chat</button></td>
+          </tr>
+        `).join('');
+      } catch (err) {}
+    }
+
+    // Crear Proyecto
+    document.getElementById('project-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        title: document.getElementById('p-title').value,
+        description: document.getElementById('p-desc').value,
+        start_date: document.getElementById('p-start').value,
+        end_date: document.getElementById('p-end').value,
+        conf_link: document.getElementById('p-link').value
+      };
+      try {
+        await window.api.fetch('/admin/projects', { method: 'POST', body });
+        window.app.showToast('Proyecto publicado');
+        e.target.reset();
+      } catch (err) { window.app.showToast(err.message, true); }
+    });
+
+    // Crear Noticia
+    document.getElementById('news-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await window.api.fetch('/admin/news', { method: 'POST', body: {
+          title: document.getElementById('n-title').value,
+          content: document.getElementById('n-content').value
+        }});
+        window.app.showToast('Noticia publicada');
+        e.target.reset();
+      } catch (err) { window.app.showToast(err.message, true); }
+    });
+
+    // CHAT
+    async function loadChatUsers() {
+      try {
+        const res = await window.api.fetch('/chat/users');
+        const list = document.getElementById('chat-users-admin');
+        list.innerHTML = res.users.map(u => `
+          <div style="padding:10px; cursor:pointer; border-radius:var(--radius-sm); transition:background 0.2s;" class="chat-user-item" onclick="openChat(${u.id}, '${u.name}')">
+            <strong>${u.name}</strong> <br><span style="font-size:0.7rem; color:var(--text-muted);">${u.email}</span>
+          </div>
+        `).join('');
+      } catch(err) {}
+    }
+
+    window.openChat = async function(userId, userName) {
+      currentChatUser = userId;
+      document.getElementById('chat-input-admin').disabled = false;
+      document.getElementById('chat-btn-admin').disabled = false;
+      document.querySelectorAll('.chat-user-item').forEach(el => el.style.background = 'transparent');
+      if(event && event.currentTarget) event.currentTarget.style.background = 'var(--bg-input)';
+      
+      try {
+        const res = await window.api.fetch(`/chat/${userId}`);
+        const box = document.getElementById('chat-messages-admin');
+        const myUser = JSON.parse(localStorage.getItem('sw_user'));
+        box.innerHTML = res.messages.map(m => {
+          const isMe = m.sender_id === myUser.id;
+          return `<div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'var(--gradient-danger)' : 'var(--bg-card)'}; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; color: #fff;">${m.content}</div>`;
+        }).join('');
+        box.scrollTop = box.scrollHeight;
+      } catch(err) {}
+    }
+
+    document.getElementById('chat-form-admin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if(!currentChatUser) return;
+      const input = document.getElementById('chat-input-admin');
+      try {
+        await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: input.value } });
+        input.value = '';
+        openChat(currentChatUser, ''); 
+      } catch(err) { window.app.showToast(err.message, true); }
+    });
+  </script>
+</body>
+</html>

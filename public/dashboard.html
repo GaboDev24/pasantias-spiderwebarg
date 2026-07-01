@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | Panel de Pasante</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+      <div class="navbar-brand">
+        <a href="/" style="text-decoration:none; display:flex; align-items:center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px; margin-right: 10px;"><span>Pasantías</span></a>
+      </div>
+      <div class="navbar-links">
+        <a href="#" onclick="window.app.logout(); return false;">Cerrar Sesión</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <main class="main-content container">
+      
+      <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 30px;">
+        <!-- SIDEBAR PERFIL -->
+        <aside>
+          <div class="card" style="text-align:center;">
+            <img id="avatar-img" src="https://via.placeholder.com/150" style="width:120px; height:120px; border-radius:50%; object-fit:cover; margin-bottom:15px; border:2px solid var(--accent-cyan);">
+            <h3 id="user-name" style="margin-bottom:5px;">Cargando...</h3>
+            <p id="user-role" style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; margin-bottom:15px;"></p>
+            
+            <div id="validation-status" style="margin-bottom:20px;"></div>
+
+            <form id="avatar-form" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
+              <input type="file" id="avatar-file" accept="image/*" style="font-size:0.7rem; width:100%;">
+              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;">Cambiar Foto</button>
+            </form>
+          </div>
+
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <span class="card-title">Mis Tags</span>
+            </div>
+            <div id="tags-container" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+          </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <section>
+          
+          <!-- VALIDACION DE TOKEN -->
+          <div class="card" id="token-card" style="margin-bottom:30px; display:none; border-color:var(--accent-red);">
+            <div class="card-header" style="border-bottom-color:rgba(239, 68, 68, 0.2);">
+              <span class="card-title" style="color:var(--accent-red);">Validación Requerida</span>
+            </div>
+            <p style="margin-bottom:15px; font-size:0.9rem;">Necesitas un Token emitido por un CEO para validar tu cuenta y aplicar a proyectos. Pídelo a través del chat.</p>
+            <form id="token-form" class="form-inline">
+              <div class="form-group">
+                <input type="text" id="token-input" class="form-input" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+              </div>
+              <button type="submit" class="btn btn-danger">Validar Cuenta</button>
+            </form>
+          </div>
+
+          <!-- CHAT -->
+          <div class="card" style="margin-bottom:30px;">
+            <div class="card-header">
+              <span class="card-title">Comunicaciones (Chat con CEOs)</span>
+            </div>
+            <div style="display:flex; gap:20px; height: 350px;">
+              <div style="flex:1; border-right:1px solid var(--border-color); overflow-y:auto; padding-right:10px;" id="chat-users">
+                <!-- Lista de CEOs -->
+              </div>
+              <div style="flex:2; display:flex; flex-direction:column;">
+                <div id="chat-messages" style="flex:1; background:var(--bg-secondary); border-radius:var(--radius-sm); padding:15px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
+                  <p style="text-align:center; color:var(--text-muted); margin-top:auto; margin-bottom:auto;">Selecciona un usuario para chatear</p>
+                </div>
+                <form id="chat-form" style="display:flex; gap:10px;">
+                  <input type="text" id="chat-input" class="form-input" placeholder="Escribe un mensaje..." required disabled>
+                  <button type="submit" class="btn btn-primary" id="chat-btn" disabled>Enviar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- MIS POSTULACIONES -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Mis Postulaciones</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Proyecto</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="apps-table">
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let currentUser = null;
+    let currentChatUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const userStr = localStorage.getItem('sw_user');
+      if (!userStr) return window.location.href = '/login.html';
+      
+      try {
+        const res = await window.api.fetch('/users/me');
+        currentUser = res.user;
+        renderProfile();
+        loadApps();
+        loadChatUsers();
+      } catch (err) {
+        window.app.logout();
+      }
+    });
+
+    function renderProfile() {
+      document.getElementById('user-name').innerText = currentUser.name;
+      document.getElementById('user-role').innerText = currentUser.role;
+      if (currentUser.avatar_url) document.getElementById('avatar-img').src = currentUser.avatar_url;
+
+      const vStatus = document.getElementById('validation-status');
+      if (currentUser.is_token_validated) {
+        vStatus.innerHTML = '<span class="badge badge-active">CUENTA VALIDADA</span>';
+        document.getElementById('token-card').style.display = 'none';
+      } else {
+        vStatus.innerHTML = '<span class="badge badge-inactive">NO VALIDADO</span>';
+        document.getElementById('token-card').style.display = 'block';
+      }
+
+      const tagsCont = document.getElementById('tags-container');
+      tagsCont.innerHTML = currentUser.tags.length ? currentUser.tags.map(t => `<span class="badge" style="background:var(--bg-glass); border:1px solid var(--border-color);">${t}</span>`).join('') : '<span style="color:var(--text-muted); font-size:0.8rem;">Sin tags asignados</span>';
+    }
+
+    // Cambiar Foto
+    document.getElementById('avatar-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('avatar-file').files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      try {
+        const res = await window.api.fetch('/users/me/avatar', { method: 'POST', body: formData });
+        currentUser.avatar_url = res.avatar_url;
+        renderProfile();
+        window.app.showToast('Foto actualizada');
+      } catch (err) {
+        window.app.showToast(err.message, true);
+      }
+    });
+
+    // Validar Token
+    document.getElementById('token-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = document.getElementById('token-input').value;
+      try {
+        const res = await window.api.fetch('/auth/validate-token', { method: 'POST', body: { token_string: token } });
+        localStorage.setItem('sw_token', res.token);
+        currentUser.is_token_validated = 1;
+        renderProfile();
+        window.app.showToast(res.message);
+      } catch (err) {
+        window.app.showToast(err.message, true);
+      }
+    });
+
+    // Cargar Postulaciones
+    async function loadApps() {
+      try {
+        const res = await window.api.fetch('/users/my-applications');
+        const tbody = document.getElementById('apps-table');
+        if (res.applications.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No tienes postulaciones</td></tr>';
+        } else {
+          tbody.innerHTML = res.applications.map(a => `
+            <tr>
+              <td><strong>${a.title}</strong></td>
+              <td><span class="badge ${a.status === 'accepted' ? 'badge-active' : (a.status==='rejected'?'badge-inactive':'')}">${a.status.toUpperCase()}</span></td>
+              <td>${new Date(a.applied_at).toLocaleDateString()}</td>
+              <td>
+                ${a.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelApp(${a.project_id})">Cancelar</button>` : '-'}
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {}
+    }
+
+    window.cancelApp = async function(id) {
+      if(!confirm('¿Cancelar postulación?')) return;
+      try {
+        await window.api.fetch(`/users/projects/${id}/apply`, { method: 'DELETE' });
+        loadApps();
+        window.app.showToast('Postulación cancelada');
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    // Funciones de Chat
+    async function loadChatUsers() {
+      try {
+        const res = await window.api.fetch('/chat/users');
+        const list = document.getElementById('chat-users');
+        list.innerHTML = res.users.map(u => `
+          <div style="padding:10px; cursor:pointer; border-radius:var(--radius-sm); transition:background 0.2s;" class="chat-user-item" onclick="openChat(${u.id}, '${u.name}')">
+            <strong>${u.name}</strong> <span style="font-size:0.7rem; color:var(--accent-cyan);">[${u.role}]</span>
+          </div>
+        `).join('');
+      } catch(err) {}
+    }
+
+    window.openChat = async function(userId, userName) {
+      currentChatUser = userId;
+      document.getElementById('chat-input').disabled = false;
+      document.getElementById('chat-btn').disabled = false;
+      document.querySelectorAll('.chat-user-item').forEach(el => el.style.background = 'transparent');
+      event.currentTarget.style.background = 'var(--bg-input)';
+      
+      try {
+        const res = await window.api.fetch(`/chat/${userId}`);
+        const box = document.getElementById('chat-messages');
+        if(res.messages.length === 0) {
+          box.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:auto; margin-bottom:auto;">Sin mensajes con ${userName}</p>`;
+        } else {
+          box.innerHTML = res.messages.map(m => {
+            const isMe = m.sender_id === currentUser.id;
+            return `
+              <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'var(--gradient-primary)' : 'var(--bg-card)'}; border: 1px solid ${isMe ? 'transparent' : 'var(--border-color)'}; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; color: #fff;">
+                ${m.content}
+              </div>
+            `;
+          }).join('');
+          box.scrollTop = box.scrollHeight;
+        }
+      } catch(err) {}
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if(!currentChatUser) return;
+      const input = document.getElementById('chat-input');
+      const text = input.value;
+      input.value = '';
+      try {
+        await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: text } });
+        openChat(currentChatUser, ''); // recargar
+      } catch(err) { window.app.showToast(err.message, true); }
+    });
+  </script>
+</body>
+</html>

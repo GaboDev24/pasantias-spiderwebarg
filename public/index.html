@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | Registro de Pasantías</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/tactical.css">
+  <link rel="stylesheet" href="/css/index.css">
+</head>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- HUD Corners -->
+  <div class="hud-corner hud-tl"><div class="hud-line h"></div><div class="hud-line v"></div></div>
+  <div class="hud-corner hud-tr"><div class="hud-line h"></div><div class="hud-line v" style="right:0; left:auto;"></div></div>
+  <div class="hud-corner hud-bl"><div class="hud-line h" style="bottom:0; top:auto;"></div><div class="hud-line v"></div></div>
+  <div class="hud-corner hud-br"><div class="hud-line h" style="bottom:0; top:auto;"></div><div class="hud-line v" style="right:0; left:auto;"></div></div>
+
+  <nav class="sw-nav">
+    <div class="sw-nav__inner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="/" style="display: flex; align-items: center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px;"></a>
+      </div>
+      <div class="sw-nav__links">
+        <a href="#news" class="sw-nav__link">Noticias</a>
+        <a href="#projects" class="sw-nav__link">Proyectos</a>
+        <div class="sw-nav__sep"></div>
+        <a href="/login.html" class="sw-nav__link guest-only">Acceso</a>
+        <a href="/register.html" class="sw-nav__link guest-only">Registro</a>
+        <a href="/dashboard.html" class="sw-nav__link auth-only" style="display:none;">Dashboard</a>
+        <a href="/admin.html" class="sw-nav__link admin-only" style="display:none; color: var(--sw-red);">Panel Admin</a>
+        <a href="#" onclick="window.app.logout(); return false;" class="sw-nav__link auth-only" style="display:none;">Salir</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero-tac">
+    <div class="hero-tac__inner" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <h1 class="hero-headline">
+        <span class="headline-line1">PASANTÍAS</span>
+        <span class="headline-line3">SPIDER-WEB ARG</span>
+      </h1>
+    </div>
+  </header>
+
+  <main class="content-section">
+    <!-- Noticias -->
+    <section id="news" style="margin-bottom: 5rem;">
+      <h2 class="section-title">Últimas Noticias</h2>
+      <div class="features-grid-tac" id="news-grid">
+        <!-- Renderizado por JS -->
+      </div>
+    </section>
+
+    <!-- Proyectos -->
+    <section id="projects">
+      <h2 class="section-title">Propuestas de Proyectos</h2>
+      <div class="features-grid-tac" id="projects-grid">
+        <!-- Renderizado por JS -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <span class="sw-footer__copy">© 2024 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
+      <div class="sw-footer__status">
+        <span class="sw-pulse"></span> Sistema en línea
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const [newsRes, projectsRes] = await Promise.all([
+          window.api.fetch('/public/news'),
+          window.api.fetch('/public/projects')
+        ]);
+
+        const newsGrid = document.getElementById('news-grid');
+        const projGrid = document.getElementById('projects-grid');
+        document.getElementById('metric-projects').innerText = projectsRes.projects.length;
+
+        // Render Noticias
+        if (newsRes.news.length === 0) {
+          newsGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem;">No hay noticias publicadas.</p>';
+        } else {
+          newsGrid.innerHTML = newsRes.news.map(n => `
+            <article class="feature-dossier">
+              ${n.cover_url ? `<img src="${n.cover_url}" class="dossier-image" alt="Cover">` : ''}
+              <div class="dossier-meta">${new Date(n.created_at).toLocaleDateString()} — AUTOR: ${n.author}</div>
+              <h3 class="dossier-title">${n.title}</h3>
+              <p class="dossier-desc">${n.content.substring(0, 100)}...</p>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.open('/news.html?id=${n.id}', '_blank')">LEER INFORME</button>
+            </article>
+          `).join('');
+        }
+
+        // Render Proyectos
+        if (projectsRes.projects.length === 0) {
+          projGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem;">No hay proyectos disponibles.</p>';
+        } else {
+          projGrid.innerHTML = projectsRes.projects.map(p => `
+            <article class="feature-dossier">
+              <div class="dossier-meta">ESTADO: ${p.status.toUpperCase()}</div>
+              <h3 class="dossier-title">${p.title}</h3>
+              <div class="tags-list">
+                ${p.required_tags.map(t => `<span class="tag-item">${t}</span>`).join('')}
+              </div>
+              <p class="dossier-desc">${p.description.substring(0, 100)}...</p>
+              <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
+            </article>
+          `).join('');
+        }
+
+      } catch (err) {
+        console.error('Error cargando datos:', err);
+      }
+    });
+  </script>
+</body>
+</html>
