@@ -145,6 +145,7 @@
     <div class="tac-tabs">
       <button class="tac-tab active" onclick="switchTab('users', this)">Pasantes &amp; Tokens</button>
       <button class="tac-tab" onclick="switchTab('projects', this)">Proyectos</button>
+      <button class="tac-tab" onclick="switchTab('portfolio', this)">Portfolio</button>
       <button class="tac-tab" onclick="switchTab('news', this)">Noticias</button>
       <button class="tac-tab" onclick="switchTab('chat', this)">Chat</button>
     </div>
@@ -244,6 +245,34 @@
       <div class="tac-card">
         <div class="tac-card-title">Proyectos Publicados</div>
         <div id="projects-list" class="pub-list">
+          <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ TAB: PORTFOLIO ════════ -->
+    <div id="tab-portfolio" class="tab-content">
+      <!-- Formulario Nuevo Portfolio -->
+      <div class="tac-card">
+        <div class="tac-card-title">Publicar Proyecto Realizado (Portfolio)</div>
+        <form id="portfolio-form">
+          <label class="tac-label">Título *</label>
+          <input type="text" id="port-title" class="tac-input" required placeholder="Título del proyecto realizado">
+
+          <label class="tac-label">Descripción *</label>
+          <textarea id="port-content" class="tac-input" rows="4" required placeholder="Descripción del trabajo realizado..."></textarea>
+
+          <label class="tac-label">Imagen de portada (opcional)</label>
+          <input type="file" id="port-image" class="tac-input" accept="image/*" style="cursor:pointer;">
+
+          <button type="submit" class="sw-btn sw-btn--primary">PUBLICAR PROYECTO</button>
+        </form>
+      </div>
+
+      <!-- Lista de portfolio -->
+      <div class="tac-card">
+        <div class="tac-card-title">Proyectos Realizados Publicados</div>
+        <div id="portfolio-list" class="pub-list">
           <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
         </div>
       </div>
@@ -405,6 +434,7 @@
       loadAllUsers();
       loadChatUsers();
       loadProjectsList();
+      loadPortfolioList();
       loadNewsList();
     });
 
@@ -879,6 +909,74 @@
         await window.api.fetch(`/admin/news/${id}`, { method: 'DELETE' });
         window.app.showToast('Noticia eliminada');
         loadNewsList();
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    // ── PORTFOLIO ──────────────────────────────────
+    document.getElementById('portfolio-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.innerText = 'PUBLICANDO...'; btn.disabled = true;
+      try {
+        let coverFileId = null;
+        const imgFile = document.getElementById('port-image').files[0];
+        if (imgFile) {
+          const formData = new FormData();
+          formData.append('file', imgFile);
+          const uploadRes = await window.api.fetch('/admin/upload', { method: 'POST', body: formData });
+          coverFileId = uploadRes.file_id || null;
+        }
+
+        await window.api.fetch('/admin/portfolio', {
+          method: 'POST',
+          body: {
+            title: document.getElementById('port-title').value,
+            description: document.getElementById('port-content').value,
+            cover_file_id: coverFileId,
+          }
+        });
+        window.app.showToast('Proyecto realizado publicado');
+        e.target.reset();
+        loadPortfolioList();
+      } catch (err) { window.app.showToast(err.message, true); }
+      finally { btn.innerText = 'PUBLICAR PROYECTO'; btn.disabled = false; }
+    });
+
+    async function loadPortfolioList() {
+      const list = document.getElementById('portfolio-list');
+      try {
+        const res = await fetch('/api/public/portfolio');
+        const data = await res.json();
+        const port = data.portfolio || [];
+        if (!port.length) {
+          list.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados.</p>';
+          return;
+        }
+        list.innerHTML = port.map(p => `
+          <div class="pub-item">
+            ${p.cover_url ? `<img src="${p.cover_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;background:var(--sw-steel);" alt="Cover">` : ''}
+            <div class="pub-item-info">
+              <div class="pub-item-title">${p.title}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-text-muted);margin-top:2px;">
+                Publicado: ${new Date(p.created_at).toLocaleDateString('es-AR')}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="sw-btn sw-btn--danger sw-btn--sm" onclick="deletePortfolio(${p.id})">ELIMINAR</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = '<p style="color:#f87171;">Error cargando portfolio.</p>';
+      }
+    }
+
+    async function deletePortfolio(id) {
+      if (!confirm('¿Eliminar este proyecto de portfolio?')) return;
+      try {
+        await window.api.fetch(`/admin/portfolio/${id}`, { method: 'DELETE' });
+        window.app.showToast('Proyecto eliminado');
+        loadPortfolioList();
       } catch (err) { window.app.showToast(err.message, true); }
     }
 

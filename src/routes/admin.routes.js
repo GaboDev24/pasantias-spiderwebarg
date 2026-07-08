@@ -36,6 +36,10 @@ router.post('/news', requireAdmin, adminCtrl.createNews);
 router.put('/news/:newsId', requireAdmin, adminCtrl.updateNews);
 router.delete('/news/:newsId', requireAdmin, adminCtrl.deleteNews);
 
+// Portfolio
+router.post('/portfolio', requireAdmin, adminCtrl.createPortfolioProject);
+router.delete('/portfolio/:portfolioId', requireAdmin, adminCtrl.deletePortfolioProject);
+
 // Upload de medios
 router.post('/upload', requireAdmin, upload.single('file'), adminCtrl.uploadMedia);
 

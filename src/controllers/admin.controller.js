@@ -335,11 +335,43 @@ async function uploadMedia(req, res) {
   }
 }
 
+// ──────────────────────────────────────────────
+// PORTFOLIO (Proyectos Realizados)
+// ──────────────────────────────────────────────
+async function createPortfolioProject(req, res) {
+  try {
+    const { title, description, cover_file_id } = req.body;
+    if (!title || !description) return res.status(400).json({ error: 'Titulo y descripcion requeridos.' });
+
+    const coverValue = cover_file_id ? `'${cover_file_id}'` : 'NULL';
+    await sql.query(
+      `INSERT INTO portfolio_projects (title, description, cover_file_id, created_by)
+       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${coverValue}, ${req.user.id})`
+    );
+    return res.status(201).json({ message: 'Proyecto de portfolio publicado.' });
+  } catch (err) {
+    console.error('[ADMIN/CREATE-PORTFOLIO]', err.message);
+    return res.status(500).json({ error: 'Error publicando proyecto de portfolio.' });
+  }
+}
+
+async function deletePortfolioProject(req, res) {
+  try {
+    const { portfolioId } = req.params;
+    await sql.query(`DELETE FROM portfolio_projects WHERE id = ${parseInt(portfolioId)}`);
+    return res.json({ message: 'Proyecto de portfolio eliminado.' });
+  } catch (err) {
+    console.error('[ADMIN/DELETE-PORTFOLIO]', err.message);
+    return res.status(500).json({ error: 'Error eliminando proyecto de portfolio.' });
+  }
+}
+
 module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser,
   generateToken, listTokens,
   listSkills, createSkill, deleteSkill,
   listProjects, createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
   createNews, updateNews, deleteNews,
+  createPortfolioProject, deletePortfolioProject,
   uploadMedia,
 };

@@ -56,8 +56,16 @@
   </header>
 
   <main class="content-section">
+    <!-- Proyectos Realizados (Portfolio) -->
+    <section id="portfolio" style="margin-bottom: 5rem; display: none;">
+      <h2 class="section-title">Proyectos Realizados</h2>
+      <div class="features-grid-tac" id="portfolio-grid">
+        <!-- Renderizado por JS -->
+      </div>
+    </section>
+
     <!-- Proyectos -->
-    <section id="projects" style="margin-bottom: 5rem;">
+    <section id="projects" style="margin-bottom: 5rem; display: none;">
       <h2 class="section-title">Propuestas de Proyectos</h2>
       <div class="features-grid-tac" id="projects-grid">
         <!-- Renderizado por JS -->
@@ -88,17 +96,48 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const newsGrid = document.getElementById('news-grid');
       const projGrid = document.getElementById('projects-grid');
+      const portGrid = document.getElementById('portfolio-grid');
+      const isAuth = !!localStorage.getItem('sw_user');
+
+      // Mostrar sección de propuestas solo si está autenticado
+      if (isAuth) {
+        document.getElementById('projects').style.display = 'block';
+      }
 
       // Mostrar estado de carga
       const loadingMsg = '<p style="color: rgba(255,255,255,0.3); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem; letter-spacing: 0.1em;">CARGANDO...</p>';
       newsGrid.innerHTML = loadingMsg;
-      projGrid.innerHTML = loadingMsg;
+      if (isAuth) projGrid.innerHTML = loadingMsg;
+      portGrid.innerHTML = loadingMsg;
 
       try {
-        const [newsRes, projectsRes] = await Promise.all([
+        const promises = [
           window.api.fetch('/public/news'),
-          window.api.fetch('/public/projects')
-        ]);
+          window.api.fetch('/public/portfolio')
+        ];
+        
+        if (isAuth) {
+          promises.push(window.api.fetch('/public/projects'));
+        }
+
+        const resArray = await Promise.all(promises);
+        const newsRes = resArray[0];
+        const portRes = resArray[1];
+        const projectsRes = isAuth ? resArray[2] : null;
+
+        // Render Portfolio
+        const portfolio = portRes.portfolio || [];
+        if (portfolio.length > 0) {
+          document.getElementById('portfolio').style.display = 'block';
+          portGrid.innerHTML = portfolio.map(p => `
+            <article class="feature-dossier">
+              ${p.cover_url ? `<img src="${p.cover_url}" class="dossier-image" alt="Cover">` : ''}
+              <div class="dossier-meta">FECHA: ${new Date(p.created_at).toLocaleDateString('es-AR')} — REALIZADO</div>
+              <h3 class="dossier-title">${p.title}</h3>
+              <p class="dossier-desc">${p.description}</p>
+            </article>
+          `).join('');
+        }
 
         // Render Noticias
         const news = newsRes.news || [];
@@ -117,27 +156,30 @@
         }
 
         // Render Proyectos
-        const projects = projectsRes.projects || [];
-        if (projects.length === 0) {
-          projGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">No hay proyectos disponibles.</p>';
-        } else {
-          projGrid.innerHTML = projects.map(p => `
-            <article class="feature-dossier">
-              <div class="dossier-meta">ESTADO: ${p.status.toUpperCase()}</div>
-              <h3 class="dossier-title">${p.title}</h3>
-              <div class="tags-list">
-                ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
-              </div>
-              <p class="dossier-desc">${p.description.substring(0, 120)}...</p>
-              <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
-            </article>
-          `).join('');
+        if (isAuth && projectsRes) {
+          const projects = projectsRes.projects || [];
+          if (projects.length === 0) {
+            projGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">No hay proyectos disponibles.</p>';
+          } else {
+            projGrid.innerHTML = projects.map(p => `
+              <article class="feature-dossier">
+                <div class="dossier-meta">ESTADO: ${p.status.toUpperCase()}</div>
+                <h3 class="dossier-title">${p.title}</h3>
+                <div class="tags-list">
+                  ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
+                </div>
+                <p class="dossier-desc">${p.description.substring(0, 120)}...</p>
+                <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
+              </article>
+            `).join('');
+          }
         }
 
       } catch (err) {
         console.error('Error cargando datos:', err);
         newsGrid.innerHTML = '<p style="color: #f87171; padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">Error cargando noticias.</p>';
-        projGrid.innerHTML = '<p style="color: #f87171; padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">Error cargando proyectos.</p>';
+        if (isAuth) projGrid.innerHTML = '<p style="color: #f87171; padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">Error cargando proyectos.</p>';
+        portGrid.innerHTML = '<p style="color: #f87171; padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">Error cargando portfolio.</p>';
       }
     });
   </script>

@@ -136,4 +136,23 @@ async function getSkills(req, res) {
   }
 }
 
-module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills };
+async function getPortfolioProjects(req, res) {
+  try {
+    const result = await sql.query(
+      `SELECT p.id, p.title, p.description, p.cover_file_id, p.created_at, COALESCE(u.name, 'Admin') AS author
+       FROM portfolio_projects p
+       LEFT JOIN users u ON u.id = p.created_by
+       ORDER BY p.created_at DESC`
+    );
+    const portfolio = (result.data || []).map(item => ({
+      ...item,
+      cover_url: item.cover_file_id ? storage.getFileUrl(item.cover_file_id) : null,
+    }));
+    return res.json({ portfolio });
+  } catch (err) {
+    console.error('[PUBLIC/PORTFOLIO]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo proyectos de portfolio.' });
+  }
+}
+
+module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills, getPortfolioProjects };
