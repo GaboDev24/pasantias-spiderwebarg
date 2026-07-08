@@ -11,8 +11,26 @@ const { sql, storage } = require('../api-client/index');
 // ──────────────────────────────────────────────
 async function getMyProfile(req, res) {
   try {
+    // Admin bypass: id 9999 no existe en BD, devolver perfil desde el JWT
+    if (req.user.id === 9999) {
+      return res.json({
+        user: {
+          id: 9999,
+          name: req.user.name || 'Admin Master',
+          email: req.user.email,
+          role: 'ceo',
+          is_email_verified: 1,
+          is_token_validated: 1,
+          avatar_file_id: null,
+          avatar_url: null,
+          tags: [],
+          created_at: new Date().toISOString(),
+        }
+      });
+    }
+
     const result = await sql.query(
-      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, tags, created_at
+      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
        FROM users WHERE id = ${req.user.id}`
     );
     if (!result.data || result.data.length === 0) {
@@ -20,8 +38,11 @@ async function getMyProfile(req, res) {
     }
     const user = result.data[0];
     user.tags = user.tags ? JSON.parse(user.tags) : [];
-    user.avatar_url = user.avatar_file_id ? storage.getFileUrl(user.avatar_file_id) : null;
+    // Usar avatar_url directo si existe, sino construir desde file_id
+    user.avatar_url = user.avatar_url || (user.avatar_file_id ? storage.getFileUrl(user.avatar_file_id) : null);
+    user.cv_url = user.cv_url || (user.cv_file_id ? storage.getFileUrl(user.cv_file_id) : null);
     return res.json({ user });
+
   } catch (err) {
     console.error('[USERS/PROFILE]', err.message);
     return res.status(500).json({ error: 'Error obteniendo perfil.' });
@@ -79,30 +100,46 @@ async function uploadAvatar(req, res) {
   try {
     if (!req.file) return res.status(400).json({ error: 'Imagen requerida.' });
 
-    const user = await sql.query(`SELECT avatar_file_id FROM users WHERE id = ${req.user.id}`);
-    const oldFileId = user.data && user.data[0] ? user.data[0].avatar_file_id : null;
+    const userQ = await sql.query(`SELECT avatar_file_id FROM users WHERE id = ${req.user.id}`);
+    const oldFileId = userQ.data && userQ.data[0] ? userQ.data[0].avatar_file_id : null;
 
-    let fileId;
+    const avatarExt = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase();
+    const avatarMime = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp' }[avatarExt] || req.file.mimetype;
+    const crypto = require('crypto');
+    const safeName = `avatar_${crypto.randomBytes(8).toString('hex')}.${avatarExt}`;
+
+    let fileId, publicUrl;
     if (oldFileId) {
-      // Reemplazar el archivo existente
       try {
-        const result = await storage.replaceFile(oldFileId, req.file.buffer, req.file.originalname, req.file.mimetype);
+        const result = await storage.replaceFile(oldFileId, req.file.buffer, safeName, avatarMime);
+        // replaceFile puede devolver la URL actualizada
+        const files = result.files || [];
+        publicUrl = Array.isArray(files) && files[0] ? files[0].url : null;
         fileId = oldFileId;
       } catch (_) {
         // Si falla el reemplazo, subir como nuevo
-        const result = await storage.uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype);
-        const files = result.files || result;
-        fileId = Array.isArray(files) ? files[0].id : files.id;
+        const result = await storage.uploadFile(req.file.buffer, safeName, avatarMime);
+        const files = result.files || [];
+        const fileData = Array.isArray(files) ? files[0] : files;
+        fileId = fileData.id;
+        publicUrl = fileData.url;
       }
     } else {
-      const result = await storage.uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype);
-      const files = result.files || result;
-      fileId = Array.isArray(files) ? files[0].id : files.id;
+      const result = await storage.uploadFile(req.file.buffer, safeName, avatarMime);
+      const files = result.files || [];
+      const fileData = Array.isArray(files) ? files[0] : files;
+      fileId = fileData.id;
+      publicUrl = fileData.url;
     }
 
-    await sql.query(`UPDATE users SET avatar_file_id = '${fileId}' WHERE id = ${req.user.id}`);
+    // Guardar SIEMPRE la URL a traves del proxy
+    const proxyUrl = `/api/media/${fileId}`;
+    await sql.query(`UPDATE users SET avatar_file_id = '${fileId}', avatar_url = '${proxyUrl}' WHERE id = ${req.user.id}`);
 
-    return res.json({ avatar_file_id: fileId, avatar_url: storage.getFileUrl(fileId) });
+    return res.json({
+      avatar_file_id: fileId,
+      avatar_url: proxyUrl,
+    });
   } catch (err) {
     console.error('[USERS/UPLOAD-AVATAR]', err.message);
     return res.status(500).json({ error: 'Error subiendo foto de perfil.' });
@@ -173,7 +210,72 @@ async function getMyApplications(req, res) {
   }
 }
 
+async function uploadCV(req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Archivo CV requerido.' });
+
+    const ext = (req.file.originalname.split('.').pop() || '').toLowerCase();
+    const mimeMap = {
+      pdf:  'application/pdf',
+      doc:  'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    const resolvedMime = mimeMap[ext];
+    if (!resolvedMime) {
+      return res.status(400).json({ error: 'Solo se aceptan archivos PDF, DOC o DOCX.' });
+    }
+
+    // Usar nombre aleatorio para evitar problemas de firma con caracteres especiales
+    const crypto = require('crypto');
+    const randomName = `cv_${crypto.randomBytes(8).toString('hex')}.${ext}`;
+    const result = await storage.uploadFile(req.file.buffer, randomName, resolvedMime);
+    const files = result.files || [];
+    const fileData = Array.isArray(files) ? files[0] : files;
+
+    if (!fileData || !fileData.id) {
+      return res.status(500).json({ error: 'El storage no devolvio el archivo.' });
+    }
+    const fileId = fileData.id;
+
+    // Usar proxy local para servir con los headers correctos
+    const proxyUrl = `/api/media/${fileId}`;
+    await sql.query(`UPDATE users SET cv_file_id = '${fileId}', cv_url = '${proxyUrl}' WHERE id = ${req.user.id}`);
+
+    return res.json({
+      cv_file_id: fileId,
+      cv_url: proxyUrl,
+      message: 'CV subido correctamente.',
+    });
+  } catch (err) {
+    console.error('[USERS/UPLOAD-CV]', err.message, err.stack);
+    return res.status(500).json({ error: 'Error subiendo CV: ' + err.message });
+  }
+}
+
+// Perfil público de usuario (para que admin lo vea)
+async function getUserPublicProfile(req, res) {
+  try {
+    const { userId } = req.params;
+    const result = await sql.query(
+      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
+       FROM users WHERE id = ${parseInt(userId)}`
+    );
+    if (!result.data || result.data.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+    const user = result.data[0];
+    user.tags = user.tags ? JSON.parse(user.tags) : [];
+    user.avatar_url = user.avatar_url || (user.avatar_file_id ? `/api/media/${user.avatar_file_id}` : null);
+    user.cv_url = user.cv_url ? `/api/media/${user.cv_file_id}` : null;
+    return res.json({ user });
+  } catch (err) {
+    console.error('[USERS/PUBLIC-PROFILE]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo perfil.' });
+  }
+}
+
 module.exports = {
   getMyProfile, updateProfile, changePassword, uploadAvatar,
+  uploadCV, getUserPublicProfile,
   applyToProject, cancelApplication, getMyApplications,
 };

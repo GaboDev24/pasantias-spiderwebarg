@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | Proyecto</title>
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .proj-page { max-width: 1000px; margin: 0 auto; padding: clamp(1rem, 4vw, 2.5rem); padding-top: 90px; padding-bottom: 50px; }
+    .proj-header { margin-bottom: 2rem; }
+    .proj-meta { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.15em; color: var(--sw-red); text-transform: uppercase; margin-bottom: 0.75rem; }
+    .proj-title { font-family: var(--sw-font-h); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; margin-bottom: 1rem; line-height: 1.05; }
+    .tac-card { background: var(--sw-dark); border: 1px solid var(--sw-border); clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); padding: 1.5rem; margin-bottom: 1.25rem; }
+    .tac-card-title { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.2em; color: var(--sw-red); text-transform: uppercase; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--sw-border); }
+    .tac-card-title::before { content: '// '; opacity: 0.5; }
+    .proj-desc { font-family: var(--sw-font-b); line-height: 1.8; color: var(--sw-text-muted); white-space: pre-wrap; }
+    .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .proj-stat { font-family: var(--sw-font-m); }
+    .proj-stat-label { font-size: 0.58rem; letter-spacing: 0.15em; color: rgba(163,0,0,0.85); text-transform: uppercase; margin-bottom: 4px; }
+    .proj-stat-val { font-size: 0.85rem; color: var(--sw-white); }
+    .tag-pill { display: inline-block; font-family: var(--sw-font-m); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.6rem; border: 1px solid var(--sw-border); background: rgba(163,0,0,0.1); color: var(--sw-white); margin: 2px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sw-text-muted); text-decoration: none; margin-bottom: 2rem; transition: color 0.2s; }
+    .back-btn:hover { color: var(--sw-red); }
+    .loading-state { text-align: center; padding: 4rem 2rem; font-family: var(--sw-font-m); font-size: 0.75rem; letter-spacing: 0.15em; color: var(--sw-text-muted); }
+    .media-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .media-grid img { width: 160px; height: 120px; object-fit: cover; border: 1px solid var(--sw-border); }
+    @media (max-width: 600px) { .proj-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <nav class="sw-nav scrolled">
+    <div class="sw-nav__inner">
+      <a href="/" style="display:flex;align-items:center;">
+        <img src="/img/logo blanco.png" alt="Logo" style="height:34px;">
+      </a>
+      <div class="sw-nav__links">
+        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
+        <a href="/" class="sw-nav__link">← Volver al Inicio</a>
+        <a href="/dashboard.html" class="sw-nav__link auth-only" style="display:none;">Mi Panel</a>
+      </div>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="proj-page">
+    <div id="loading" class="loading-state">CARGANDO PROYECTO...</div>
+
+    <div id="content" style="display:none;">
+      <a href="/" class="back-btn">← Volver al índice</a>
+
+      <div class="proj-header">
+        <div id="proj-meta" class="proj-meta"></div>
+        <h1 id="proj-title" class="proj-title"></h1>
+        <div id="proj-tags" style="margin-bottom:1rem;"></div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="tac-card">
+        <div class="tac-card-title">Descripción del Proyecto</div>
+        <p id="proj-desc" class="proj-desc"></p>
+      </div>
+
+      <!-- Info -->
+      <div class="tac-card">
+        <div class="tac-card-title">Detalles</div>
+        <div class="proj-grid">
+          <div class="proj-stat">
+            <div class="proj-stat-label">Estado</div>
+            <div id="proj-status" class="proj-stat-val"></div>
+          </div>
+          <div class="proj-stat">
+            <div class="proj-stat-label">Inscriptos</div>
+            <div id="proj-count" class="proj-stat-val">—</div>
+          </div>
+          <div class="proj-stat" id="start-wrap">
+            <div class="proj-stat-label">Fecha de Inicio</div>
+            <div id="proj-start" class="proj-stat-val"></div>
+          </div>
+          <div class="proj-stat" id="end-wrap">
+            <div class="proj-stat-label">Fecha de Cierre</div>
+            <div id="proj-end" class="proj-stat-val"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imágenes -->
+      <div id="media-card" class="tac-card" style="display:none;">
+        <div class="tac-card-title">Material del Proyecto</div>
+        <div id="media-grid" class="media-grid"></div>
+      </div>
+
+      <!-- Acción -->
+      <div id="apply-card" class="tac-card auth-only" style="display:none; border-color:rgba(163,0,0,0.35);">
+        <div class="tac-card-title">Postularse al Proyecto</div>
+        <p style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-text-muted);margin-bottom:1rem;line-height:1.6;">
+          Si tu perfil coincide con los requisitos del proyecto, podés postularte para participar.
+        </p>
+        <div id="conf-link-wrap" style="display:none;margin-bottom:1rem;">
+          <a id="conf-link" href="#" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm"><i class="fa-solid fa-link"></i> UNIRSE A CONFERENCIA</a>
+        </div>
+        <button id="apply-btn" class="sw-btn sw-btn--primary" onclick="applyToProject()">POSTULARME</button>
+        <span id="apply-msg" style="font-family:var(--sw-font-m);font-size:0.72rem;margin-left:1rem;color:var(--sw-text-muted);"></span>
+      </div>
+    </div>
+
+    <div id="error" class="loading-state" style="display:none; color:#f87171;">Proyecto no encontrado.</div>
+  </div>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <span class="sw-footer__copy">© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
+      <div class="sw-footer__status"><span class="sw-pulse"></span> Sistema en línea</div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let projectId;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      projectId = params.get('id');
+      if (!projectId) { showError(); return; }
+
+      try {
+        const res = await fetch(`/api/public/projects/${projectId}`);
+        if (!res.ok) { showError(); return; }
+        const { project } = await res.json();
+
+        document.title = `${project.title} | Spider-Web ARG`;
+
+        const statusMap = { open: 'ABIERTO', closed: 'CERRADO', in_progress: 'EN PROGRESO' };
+        document.getElementById('proj-meta').innerText =
+          `PUBLICADO: ${new Date(project.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — POR: ${project.author}`;
+        document.getElementById('proj-title').innerText = project.title;
+        document.getElementById('proj-desc').innerText = project.description;
+        document.getElementById('proj-status').innerText = statusMap[project.status] || project.status.toUpperCase();
+        document.getElementById('proj-count').innerText = `${project.applicant_count} pasante(s)`;
+
+        if (project.start_date) {
+          document.getElementById('proj-start').innerText = new Date(project.start_date).toLocaleString('es-AR');
+        } else { document.getElementById('start-wrap').style.display = 'none'; }
+
+        if (project.end_date) {
+          document.getElementById('proj-end').innerText = new Date(project.end_date).toLocaleString('es-AR');
+        } else { document.getElementById('end-wrap').style.display = 'none'; }
+
+        // Tags
+        const tags = project.required_tags || [];
+        document.getElementById('proj-tags').innerHTML = tags.length
+          ? tags.map(t => `<span class="tag-pill">${t}</span>`).join('')
+          : '';
+
+        // Media
+        const media = project.media_urls || [];
+        if (media.length) {
+          document.getElementById('media-card').style.display = 'block';
+          document.getElementById('media-grid').innerHTML = media.map(url =>
+            `<img src="${url}" alt="Media">`
+          ).join('');
+        }
+
+        // Link de conferencia
+        if (project.conf_link) {
+          const wrap = document.getElementById('conf-link-wrap');
+          wrap.style.display = 'block';
+          document.getElementById('conf-link').href = project.conf_link;
+        }
+
+        // Botón postularse (solo usuarios logueados)
+        const token = localStorage.getItem('sw_token');
+        if (token && project.status === 'open') {
+          document.getElementById('apply-card').style.display = 'block';
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } catch (err) {
+        showError();
+      }
+    });
+
+    async function applyToProject() {
+      const btn = document.getElementById('apply-btn');
+      const msg = document.getElementById('apply-msg');
+      btn.disabled = true; btn.innerText = 'ENVIANDO...';
+      try {
+        await window.api.fetch(`/users/projects/${projectId}/apply`, { method: 'POST' });
+        msg.innerText = '<i class="fa-solid fa-check"></i> Postulación enviada';
+        msg.style.color = '#4ade80';
+        btn.style.display = 'none';
+      } catch (err) {
+        msg.innerText = err.message;
+        msg.style.color = '#f87171';
+        btn.disabled = false; btn.innerText = 'POSTULARME';
+      }
+    }
+
+    function showError() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

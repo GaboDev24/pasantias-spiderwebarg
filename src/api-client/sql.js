@@ -22,13 +22,21 @@ async function listTables() {
 /**
  * Ejecuta una query SQL en la base de datos configurada
  * @param {string} sql - Query SQL a ejecutar
- * @param {Array} params - No aplica en este motor (queries directas)
  */
 async function query(sql) {
-  return request('/query', {
+  const raw = await request('/query', {
     method: 'POST',
     body: JSON.stringify({ database: DB, query: sql }),
   });
+
+  // La API devuelve { success, result: [...] }
+  // Normalizamos a { data: [...], insertId, affectedRows } para uso interno
+  return {
+    data: raw.result ?? raw.data ?? null,
+    insertId: raw.insertId ?? raw.insert_id ?? null,
+    affectedRows: raw.affectedRows ?? raw.affected_rows ?? null,
+    success: raw.success ?? true,
+  };
 }
 
 module.exports = { listDatabases, listTables, query };

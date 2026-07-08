@@ -49,4 +49,21 @@ function requireCeo(req, res, next) {
   });
 }
 
-module.exports = { requireAuth, requireAdmin, requireCeo };
+/**
+ * Middleware opcional: si hay token lo procesa y setea req.user, si no, pasa igual.
+ */
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+    } catch (err) {
+      // Ignorar token invalido en rutas opcionales
+    }
+  }
+  next();
+}
+
+module.exports = { requireAuth, requireAdmin, requireCeo, optionalAuth };

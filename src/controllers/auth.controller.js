@@ -138,8 +138,9 @@ async function login(req, res) {
 
     const user = result.data[0];
 
-    if (!user.is_email_verified) {
-      return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesion.' });
+    // La API puede devolver valores como strings ("0", "1") — forzar comparación numérica
+    if (parseInt(user.is_email_verified) !== 1) {
+      return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesion. Revisa tu bandeja de entrada.' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);

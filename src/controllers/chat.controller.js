@@ -15,10 +15,12 @@ async function sendMessage(req, res) {
       return res.status(400).json({ error: 'Destinatario y contenido requeridos.' });
     }
 
-    // Verificar que el receptor existe
-    const userCheck = await sql.query(`SELECT id FROM users WHERE id = ${parseInt(receiver_id)}`);
-    if (!userCheck.data || userCheck.data.length === 0) {
-      return res.status(404).json({ error: 'Usuario destinatario no encontrado.' });
+    // Admin bypass (id 9999) no existe en BD — solo verificar si no es ese id
+    if (parseInt(receiver_id) !== 9999) {
+      const userCheck = await sql.query(`SELECT id FROM users WHERE id = ${parseInt(receiver_id)}`);
+      if (!userCheck.data || userCheck.data.length === 0) {
+        return res.status(404).json({ error: 'Usuario destinatario no encontrado.' });
+      }
     }
 
     await sql.query(
@@ -41,11 +43,11 @@ async function getConversation(req, res) {
 
     const result = await sql.query(
       `SELECT cm.id, cm.sender_id, cm.receiver_id, cm.content, cm.is_read, cm.sent_at,
-              s.name AS sender_name, s.avatar_file_id AS sender_avatar,
-              r.name AS receiver_name
+              COALESCE(s.name, 'Admin') AS sender_name,
+              COALESCE(r.name, 'Admin') AS receiver_name
        FROM chat_messages cm
-       JOIN users s ON s.id = cm.sender_id
-       JOIN users r ON r.id = cm.receiver_id
+       LEFT JOIN users s ON s.id = cm.sender_id
+       LEFT JOIN users r ON r.id = cm.receiver_id
        WHERE (cm.sender_id = ${myId} AND cm.receiver_id = ${parseInt(userId)})
           OR (cm.sender_id = ${parseInt(userId)} AND cm.receiver_id = ${myId})
        ORDER BY cm.sent_at ASC
@@ -103,7 +105,17 @@ async function getChatUsers(req, res) {
     }
 
     const result = await sql.query(query);
-    return res.json({ users: result.data || [] });
+    let users = result.data || [];
+
+    // Si el usuario es pasante, agregar el CEO del sistema (admin bypass) como entrada virtual
+    if (req.user.role !== 'admin' && req.user.role !== 'ceo') {
+      users = [
+        { id: 9999, name: 'Spider-Web ARG CEO', email: 'admin@spiderweb.com', role: 'ceo', avatar_file_id: null },
+        ...users,
+      ];
+    }
+
+    return res.json({ users });
   } catch (err) {
     console.error('[CHAT/USERS]', err.message);
     return res.status(500).json({ error: 'Error obteniendo usuarios.' });

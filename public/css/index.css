@@ -26,7 +26,7 @@
 }
 .metric-group { display: flex; flex-direction: column; }
 .metric-val { font-family: var(--sw-font-m); font-size: 1.3rem; color: var(--sw-red); font-weight: 700; }
-.metric-label { font-family: var(--sw-font-m); font-size: 0.6rem; letter-spacing: 0.15em; color: rgba(245,245,245, 0.35); text-transform: uppercase; margin-top: 4px; }
+.metric-label { font-family: var(--sw-font-m); font-size: 0.6rem; letter-spacing: 0.15em; color: var(--sw-text-muted); text-transform: uppercase; margin-top: 4px; }
 .metric-divider { width: 1px; height: 36px; background: var(--sw-border); }
 
 /* Secciones de Noticias y Proyectos */
@@ -52,7 +52,7 @@
   transition: opacity 0.5s, transform 0.5s, background 0.3s;
   display: flex; flex-direction: column;
 }
-.feature-dossier:hover { background: #0e0606; }
+.feature-dossier:hover { background: var(--sw-black); }
 
 .dossier-meta {
   font-family: var(--sw-font-m); font-size: 0.65rem; color: var(--sw-red);
@@ -62,7 +62,7 @@
   font-family: var(--sw-font-h); font-size: 1.8rem; line-height: 1.1; margin-bottom: 1rem;
 }
 .dossier-desc {
-  font-family: var(--sw-font-b); font-size: 0.85rem; color: rgba(245,245,245, 0.6);
+  font-family: var(--sw-font-b); font-size: 0.85rem; color: var(--sw-text-muted);
   flex: 1; margin-bottom: 1.5rem;
 }
 

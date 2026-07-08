@@ -50,23 +50,12 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: var(--font-sans);
+  font-family: 'Inter', sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.03) 0%, transparent 60%);
-  pointer-events: none; z-index: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .gradient-text {

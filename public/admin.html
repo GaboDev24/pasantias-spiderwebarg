@@ -3,229 +3,881 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spider-Web ARG | Panel CEO</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <title>Spider-Web ARG | Panel Admin</title>
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .admin-nav { margin-bottom: 20px; display: flex; gap: 10px; }
-    .admin-nav .btn { flex: 1; justify-content: center; background: var(--bg-card); border: 1px solid var(--border-color); }
-    .admin-nav .btn.active { background: var(--gradient-danger); border-color: transparent; }
+    .admin-layout {
+      max-width: 1280px; margin: 0 auto;
+      padding: clamp(1rem, 4vw, 2.5rem); padding-top: 90px; padding-bottom: 50px;
+    }
+    .tac-card {
+      background: var(--sw-dark); border: 1px solid var(--sw-border);
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      padding: 1.5rem; margin-bottom: 1.25rem;
+    }
+    .tac-card-title {
+      font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.2em;
+      color: var(--sw-red); text-transform: uppercase; margin-bottom: 1rem;
+      padding-bottom: 0.75rem; border-bottom: 1px solid var(--sw-border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .tac-card-title::before { content: '//'; opacity: 0.5; }
+    .tac-label {
+      font-family: var(--sw-font-m); font-size: 0.58rem; letter-spacing: 0.15em;
+      color: rgba(163,0,0,0.85); text-transform: uppercase; display: block; margin-bottom: 0.4rem;
+    }
+    .tac-input {
+      width: 100%; background: var(--sw-black); border: 1px solid var(--sw-border);
+      color: var(--sw-white); font-family: var(--sw-font-m); font-size: 0.82rem;
+      padding: 0.65rem 0.9rem; outline: none; margin-bottom: 0.75rem;
+      clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+      transition: border-color 0.2s; resize: vertical;
+    }
+    .tac-input:focus { border-color: var(--sw-red); }
+    .tac-input::placeholder { color: var(--sw-text-muted); }
+    .tac-table { width: 100%; border-collapse: collapse; font-family: var(--sw-font-m); font-size: 0.75rem; }
+    .tac-table th {
+      font-size: 0.58rem; letter-spacing: 0.15em; color: var(--sw-red);
+      text-transform: uppercase; padding: 0.5rem 0.75rem; text-align: left;
+      border-bottom: 1px solid var(--sw-border);
+    }
+    .tac-table td { padding: 0.6rem 0.75rem; color: var(--sw-white); border-bottom: 1px solid rgba(163,0,0,0.06); vertical-align: middle; }
+    .tac-table tr:hover td { background: rgba(163,0,0,0.04); }
+    .tac-badge {
+      font-family: var(--sw-font-m); font-size: 0.56rem; padding: 0.18rem 0.5rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      background: rgba(163,0,0,0.1); border: 1px solid var(--sw-border); color: var(--sw-white);
+    }
+    .tac-badge.ok  { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);  color: #4ade80; }
+    .tac-badge.warn{ background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: #f87171; }
+    .tac-badge.info{ background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #60a5fa; }
+    /* Tabs */
+    .tac-tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tac-tab {
+      font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.12em;
+      text-transform: uppercase; padding: 0.5rem 1.1rem; cursor: pointer;
+      background: var(--sw-dark); border: 1px solid var(--sw-border); color: var(--sw-text-muted);
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+      transition: all 0.2s;
+    }
+    .tac-tab:hover { color: var(--sw-white); border-color: var(--sw-red); }
+    .tac-tab.active { background: var(--sw-red); border-color: var(--sw-red); color: var(--sw-white); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    /* Token display */
+    .token-display {
+      font-family: var(--sw-font-m); letter-spacing: 0.2em; font-size: 1.2rem;
+      color: #4ade80; background: var(--sw-black); border: 1px solid rgba(34,197,94,0.3);
+      padding: 0.75rem 1.25rem; margin-top: 1rem; display: none;
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    }
+    /* Chat */
+    .chat-box {
+      background: var(--sw-black); border: 1px solid var(--sw-border); height: 300px;
+      overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .chat-msg-me    { align-self: flex-end;  background: rgba(163,0,0,0.15); border: 1px solid var(--sw-border); padding: 0.5rem 0.75rem; max-width: 80%; font-family: var(--sw-font-m); font-size: 0.78rem; }
+    .chat-msg-other { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 0.5rem 0.75rem; max-width: 80%; font-family: var(--sw-font-m); font-size: 0.78rem; }
+    .chat-user-item { padding: 0.5rem 0.6rem; cursor: pointer; border: 1px solid transparent; font-family: var(--sw-font-m); font-size: 0.72rem; transition: all 0.2s; line-height: 1.4; }
+    .chat-user-item:hover, .chat-user-item.active { border-color: var(--sw-border); background: rgba(163,0,0,0.08); color: var(--sw-red); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:600px) { .form-row { grid-template-columns: 1fr; } }
+    /* Lista de publicaciones */
+    .pub-list { display: flex; flex-direction: column; gap: 12px; margin-top: 1rem; }
+    .pub-item { border: 1px solid var(--sw-border); background: var(--sw-black); padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 1rem; }
+    .pub-item-info { flex: 1; min-width: 0; }
+    .pub-item-title { font-family: var(--sw-font-h); font-size: 1.05rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pub-item-meta { font-family: var(--sw-font-m); font-size: 0.6rem; color: var(--sw-text-muted); letter-spacing: 0.1em; margin-top: 2px; }
+    .pub-item-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+    /* Modal */
+    .sw-modal-overlay { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 1rem; }
+    .sw-modal-overlay.open { display: flex; }
+    .sw-modal { background: var(--sw-dark); border: 1px solid var(--sw-border); max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+    .sw-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--sw-border); }
+    .sw-modal-title { font-family: var(--sw-font-h); font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .sw-modal-close { background: transparent; border: none; color: var(--sw-text-muted); cursor: pointer; font-size: 1.2rem; padding: 0.25rem; transition: color 0.2s; }
+    .sw-modal-close:hover { color: var(--sw-red); }
+    .sw-modal-body { padding: 1.25rem; }
+    .applicant-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .applicant-row:last-child { border-bottom: none; }
+    .applicant-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--sw-steel); object-fit: cover; }
+    .applicant-info { flex: 1; }
+    .applicant-name { font-family: var(--sw-font-m); font-size: 0.78rem; }
+    .applicant-email { font-family: var(--sw-font-m); font-size: 0.62rem; color: var(--sw-text-muted); }
+    .status-badge { font-family: var(--sw-font-m); font-size: 0.58rem; letter-spacing: 0.1em; padding: 2px 8px; border: 1px solid; }
+    .status-badge.pending  { border-color: rgba(234,179,8,0.4); color: #fbbf24; }
+    .status-badge.accepted { border-color: rgba(34,197,94,0.4); color: #4ade80; }
+    .status-badge.rejected { border-color: rgba(239,68,68,0.4); color: #f87171; }
   </style>
 </head>
-<body>
-  <nav class="navbar">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-      <div class="navbar-brand">
-        <a href="/" style="text-decoration:none; display:flex; align-items:center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px; margin-right: 10px;"><span style="color:var(--accent-red); background:none; -webkit-text-fill-color:var(--accent-red);">Panel Admin</span></a>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <nav class="sw-nav scrolled">
+    <div class="sw-nav__inner">
+      <a href="/" style="display:flex;align-items:center;">
+        <img src="/img/logo blanco.png" alt="Logo" style="height:34px;">
+      </a>
+      <div class="sw-nav__links">
+        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
+        <span class="sw-pulse" style="margin-right:0.5rem;"></span>
+        <span style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-red);letter-spacing:0.15em;margin-right:0.75rem;">PANEL ADMIN</span>
+        <a href="/dashboard.html" class="sw-nav__link">Mi Perfil</a>
+        <a href="#" onclick="window.app.logout();return false;" class="sw-nav__link">Salir</a>
       </div>
-      <div class="navbar-links">
-        <a href="/dashboard.html">Mi Perfil</a>
-        <a href="#" onclick="window.app.logout(); return false;">Cerrar Sesión</a>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
 
-  <div class="page-wrapper container" style="margin-top: 30px;">
-    
-    <div class="admin-nav">
-      <button class="btn active" onclick="switchTab('users')">Pasantes & Tokens</button>
-      <button class="btn" onclick="switchTab('projects')">Proyectos</button>
-      <button class="btn" onclick="switchTab('news')">Noticias</button>
-      <button class="btn" onclick="switchTab('chat')">Comunicaciones</button>
+  <div class="admin-layout">
+
+    <!-- Tabs de navegación -->
+    <div class="tac-tabs">
+      <button class="tac-tab active" onclick="switchTab('users', this)">Pasantes &amp; Tokens</button>
+      <button class="tac-tab" onclick="switchTab('projects', this)">Proyectos</button>
+      <button class="tac-tab" onclick="switchTab('news', this)">Noticias</button>
+      <button class="tac-tab" onclick="switchTab('chat', this)">Chat</button>
     </div>
 
-    <!-- TAB: USUARIOS Y TOKENS -->
+    <!-- ════════ TAB: USUARIOS ════════ -->
     <div id="tab-users" class="tab-content active">
-      <div class="card" style="margin-bottom: 20px;">
-        <div class="card-header"><span class="card-title">Generar Token de Validación</span></div>
-        <form id="gen-token-form" class="form-inline">
-          <div class="form-group">
-            <input type="email" id="token-email" class="form-input" placeholder="Email del pasante (Opcional)">
+
+      <!-- Generar Token -->
+      <div class="tac-card">
+        <div class="tac-card-title">Generar Token de Validación</div>
+        <form id="gen-token-form" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label class="tac-label">Email del pasante (opcional)</label>
+            <input type="email" id="token-email" class="tac-input" style="margin:0;" placeholder="pasante@email.com">
           </div>
-          <button type="submit" class="btn btn-danger">Generar Token</button>
+          <button type="submit" class="sw-btn sw-btn--primary">GENERAR TOKEN</button>
         </form>
-        <div id="new-token-display" style="margin-top:15px; font-family:var(--font-mono); color:var(--accent-cyan); font-size:1.2rem; display:none;"></div>
+        <div class="token-display" id="new-token-display"></div>
       </div>
 
-      <div class="card">
-        <div class="card-header"><span class="card-title">Usuarios Pendientes de Validación</span></div>
-        <div class="table-wrapper">
-          <table class="table">
-            <thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Acción</th></tr></thead>
+      <!-- Usuarios pendientes de validación -->
+      <div class="tac-card">
+        <div class="tac-card-title">Usuarios Pendientes de Validación</div>
+        <div style="overflow-x:auto;">
+          <table class="tac-table">
+            <thead>
+              <tr><th>Nombre</th><th>Email</th><th>Registrado</th><th>Email Ver.</th><th>Acción</th></tr>
+            </thead>
             <tbody id="pending-users-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Todos los usuarios -->
+      <div class="tac-card">
+        <div class="tac-card-title">Todos los Usuarios</div>
+        <div style="overflow-x:auto;">
+          <table class="tac-table">
+            <thead>
+              <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Validado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="all-users-table"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB: PROYECTOS -->
+    <!-- ════════ TAB: PROYECTOS ════════ -->
     <div id="tab-projects" class="tab-content">
-      <div class="card" style="margin-bottom: 20px;">
-        <div class="card-header"><span class="card-title">Publicar Proyecto</span></div>
+
+      <!-- Formulario Nuevo Proyecto -->
+      <div class="tac-card">
+        <div class="tac-card-title">Publicar Nuevo Proyecto</div>
         <form id="project-form">
-          <div class="form-group"><label class="form-label">Título</label><input type="text" id="p-title" class="form-input" required></div>
-          <div class="form-group"><label class="form-label">Descripción</label><textarea id="p-desc" class="form-input" rows="3" required></textarea></div>
-          <div class="form-inline">
-            <div class="form-group"><label class="form-label">Inicio</label><input type="datetime-local" id="p-start" class="form-input" required></div>
-            <div class="form-group"><label class="form-label">Fin</label><input type="datetime-local" id="p-end" class="form-input" required></div>
+          <label class="tac-label">Título *</label>
+          <input type="text" id="p-title" class="tac-input" required placeholder="Nombre del proyecto">
+
+          <label class="tac-label">Descripción *</label>
+          <textarea id="p-desc" class="tac-input" rows="4" required placeholder="Detalle del proyecto..."></textarea>
+
+          <div class="form-row">
+            <div>
+              <label class="tac-label">Fecha de Inicio (opcional)</label>
+              <input type="datetime-local" id="p-start" class="tac-input">
+            </div>
+            <div>
+              <label class="tac-label">Fecha de Cierre (opcional)</label>
+              <input type="datetime-local" id="p-end" class="tac-input">
+            </div>
           </div>
-          <div class="form-group"><label class="form-label">Link Conferencia</label><input type="url" id="p-link" class="form-input"></div>
-          <button type="submit" class="btn btn-primary">Publicar</button>
+
+          <label class="tac-label">Tags Requeridos (Aptitudes)</label>
+          <div id="p-tags" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="Programacion"> Programacion</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="Diseño Grafico"> Diseño Grafico</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="Redes Sociales"> Redes Sociales</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="Edicion de Videos"> Edicion de Videos</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="QA"> QA</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="Marketing"> Marketing</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"><input type="checkbox" name="ptags" value="IT (Soporte técnico)"> IT (Soporte técnico)</label>
+          </div>
+
+          <label class="tac-label">Link de Conferencia (opcional)</label>
+          <input type="url" id="p-link" class="tac-input" placeholder="https://meet.google.com/...">
+
+          <label class="tac-label">Imagen del Proyecto (opcional)</label>
+          <input type="file" id="p-image" class="tac-input" accept="image/*" style="cursor:pointer;">
+          <div id="p-image-preview" style="display:none; margin-bottom:0.75rem;">
+            <img id="p-preview-img" style="max-width:100%; max-height:160px; border:1px solid var(--sw-border);" alt="Preview">
+          </div>
+
+          <button type="submit" class="sw-btn sw-btn--primary">PUBLICAR PROYECTO</button>
         </form>
+      </div>
+
+      <!-- Lista de proyectos publicados -->
+      <div class="tac-card">
+        <div class="tac-card-title">Proyectos Publicados</div>
+        <div id="projects-list" class="pub-list">
+          <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+        </div>
       </div>
     </div>
 
-    <!-- TAB: NOTICIAS -->
+    <!-- ════════ TAB: NOTICIAS ════════ -->
     <div id="tab-news" class="tab-content">
-      <div class="card" style="margin-bottom: 20px;">
-        <div class="card-header"><span class="card-title">Publicar Noticia</span></div>
+
+      <!-- Formulario Nueva Noticia -->
+      <div class="tac-card">
+        <div class="tac-card-title">Publicar Noticia</div>
         <form id="news-form">
-          <div class="form-group"><label class="form-label">Título</label><input type="text" id="n-title" class="form-input" required></div>
-          <div class="form-group"><label class="form-label">Contenido</label><textarea id="n-content" class="form-input" rows="5" required></textarea></div>
-          <button type="submit" class="btn btn-primary">Publicar Noticia</button>
+          <label class="tac-label">Título *</label>
+          <input type="text" id="n-title" class="tac-input" required placeholder="Título de la noticia">
+
+          <label class="tac-label">Contenido *</label>
+          <textarea id="n-content" class="tac-input" rows="6" required placeholder="Contenido de la noticia..."></textarea>
+
+          <label class="tac-label">Imagen de portada (opcional)</label>
+          <input type="file" id="n-image" class="tac-input" accept="image/*" style="cursor:pointer;">
+          <div id="n-image-preview" style="display:none; margin-bottom:0.75rem;">
+            <img id="n-preview-img" style="max-width:100%; max-height:160px; border:1px solid var(--sw-border);" alt="Preview">
+          </div>
+
+          <button type="submit" class="sw-btn sw-btn--primary">PUBLICAR NOTICIA</button>
         </form>
+      </div>
+
+      <!-- Lista de noticias publicadas -->
+      <div class="tac-card">
+        <div class="tac-card-title">Noticias Publicadas</div>
+        <div id="news-list" class="pub-list">
+          <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+        </div>
       </div>
     </div>
 
-    <!-- TAB: CHAT -->
+    <!-- ════════ TAB: CHAT ════════ -->
     <div id="tab-chat" class="tab-content">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Chat con Pasantes (Envío de Tokens)</span></div>
-        <div style="display:flex; gap:20px; height: 500px;">
-          <div style="flex:1; border-right:1px solid var(--border-color); overflow-y:auto; padding-right:10px;" id="chat-users-admin"></div>
-          <div style="flex:2; display:flex; flex-direction:column;">
-            <div id="chat-messages-admin" style="flex:1; background:var(--bg-secondary); border-radius:var(--radius-sm); padding:15px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;"></div>
-            <form id="chat-form-admin" style="display:flex; gap:10px;">
-              <input type="text" id="chat-input-admin" class="form-input" placeholder="Escribe un mensaje o pega un token..." required disabled>
-              <button type="submit" class="btn btn-primary" id="chat-btn-admin" disabled>Enviar</button>
+      <div class="tac-card">
+        <div class="tac-card-title">Chat con Pasantes</div>
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:16px;">
+          <div>
+            <div style="font-family:var(--sw-font-m);font-size:0.58rem;letter-spacing:0.15em;color:var(--sw-text-muted);text-transform:uppercase;margin-bottom:0.5rem;">Usuarios</div>
+            <div id="chat-users-admin" style="display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="chat-box" id="chat-messages-admin">
+              <span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Selecciona un usuario</span>
+            </div>
+            <form id="chat-form-admin" style="display:flex;gap:8px;">
+              <input type="text" id="chat-input-admin" class="tac-input" style="margin:0;flex:1;" placeholder="Escribe o pega un token..." disabled>
+              <button type="submit" class="sw-btn sw-btn--primary" id="chat-btn-admin" disabled>ENVIAR</button>
             </form>
           </div>
         </div>
       </div>
     </div>
 
+  </div><!-- /admin-layout -->
+
+  <!-- ════════ MODAL: POSTULADOS ════════ -->
+  <div id="modal-applicants" class="sw-modal-overlay" onclick="closeModal(event)">
+    <div class="sw-modal">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title" id="modal-applicants-title">Postulados</span>
+        <button class="sw-modal-close" onclick="closeModalById('modal-applicants')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body" id="modal-applicants-body">
+        <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+      </div>
+    </div>
   </div>
+
+  <!-- ════════ MODAL: EDITAR PROYECTO ════════ -->
+  <div id="modal-edit-project" class="sw-modal-overlay" onclick="closeModal(event)">
+    <div class="sw-modal">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title">Editar Proyecto</span>
+        <button class="sw-modal-close" onclick="closeModalById('modal-edit-project')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body">
+        <input type="hidden" id="edit-p-id">
+        <label class="tac-label">Título</label>
+        <input type="text" id="edit-p-title" class="tac-input">
+        <label class="tac-label">Descripción</label>
+        <textarea id="edit-p-desc" class="tac-input" rows="4"></textarea>
+        <label class="tac-label">Estado</label>
+        <select id="edit-p-status" class="tac-input" style="background:var(--sw-black);color:var(--sw-white);">
+          <option value="open">Abierto</option>
+          <option value="in_progress">En Progreso</option>
+          <option value="closed">Cerrado</option>
+        </select>
+        <label class="tac-label">Link Conferencia</label>
+        <input type="url" id="edit-p-link" class="tac-input">
+        <div style="margin-top:1rem;">
+          <button class="sw-btn sw-btn--primary" onclick="saveEditProject()">GUARDAR CAMBIOS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODAL: EDITAR NOTICIA ════════ -->
+  <div id="modal-edit-news" class="sw-modal-overlay" onclick="closeModal(event)">
+    <div class="sw-modal">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title">Editar Noticia</span>
+        <button class="sw-modal-close" onclick="closeModalById('modal-edit-news')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body">
+        <input type="hidden" id="edit-n-id">
+        <label class="tac-label">Título</label>
+        <input type="text" id="edit-n-title" class="tac-input">
+        <label class="tac-label">Contenido</label>
+        <textarea id="edit-n-content" class="tac-input" rows="6"></textarea>
+        <div style="margin-top:1rem;">
+          <button class="sw-btn sw-btn--primary" onclick="saveEditNews()">GUARDAR CAMBIOS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODAL: PERFIL PASANTE ════════ -->
+  <div id="modal-user-profile" class="sw-modal-overlay" onclick="closeModal(event)">
+    <div class="sw-modal">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title">Perfil del Pasante</span>
+        <button class="sw-modal-close" onclick="closeModalById('modal-user-profile')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body" id="modal-user-profile-body">
+        <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <span class="sw-footer__copy">© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
+      <div class="sw-footer__status"><span class="sw-pulse"></span> Sistema en línea</div>
+    </div>
+  </footer>
 
   <script src="/js/api.js"></script>
   <script src="/js/app.js"></script>
   <script>
     let currentChatUser = null;
+    let currentAdminUser = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const userStr = localStorage.getItem('sw_user');
       if (!userStr) return window.location.href = '/login.html';
       const user = JSON.parse(userStr);
       if (user.role !== 'admin' && user.role !== 'ceo') return window.location.href = '/dashboard.html';
-      
+      currentAdminUser = user;
       loadPendingUsers();
+      loadAllUsers();
       loadChatUsers();
+      loadProjectsList();
+      loadNewsList();
     });
 
-    function switchTab(tabId) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.admin-nav .btn').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tac-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active');
-      event.currentTarget.classList.add('active');
+      btn.classList.add('active');
     }
 
-    // Generar Token
+    // ── GENERAR TOKEN ──────────────────────────────────
     document.getElementById('gen-token-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('token-email').value;
       try {
-        const res = await window.api.fetch('/admin/tokens/generate', { method: 'POST', body: { assigned_to_email: email } });
+        const res = await window.api.fetch('/admin/tokens/generate', {
+          method: 'POST', body: { assigned_to_email: email || null }
+        });
         const display = document.getElementById('new-token-display');
         display.style.display = 'block';
-        display.innerHTML = `Token Generado: <span style="user-select:all; background:#000; padding:5px;">${res.token}</span><br><span style="font-size:0.7rem;color:var(--text-muted);">Cópialo y envíalo por el chat</span>`;
+        display.innerHTML = `TOKEN GENERADO: <span style="user-select:all;color:#fff;">${res.token}</span>
+          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:6px;letter-spacing:0.08em;">Cópialo y envíalo al pasante por el chat</div>`;
+        window.app.showToast('Token generado');
       } catch (err) { window.app.showToast(err.message, true); }
     });
 
+    // ── USUARIOS PENDIENTES ────────────────────────────
     async function loadPendingUsers() {
       try {
         const res = await window.api.fetch('/admin/users/pending');
         const tbody = document.getElementById('pending-users-table');
+        if (!res.users || res.users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios pendientes</td></tr>';
+          return;
+        }
         tbody.innerHTML = res.users.map(u => `
           <tr>
-            <td>${u.name}</td><td>${u.email}</td><td>${new Date(u.created_at).toLocaleDateString()}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="switchTab('chat'); openChat(${u.id}, '${u.name}')">Abrir Chat</button></td>
+            <td>${u.name}</td>
+            <td style="color:var(--sw-text-muted);">${u.email}</td>
+            <td>${new Date(u.created_at).toLocaleDateString('es-AR')}</td>
+            <td><span class="tac-badge ${parseInt(u.is_email_verified)?'ok':'warn'}">${parseInt(u.is_email_verified)?'SÍ':'NO'}</span></td>
+            <td>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="goToChat(${u.id},'${u.name}')">CHAT</button>
+            </td>
           </tr>
         `).join('');
       } catch (err) {}
     }
 
-    // Crear Proyecto
+    // ── TODOS LOS USUARIOS ────────────────────────────
+    async function loadAllUsers() {
+      try {
+        const res = await window.api.fetch('/admin/users');
+        const tbody = document.getElementById('all-users-table');
+        if (!res.users || res.users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios</td></tr>';
+          return;
+        }
+        tbody.innerHTML = res.users.map(u => `
+          <tr>
+            <td>${u.name}</td>
+            <td style="color:var(--sw-text-muted);font-size:0.7rem;">${u.email}</td>
+            <td>
+              <select class="tac-input" style="margin:0;padding:0.25rem 0.4rem;font-size:0.65rem;" onchange="changeRole(${u.id}, this.value)">
+                <option ${u.role==='pasante'?'selected':''}>pasante</option>
+                <option ${u.role==='admin'?'selected':''}>admin</option>
+                <option ${u.role==='ceo'?'selected':''}>ceo</option>
+              </select>
+            </td>
+            <td><span class="tac-badge ${parseInt(u.is_token_validated)?'ok':'warn'}">${parseInt(u.is_token_validated)?'SÍ':'NO'}</span></td>
+            <td>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteUser(${u.id})" style="border-color:rgba(239,68,68,0.4);color:#f87171;">ELIMINAR</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {}
+    }
+
+    window.changeRole = async function(userId, role) {
+      try {
+        await window.api.fetch(`/admin/users/${userId}/role`, { method: 'PUT', body: { role } });
+        window.app.showToast('Rol actualizado');
+      } catch (err) { window.app.showToast(err.message, true); }
+    };
+
+    window.deleteUser = async function(userId) {
+      if (!confirm('¿Eliminar este usuario?')) return;
+      try {
+        await window.api.fetch(`/admin/users/${userId}`, { method: 'DELETE' });
+        loadAllUsers(); loadPendingUsers();
+        window.app.showToast('Usuario eliminado');
+      } catch (err) { window.app.showToast(err.message, true); }
+    };
+
+    // ── PUBLICAR PROYECTO ─────────────────────────────
     document.getElementById('project-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const body = {
-        title: document.getElementById('p-title').value,
-        description: document.getElementById('p-desc').value,
-        start_date: document.getElementById('p-start').value,
-        end_date: document.getElementById('p-end').value,
-        conf_link: document.getElementById('p-link').value
-      };
+      const btn = e.target.querySelector('button');
+      btn.innerText = 'PUBLICANDO...'; btn.disabled = true;
       try {
-        await window.api.fetch('/admin/projects', { method: 'POST', body });
-        window.app.showToast('Proyecto publicado');
+        // Subir imagen si fue seleccionada
+        let mediaFileIds = [];
+        const imgFile = document.getElementById('p-image').files[0];
+        if (imgFile) {
+          const formData = new FormData();
+          formData.append('file', imgFile);
+          const uploadRes = await window.api.fetch('/admin/upload', { method: 'POST', body: formData });
+          if (uploadRes.file_id) mediaFileIds = [uploadRes.file_id];
+        }
+
+        const tagsCheckboxes = document.querySelectorAll('input[name="ptags"]:checked');
+        const requiredTags = Array.from(tagsCheckboxes).map(cb => cb.value);
+
+        await window.api.fetch('/admin/projects', {
+          method: 'POST',
+          body: {
+            title: document.getElementById('p-title').value,
+            description: document.getElementById('p-desc').value,
+            required_tags: requiredTags,
+            start_date: document.getElementById('p-start').value || null,
+            end_date: document.getElementById('p-end').value || null,
+            conf_link: document.getElementById('p-link').value || null,
+            media_file_ids: mediaFileIds,
+          }
+        });
+        window.app.showToast('Proyecto publicado correctamente');
         e.target.reset();
+        document.getElementById('p-image-preview').style.display = 'none';
       } catch (err) { window.app.showToast(err.message, true); }
+      btn.innerText = 'PUBLICAR PROYECTO'; btn.disabled = false;
     });
 
-    // Crear Noticia
+    // Preview imagen proyecto
+    document.getElementById('p-image').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        document.getElementById('p-preview-img').src = URL.createObjectURL(file);
+        document.getElementById('p-image-preview').style.display = 'block';
+      }
+    });
+
+    // ── PUBLICAR NOTICIA ──────────────────────────────
     document.getElementById('news-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.innerText = 'PUBLICANDO...'; btn.disabled = true;
       try {
-        await window.api.fetch('/admin/news', { method: 'POST', body: {
-          title: document.getElementById('n-title').value,
-          content: document.getElementById('n-content').value
-        }});
-        window.app.showToast('Noticia publicada');
+        // Subir imagen de portada si fue seleccionada
+        let coverFileId = null;
+        const imgFile = document.getElementById('n-image').files[0];
+        if (imgFile) {
+          const formData = new FormData();
+          formData.append('file', imgFile);
+          const uploadRes = await window.api.fetch('/admin/upload', { method: 'POST', body: formData });
+          coverFileId = uploadRes.file_id || null;
+        }
+
+        await window.api.fetch('/admin/news', {
+          method: 'POST',
+          body: {
+            title: document.getElementById('n-title').value,
+            content: document.getElementById('n-content').value,
+            cover_file_id: coverFileId,
+          }
+        });
+        window.app.showToast('Noticia publicada correctamente');
         e.target.reset();
+        document.getElementById('n-image-preview').style.display = 'none';
       } catch (err) { window.app.showToast(err.message, true); }
+      btn.innerText = 'PUBLICAR NOTICIA'; btn.disabled = false;
     });
 
-    // CHAT
+    // Preview imagen noticia
+    document.getElementById('n-image').addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        document.getElementById('n-preview-img').src = URL.createObjectURL(file);
+        document.getElementById('n-image-preview').style.display = 'block';
+      }
+    });
+
+    // ── CHAT ──────────────────────────────────────────
     async function loadChatUsers() {
       try {
         const res = await window.api.fetch('/chat/users');
         const list = document.getElementById('chat-users-admin');
-        list.innerHTML = res.users.map(u => `
-          <div style="padding:10px; cursor:pointer; border-radius:var(--radius-sm); transition:background 0.2s;" class="chat-user-item" onclick="openChat(${u.id}, '${u.name}')">
-            <strong>${u.name}</strong> <br><span style="font-size:0.7rem; color:var(--text-muted);">${u.email}</span>
+        list.innerHTML = (res.users || []).map(u => `
+          <div class="chat-user-item" onclick="openAdminChat(${u.id}, '${u.name}', this)">
+            <div>${u.name}</div>
+            <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${u.email}</div>
           </div>
-        `).join('');
-      } catch(err) {}
+        `).join('') || '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
+      } catch (err) {}
     }
 
-    window.openChat = async function(userId, userName) {
+    window.goToChat = function(userId, userName) {
+      document.querySelectorAll('.tac-tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-chat').classList.add('active');
+      document.querySelectorAll('.tac-tab')[3].classList.add('active');
+      // Buscar el item en la lista
+      setTimeout(() => {
+        const items = document.querySelectorAll('#chat-users-admin .chat-user-item');
+        items.forEach(item => {
+          if (item.textContent.includes(userName)) {
+            item.click();
+          }
+        });
+      }, 100);
+    };
+
+    window.openAdminChat = async function(userId, userName, el) {
       currentChatUser = userId;
+      document.querySelectorAll('#chat-users-admin .chat-user-item').forEach(x => x.classList.remove('active'));
+      if (el) el.classList.add('active');
       document.getElementById('chat-input-admin').disabled = false;
       document.getElementById('chat-btn-admin').disabled = false;
-      document.querySelectorAll('.chat-user-item').forEach(el => el.style.background = 'transparent');
-      if(event && event.currentTarget) event.currentTarget.style.background = 'var(--bg-input)';
-      
       try {
         const res = await window.api.fetch(`/chat/${userId}`);
         const box = document.getElementById('chat-messages-admin');
-        const myUser = JSON.parse(localStorage.getItem('sw_user'));
-        box.innerHTML = res.messages.map(m => {
-          const isMe = m.sender_id === myUser.id;
-          return `<div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'var(--gradient-danger)' : 'var(--bg-card)'}; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; color: #fff;">${m.content}</div>`;
-        }).join('');
-        box.scrollTop = box.scrollHeight;
-      } catch(err) {}
-    }
+        if (!res.messages || res.messages.length === 0) {
+          box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${userName}</span>`;
+        } else {
+          const myId = currentAdminUser.id;
+          box.innerHTML = res.messages.map(m => {
+            const isMe = m.sender_id === myId || m.sender_id === 9999;
+            return `<div class="${isMe ? 'chat-msg-me' : 'chat-msg-other'}">${m.content}</div>`;
+          }).join('');
+          box.scrollTop = box.scrollHeight;
+        }
+      } catch (err) {}
+    };
 
     document.getElementById('chat-form-admin').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if(!currentChatUser) return;
+      if (!currentChatUser) return;
       const input = document.getElementById('chat-input-admin');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
       try {
-        await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: input.value } });
-        input.value = '';
-        openChat(currentChatUser, ''); 
-      } catch(err) { window.app.showToast(err.message, true); }
+        await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: text } });
+        window.openAdminChat(currentChatUser, '', null);
+      } catch (err) { window.app.showToast(err.message, true); }
     });
+
+    // ══════════════════════════════════════════
+    // MODAL HELPERS
+    // ══════════════════════════════════════════
+    function closeModal(event) {
+      if (event.target.classList.contains('sw-modal-overlay')) {
+        event.target.classList.remove('open');
+      }
+    }
+    function closeModalById(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+    function openModalById(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    // ══════════════════════════════════════════
+    // LISTA DE PROYECTOS
+    // ══════════════════════════════════════════
+    async function loadProjectsList() {
+      const list = document.getElementById('projects-list');
+      try {
+        const res = await window.api.fetch('/admin/projects?limit=50');
+        const projects = res.projects || [];
+        if (!projects.length) {
+          list.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados.</p>';
+          return;
+        }
+        const statusMap = { open: 'ABIERTO', in_progress: 'EN PROGRESO', closed: 'CERRADO' };
+        list.innerHTML = projects.map(p => `
+          <div class="pub-item">
+            <div class="pub-item-info">
+              <div class="pub-item-title">${p.title}</div>
+              <div class="pub-item-meta">
+                ${statusMap[p.status] || p.status.toUpperCase()} &nbsp;·&nbsp;
+                ${new Date(p.created_at).toLocaleDateString('es-AR')} &nbsp;·&nbsp;
+                ${p.applicant_count || 0} postulado(s)
+              </div>
+            </div>
+            <div class="pub-item-actions">
+              <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id},'${encodeURIComponent(p.title)}','${encodeURIComponent(p.description)}','${p.status}','${p.conf_link||''}')">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando proyectos.</p>';
+      }
+    }
+
+    function openEditProject(id, title, desc, status, link) {
+      document.getElementById('edit-p-id').value = id;
+      document.getElementById('edit-p-title').value = decodeURIComponent(title);
+      document.getElementById('edit-p-desc').value = decodeURIComponent(desc);
+      document.getElementById('edit-p-status').value = status;
+      document.getElementById('edit-p-link').value = link || '';
+      openModalById('modal-edit-project');
+    }
+
+    async function saveEditProject() {
+      const id = document.getElementById('edit-p-id').value;
+      try {
+        await window.api.fetch(`/admin/projects/${id}`, {
+          method: 'PUT',
+          body: {
+            title: document.getElementById('edit-p-title').value,
+            description: document.getElementById('edit-p-desc').value,
+            status: document.getElementById('edit-p-status').value,
+            conf_link: document.getElementById('edit-p-link').value || null,
+          }
+        });
+        window.app.showToast('Proyecto actualizado');
+        closeModalById('modal-edit-project');
+        loadProjectsList();
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    async function deleteProject(id) {
+      if (!confirm('¿Eliminar este proyecto? Esta acción no se puede deshacer.')) return;
+      try {
+        await window.api.fetch(`/admin/projects/${id}`, { method: 'DELETE' });
+        window.app.showToast('Proyecto eliminado');
+        loadProjectsList();
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    // ══════════════════════════════════════════
+    // POSTULADOS DE UN PROYECTO
+    // ══════════════════════════════════════════
+    async function openApplicants(projectId, titleEncoded) {
+      document.getElementById('modal-applicants-title').innerText = `Postulados — ${decodeURIComponent(titleEncoded)}`;
+      const body = document.getElementById('modal-applicants-body');
+      body.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+      openModalById('modal-applicants');
+
+      try {
+        const res = await window.api.fetch(`/admin/projects/${projectId}/applications`);
+        const apps = res.applications || [];
+        if (!apps.length) {
+          body.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Aún no hay postulados.</p>';
+          return;
+        }
+        body.innerHTML = apps.map(a => `
+          <div class="applicant-row">
+            <img class="applicant-avatar" src="${a.avatar_file_id ? '/api/media/' + a.avatar_file_id : 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>'}" alt="Avatar" onerror="this.style.display='none'">
+            <div class="applicant-info">
+              <div class="applicant-name">${a.name}</div>
+              <div class="applicant-email">${a.email}</div>
+            </div>
+            <span class="status-badge ${a.status}">${a.status.toUpperCase()}</span>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="viewUserProfile(${a.user_id})">PERFIL</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" style="color:#4ade80;border-color:rgba(74,222,128,0.3);" onclick="updateAppStatus(${a.id},'accepted')"><i class="fa-solid fa-check"></i></button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" style="color:#f87171;border-color:rgba(248,113,113,0.3);" onclick="updateAppStatus(${a.id},'rejected')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando postulados.</p>';
+      }
+    }
+
+    async function updateAppStatus(appId, status) {
+      try {
+        await window.api.fetch(`/admin/applications/${appId}/status`, { method: 'PATCH', body: { status } });
+        window.app.showToast(status === 'accepted' ? 'Postulante aceptado' : 'Postulante rechazado');
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    // ══════════════════════════════════════════
+    // PERFIL DE PASANTE (con CV)
+    // ══════════════════════════════════════════
+    async function viewUserProfile(userId) {
+      const body = document.getElementById('modal-user-profile-body');
+      body.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+      openModalById('modal-user-profile');
+      try {
+        const res = await window.api.fetch(`/users/${userId}/profile`);
+        const u = res.user;
+        const tags = (u.tags || []).map(t => `<span style="font-family:var(--sw-font-m);font-size:0.6rem;padding:2px 8px;border:1px solid var(--sw-border);margin:2px;">${t}</span>`).join('');
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+            ${u.avatar_url ? `<img src="${u.avatar_url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);" alt="Avatar">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--sw-steel);border:1px solid var(--sw-border);"></div>'}
+            <div>
+              <div style="font-family:var(--sw-font-h);font-size:1.5rem;font-weight:800;text-transform:uppercase;">${u.name}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">${u.email}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-red);letter-spacing:0.1em;margin-top:2px;">${u.role.toUpperCase()}</div>
+            </div>
+          </div>
+          ${tags ? `<div style="margin-bottom:1rem;"><div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">APTITUDES</div>${tags}</div>` : ''}
+          <div style="margin-bottom:1rem;">
+            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">CURRICULUM VITAE</div>
+            ${u.cv_url
+              ? `<a href="${u.cv_url}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm"><i class="fa-solid fa-file-lines"></i> VER / DESCARGAR CV</a>`
+              : '<span style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Sin CV cargado</span>'
+            }
+          </div>
+          <div>
+            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);letter-spacing:0.1em;">Miembro desde ${new Date(u.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'})}</div>
+          </div>
+        `;
+      } catch (err) {
+        body.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando perfil.</p>';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // LISTA DE NOTICIAS
+    // ══════════════════════════════════════════
+    async function loadNewsList() {
+      const list = document.getElementById('news-list');
+      try {
+        const res = await fetch('/api/public/news?limit=50');
+        const data = await res.json();
+        const news = data.news || [];
+        if (!news.length) {
+          list.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay noticias publicadas.</p>';
+          return;
+        }
+        list.innerHTML = news.map(n => `
+          <div class="pub-item">
+            ${n.cover_url ? `<img src="${n.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Cover">` : ''}
+            <div class="pub-item-info">
+              <div class="pub-item-title">${n.title}</div>
+              <div class="pub-item-meta">${new Date(n.created_at).toLocaleDateString('es-AR')} &nbsp;·&nbsp; Por ${n.author}</div>
+            </div>
+            <div class="pub-item-actions">
+              <a href="/news.html?id=${n.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditNews(${n.id},'${encodeURIComponent(n.title)}','${encodeURIComponent(n.content)}')">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteNews(${n.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando noticias.</p>';
+      }
+    }
+
+    function openEditNews(id, title, content) {
+      document.getElementById('edit-n-id').value = id;
+      document.getElementById('edit-n-title').value = decodeURIComponent(title);
+      document.getElementById('edit-n-content').value = decodeURIComponent(content);
+      openModalById('modal-edit-news');
+    }
+
+    async function saveEditNews() {
+      const id = document.getElementById('edit-n-id').value;
+      try {
+        await window.api.fetch(`/admin/news/${id}`, {
+          method: 'PUT',
+          body: {
+            title: document.getElementById('edit-n-title').value,
+            content: document.getElementById('edit-n-content').value,
+          }
+        });
+        window.app.showToast('Noticia actualizada');
+        closeModalById('modal-edit-news');
+        loadNewsList();
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
+    async function deleteNews(id) {
+      if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return;
+      try {
+        await window.api.fetch(`/admin/news/${id}`, { method: 'DELETE' });
+        window.app.showToast('Noticia eliminada');
+        loadNewsList();
+      } catch (err) { window.app.showToast(err.message, true); }
+    }
+
   </script>
 </body>
 </html>

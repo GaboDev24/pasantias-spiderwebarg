@@ -34,7 +34,9 @@ async function fetchAPI(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || 'Error en la petición');
+    const error = new Error(data.error || 'Error en la petición');
+    error.status = response.status;
+    throw error;
   }
 
   return data;

@@ -11,6 +11,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
 router.get('/users', requireAdmin, adminCtrl.listAllUsers);
 router.get('/users/pending', requireAdmin, adminCtrl.listPendingUsers);
 router.patch('/users/:userId/role', requireAdmin, adminCtrl.updateUserRole);
+router.put('/users/:userId/role', requireAdmin, adminCtrl.updateUserRole);
 router.delete('/users/:userId', requireAdmin, adminCtrl.deleteUser);
 
 // Tokens de validacion
@@ -23,6 +24,7 @@ router.post('/skills', requireAdmin, adminCtrl.createSkill);
 router.delete('/skills/:skillId', requireAdmin, adminCtrl.deleteSkill);
 
 // Proyectos
+router.get('/projects', requireAdmin, adminCtrl.listProjects);
 router.post('/projects', requireAdmin, adminCtrl.createProject);
 router.put('/projects/:projectId', requireAdmin, adminCtrl.updateProject);
 router.delete('/projects/:projectId', requireAdmin, adminCtrl.deleteProject);

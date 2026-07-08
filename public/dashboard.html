@@ -3,112 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spider-Web ARG | Panel de Pasante</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <title>Spider-Web ARG | Mi Panel</title>
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=3">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .dash-layout {
+      max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2.5rem);
+      display: grid; grid-template-columns: 280px 1fr; gap: 24px;
+      padding-top: 90px; padding-bottom: 50px;
+    }
+    .tac-card {
+      background: var(--sw-dark); border: 1px solid var(--sw-border);
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      padding: 1.5rem; margin-bottom: 1.25rem;
+    }
+    .tac-card-title {
+      font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.2em;
+      color: var(--sw-red); text-transform: uppercase; margin-bottom: 1rem;
+      padding-bottom: 0.75rem; border-bottom: 1px solid var(--sw-border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .tac-card-title::before { content: '//'; opacity: 0.5; }
+    .tac-label {
+      font-family: var(--sw-font-m); font-size: 0.58rem; letter-spacing: 0.15em;
+      color: rgba(163,0,0,0.85); text-transform: uppercase; display: block; margin-bottom: 0.5rem;
+    }
+    .tac-input {
+      width: 100%; background: var(--sw-black); border: 1px solid var(--sw-border);
+      color: var(--sw-white); font-family: var(--sw-font-m); font-size: 0.82rem;
+      padding: 0.65rem 0.9rem; outline: none; margin-bottom: 1rem;
+      clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+      transition: border-color 0.2s;
+    }
+    .tac-input:focus { border-color: var(--sw-red); }
+    .tac-input::placeholder { color: var(--sw-text-muted); }
+    .tac-table { width: 100%; border-collapse: collapse; font-family: var(--sw-font-m); font-size: 0.75rem; }
+    .tac-table th {
+      font-size: 0.6rem; letter-spacing: 0.15em; color: var(--sw-red);
+      text-transform: uppercase; padding: 0.5rem 0.75rem; text-align: left;
+      border-bottom: 1px solid var(--sw-border);
+    }
+    .tac-table td { padding: 0.65rem 0.75rem; color: var(--sw-white); border-bottom: 1px solid rgba(163,0,0,0.06); }
+    .tac-table tr:hover td { background: rgba(163,0,0,0.04); }
+    .tac-badge {
+      font-family: var(--sw-font-m); font-size: 0.58rem; padding: 0.2rem 0.6rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      background: rgba(163,0,0,0.12); border: 1px solid var(--sw-border); color: var(--sw-white);
+    }
+    .tac-badge.ok { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); color: #4ade80; }
+    .tac-badge.warn { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #f87171; }
+    .tac-avatar {
+      width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--sw-border); display: block; margin: 0 auto 1rem;
+    }
+    .chat-box {
+      background: var(--sw-black); border: 1px solid var(--sw-border); height: 260px;
+      overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .chat-msg-me { align-self: flex-end; background: rgba(163,0,0,0.15); border: 1px solid var(--sw-border); padding: 0.5rem 0.75rem; max-width: 80%; font-family: var(--sw-font-m); font-size: 0.78rem; }
+    .chat-msg-other { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 0.5rem 0.75rem; max-width: 80%; font-family: var(--sw-font-m); font-size: 0.78rem; }
+    .chat-user-item { padding: 0.6rem 0.75rem; cursor: pointer; border: 1px solid transparent; font-family: var(--sw-font-m); font-size: 0.75rem; transition: all 0.2s; }
+    .chat-user-item:hover, .chat-user-item.active { border-color: var(--sw-border); background: rgba(163,0,0,0.06); color: var(--sw-red); }
+    .section-header { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.2em; color: var(--sw-text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+    @media (max-width: 768px) { .dash-layout { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body>
-  <nav class="navbar">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-      <div class="navbar-brand">
-        <a href="/" style="text-decoration:none; display:flex; align-items:center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px; margin-right: 10px;"><span>Pasantías</span></a>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <nav class="sw-nav scrolled">
+    <div class="sw-nav__inner">
+      <a href="/" style="display: flex; align-items: center;">
+        <img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 34px;">
+      </a>
+      <div class="sw-nav__links">
+        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
+        <span class="sw-pulse" style="margin-right:0.5rem;"></span>
+        <span id="nav-username" style="font-family:var(--sw-font-m); font-size:0.65rem; color:var(--sw-text-muted); margin-right:0.5rem;"></span>
+        <a href="/admin.html" class="sw-nav__link admin-only" style="display:none; color:var(--sw-red);">Admin</a>
+        <a href="#" onclick="window.app.logout(); return false;" class="sw-nav__link">Cerrar Sesión</a>
       </div>
-      <div class="navbar-links">
-        <a href="#" onclick="window.app.logout(); return false;">Cerrar Sesión</a>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
 
-  <div class="page-wrapper">
-    <main class="main-content container">
-      
-      <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 30px;">
-        <!-- SIDEBAR PERFIL -->
-        <aside>
-          <div class="card" style="text-align:center;">
-            <img id="avatar-img" src="https://via.placeholder.com/150" style="width:120px; height:120px; border-radius:50%; object-fit:cover; margin-bottom:15px; border:2px solid var(--accent-cyan);">
-            <h3 id="user-name" style="margin-bottom:5px;">Cargando...</h3>
-            <p id="user-role" style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; margin-bottom:15px;"></p>
-            
-            <div id="validation-status" style="margin-bottom:20px;"></div>
+  <div class="dash-layout">
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="tac-card" style="text-align:center;">
+        <img id="avatar-img" src="https://via.placeholder.com/100" class="tac-avatar">
+        <div style="font-family:var(--sw-font-h); font-size:1.4rem; text-transform:uppercase; margin-bottom:4px;" id="user-name">---</div>
+        <div style="font-family:var(--sw-font-m); font-size:0.62rem; color:var(--sw-red); letter-spacing:0.15em;" id="user-role">---</div>
+        <div id="validation-status" style="margin:1rem 0;"></div>
+        <form id="avatar-form">
+          <label class="tac-label" style="margin-top:0.5rem;">Cambiar foto</label>
+          <input type="file" id="avatar-file" accept="image/*" class="tac-input" style="font-size:0.7rem; cursor:pointer;">
+          <button type="submit" class="sw-btn sw-btn--ghost sw-btn--sm sw-btn--full">Actualizar Avatar</button>
+        </form>
 
-            <form id="avatar-form" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
-              <input type="file" id="avatar-file" accept="image/*" style="font-size:0.7rem; width:100%;">
-              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;">Cambiar Foto</button>
-            </form>
-          </div>
-
-          <div class="card" style="margin-top:20px;">
-            <div class="card-header">
-              <span class="card-title">Mis Tags</span>
-            </div>
-            <div id="tags-container" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
-          </div>
-        </aside>
-
-        <!-- CONTENIDO PRINCIPAL -->
-        <section>
-          
-          <!-- VALIDACION DE TOKEN -->
-          <div class="card" id="token-card" style="margin-bottom:30px; display:none; border-color:var(--accent-red);">
-            <div class="card-header" style="border-bottom-color:rgba(239, 68, 68, 0.2);">
-              <span class="card-title" style="color:var(--accent-red);">Validación Requerida</span>
-            </div>
-            <p style="margin-bottom:15px; font-size:0.9rem;">Necesitas un Token emitido por un CEO para validar tu cuenta y aplicar a proyectos. Pídelo a través del chat.</p>
-            <form id="token-form" class="form-inline">
-              <div class="form-group">
-                <input type="text" id="token-input" class="form-input" placeholder="XXXX-XXXX-XXXX-XXXX" required>
-              </div>
-              <button type="submit" class="btn btn-danger">Validar Cuenta</button>
-            </form>
-          </div>
-
-          <!-- CHAT -->
-          <div class="card" style="margin-bottom:30px;">
-            <div class="card-header">
-              <span class="card-title">Comunicaciones (Chat con CEOs)</span>
-            </div>
-            <div style="display:flex; gap:20px; height: 350px;">
-              <div style="flex:1; border-right:1px solid var(--border-color); overflow-y:auto; padding-right:10px;" id="chat-users">
-                <!-- Lista de CEOs -->
-              </div>
-              <div style="flex:2; display:flex; flex-direction:column;">
-                <div id="chat-messages" style="flex:1; background:var(--bg-secondary); border-radius:var(--radius-sm); padding:15px; overflow-y:auto; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
-                  <p style="text-align:center; color:var(--text-muted); margin-top:auto; margin-bottom:auto;">Selecciona un usuario para chatear</p>
-                </div>
-                <form id="chat-form" style="display:flex; gap:10px;">
-                  <input type="text" id="chat-input" class="form-input" placeholder="Escribe un mensaje..." required disabled>
-                  <button type="submit" class="btn btn-primary" id="chat-btn" disabled>Enviar</button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- MIS POSTULACIONES -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Mis Postulaciones</span>
-            </div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Proyecto</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody id="apps-table">
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </section>
+        <form id="cv-form" style="margin-top:1.5rem; border-top:1px solid var(--sw-border); padding-top:1rem;">
+          <label class="tac-label">Subir CV</label>
+          <input type="file" id="cv-file" accept=".pdf,.doc,.docx" class="tac-input" style="font-size:0.7rem; cursor:pointer;">
+          <button type="submit" class="sw-btn sw-btn--ghost sw-btn--sm sw-btn--full">SUBIR CV</button>
+          <div id="cv-status" style="margin-top:0.5rem; font-family:var(--sw-font-m); font-size:0.6rem; color:var(--sw-text-muted);"></div>
+        </form>
       </div>
 
+      <div class="tac-card">
+        <div class="tac-card-title">Mis Tags</div>
+        <form id="tags-form">
+          <div id="tags-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+            <!-- Checkboxes generados dinamicamente -->
+          </div>
+          <button type="submit" class="sw-btn sw-btn--ghost sw-btn--sm sw-btn--full">ACTUALIZAR TAGS</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <!-- TOKEN CARD -->
+      <div class="tac-card" id="token-card" style="display:none; border-color:rgba(239,68,68,0.35);">
+        <div class="tac-card-title" style="color:#f87171;">Validación de Cuenta Requerida</div>
+        <p style="font-family:var(--sw-font-m); font-size:0.75rem; color:var(--sw-text-muted); margin-bottom:1rem; line-height:1.6;">Tu cuenta aún no fue validada. Contacta a un CEO a través del chat y solicitá tu token de acceso.</p>
+        <form id="token-form" style="display:flex; gap:10px;">
+          <input type="text" id="token-input" class="tac-input" style="margin:0; flex:1;" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+          <button type="submit" class="sw-btn sw-btn--primary">VALIDAR</button>
+        </form>
+      </div>
+
+      <!-- CHAT -->
+      <div class="tac-card" style="margin-bottom:1.25rem;">
+        <div class="tac-card-title" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="document.getElementById('chat-mobile-content').classList.toggle('open'); document.getElementById('chat-mobile-icon').classList.toggle('open');">
+          <span>Chat con CEOs</span>
+          <i id="chat-mobile-icon" class="fa-solid fa-chevron-down chat-mobile-icon"></i>
+        </div>
+        <div id="chat-mobile-content" style="display:grid; grid-template-columns:180px 1fr; gap:16px;" class="chat-grid chat-mobile-content">
+          <div>
+            <div class="section-header">Usuarios</div>
+            <div id="chat-users" style="display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="chat-box" id="chat-messages">
+              <span style="margin:auto; font-family:var(--sw-font-m); font-size:0.7rem; color:var(--sw-text-muted);">Selecciona un usuario</span>
+            </div>
+            <form id="chat-form" style="display:flex; gap:8px;">
+              <input type="text" id="chat-input" class="tac-input" style="margin:0; flex:1;" placeholder="Escribe un mensaje..." disabled>
+              <button type="submit" class="sw-btn sw-btn--primary" id="chat-btn" disabled>ENVIAR</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- POSTULACIONES -->
+      <div class="tac-card">
+        <div class="tac-card-title">Mis Postulaciones</div>
+        <div style="overflow-x:auto;">
+          <table class="tac-table">
+            <thead>
+              <tr><th>Proyecto</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr>
+            </thead>
+            <tbody id="apps-table"></tbody>
+          </table>
+        </div>
+      </div>
     </main>
   </div>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <span class="sw-footer__copy">© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
+      <div class="sw-footer__status"><span class="sw-pulse"></span> Sistema en línea</div>
+    </div>
+  </footer>
 
   <script src="/js/api.js"></script>
   <script src="/js/app.js"></script>
@@ -119,56 +194,116 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const userStr = localStorage.getItem('sw_user');
       if (!userStr) return window.location.href = '/login.html';
-      
+
       try {
         const res = await window.api.fetch('/users/me');
         currentUser = res.user;
+        document.getElementById('nav-username').innerText = currentUser.name;
         renderProfile();
         loadApps();
         loadChatUsers();
       } catch (err) {
-        window.app.logout();
+        if (err.status === 401 || err.status === 403) {
+          window.app.logout();
+        } else {
+          window.app.showToast('Error de conexión con el servidor', true);
+        }
       }
     });
 
     function renderProfile() {
       document.getElementById('user-name').innerText = currentUser.name;
-      document.getElementById('user-role').innerText = currentUser.role;
-      if (currentUser.avatar_url) document.getElementById('avatar-img').src = currentUser.avatar_url;
+      document.getElementById('user-role').innerText = currentUser.role.toUpperCase();
+      const avatarImg = document.getElementById('avatar-img');
+      if (currentUser.avatar_url) {
+        // Agregar cache-buster para forzar recarga
+        avatarImg.src = currentUser.avatar_url + '?t=' + Date.now();
+      } else {
+        avatarImg.src = 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E';
+      }
 
       const vStatus = document.getElementById('validation-status');
-      if (currentUser.is_token_validated) {
-        vStatus.innerHTML = '<span class="badge badge-active">CUENTA VALIDADA</span>';
+      if (parseInt(currentUser.is_token_validated) === 1) {
+        vStatus.innerHTML = '<span class="tac-badge ok">CUENTA VALIDADA</span>';
         document.getElementById('token-card').style.display = 'none';
       } else {
-        vStatus.innerHTML = '<span class="badge badge-inactive">NO VALIDADO</span>';
+        vStatus.innerHTML = '<span class="tac-badge warn">NO VALIDADO</span>';
         document.getElementById('token-card').style.display = 'block';
       }
 
-      const tagsCont = document.getElementById('tags-container');
-      tagsCont.innerHTML = currentUser.tags.length ? currentUser.tags.map(t => `<span class="badge" style="background:var(--bg-glass); border:1px solid var(--border-color);">${t}</span>`).join('') : '<span style="color:var(--text-muted); font-size:0.8rem;">Sin tags asignados</span>';
+      const tagsContainer = document.getElementById('tags-container');
+      const ALL_TAGS = ["Programacion", "Diseño Grafico", "Redes Sociales", "Edicion de Videos", "QA", "Marketing", "IT (Soporte técnico)"];
+      const userTags = currentUser.tags || [];
+      
+      tagsContainer.innerHTML = ALL_TAGS.map(t => {
+        const isChecked = userTags.includes(t) ? 'checked' : '';
+        return `
+          <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;">
+            <input type="checkbox" name="tags" value="${t}" ${isChecked}>
+            ${t}
+          </label>
+        `;
+      }).join('');
+
+      if (currentUser.cv_url) {
+        document.getElementById('cv-status').innerHTML = `<a href="${currentUser.cv_url}" target="_blank" style="color:var(--sw-red);text-decoration:none;"><i class="fa-solid fa-check"></i> CV cargado (Ver actual)</a>`;
+      }
     }
 
-    // Cambiar Foto
-    document.getElementById('avatar-form').addEventListener('submit', async (e) => {
+    document.getElementById('tags-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const file = document.getElementById('avatar-file').files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append('avatar', file);
-
+      const checkboxes = document.querySelectorAll('input[name="tags"]:checked');
+      const tags = Array.from(checkboxes).map(cb => cb.value);
       try {
-        const res = await window.api.fetch('/users/me/avatar', { method: 'POST', body: formData });
-        currentUser.avatar_url = res.avatar_url;
-        renderProfile();
-        window.app.showToast('Foto actualizada');
+        await window.api.fetch('/users/me', {
+          method: 'PATCH',
+          body: { tags }
+        });
+        currentUser.tags = tags;
+        window.app.showToast('Tags actualizados correctamente');
       } catch (err) {
         window.app.showToast(err.message, true);
       }
     });
 
-    // Validar Token
+    document.getElementById('avatar-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('avatar-file').files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('avatar', file);
+      try {
+        const res = await window.api.fetch('/users/me/avatar', { method: 'POST', body: formData });
+        currentUser.avatar_url = res.avatar_url;
+        // Cache-buster para forzar recarga inmediata
+        document.getElementById('avatar-img').src = res.avatar_url + '?t=' + Date.now();
+        window.app.showToast('Foto actualizada');
+      } catch (err) { window.app.showToast(err.message, true); }
+    });
+
+    document.getElementById('cv-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('cv-file').files[0];
+      if (!file) return window.app.showToast('Selecciona un archivo', true);
+      const formData = new FormData();
+      formData.append('cv', file);
+      const btn = e.target.querySelector('button');
+      btn.innerText = 'SUBIENDO...';
+      btn.disabled = true;
+      try {
+        const res = await window.api.fetch('/users/me/cv', { method: 'POST', body: formData });
+        window.app.showToast('CV subido correctamente');
+        currentUser.cv_url = res.cv_url;
+        document.getElementById('cv-status').innerHTML = `<a href="${res.cv_url}" target="_blank" style="color:var(--sw-red);text-decoration:none;"><i class="fa-solid fa-check"></i> CV cargado (Ver actual)</a>`;
+      } catch (err) { 
+        window.app.showToast(err.message, true); 
+      } finally {
+        btn.innerText = 'SUBIR CV';
+        btn.disabled = false;
+        e.target.reset();
+      }
+    });
+
     document.getElementById('token-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = document.getElementById('token-input').value;
@@ -178,27 +313,22 @@
         currentUser.is_token_validated = 1;
         renderProfile();
         window.app.showToast(res.message);
-      } catch (err) {
-        window.app.showToast(err.message, true);
-      }
+      } catch (err) { window.app.showToast(err.message, true); }
     });
 
-    // Cargar Postulaciones
     async function loadApps() {
       try {
         const res = await window.api.fetch('/users/my-applications');
         const tbody = document.getElementById('apps-table');
-        if (res.applications.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No tienes postulaciones</td></tr>';
+        if (!res.applications || res.applications.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin postulaciones</td></tr>';
         } else {
           tbody.innerHTML = res.applications.map(a => `
             <tr>
               <td><strong>${a.title}</strong></td>
-              <td><span class="badge ${a.status === 'accepted' ? 'badge-active' : (a.status==='rejected'?'badge-inactive':'')}">${a.status.toUpperCase()}</span></td>
-              <td>${new Date(a.applied_at).toLocaleDateString()}</td>
-              <td>
-                ${a.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelApp(${a.project_id})">Cancelar</button>` : '-'}
-              </td>
+              <td><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'')}">${a.status.toUpperCase()}</span></td>
+              <td>${new Date(a.applied_at).toLocaleDateString('es-AR')}</td>
+              <td>${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${a.project_id})">Cancelar</button>`:'-'}</td>
             </tr>
           `).join('');
         }
@@ -206,63 +336,59 @@
     }
 
     window.cancelApp = async function(id) {
-      if(!confirm('¿Cancelar postulación?')) return;
+      if (!confirm('¿Cancelar postulación?')) return;
       try {
         await window.api.fetch(`/users/projects/${id}/apply`, { method: 'DELETE' });
         loadApps();
         window.app.showToast('Postulación cancelada');
       } catch (err) { window.app.showToast(err.message, true); }
-    }
+    };
 
-    // Funciones de Chat
     async function loadChatUsers() {
       try {
         const res = await window.api.fetch('/chat/users');
         const list = document.getElementById('chat-users');
-        list.innerHTML = res.users.map(u => `
-          <div style="padding:10px; cursor:pointer; border-radius:var(--radius-sm); transition:background 0.2s;" class="chat-user-item" onclick="openChat(${u.id}, '${u.name}')">
-            <strong>${u.name}</strong> <span style="font-size:0.7rem; color:var(--accent-cyan);">[${u.role}]</span>
+        list.innerHTML = (res.users || []).map(u => `
+          <div class="chat-user-item" onclick="openChat(${u.id}, '${u.name}', this)">
+            <div>${u.name}</div>
+            <div style="font-size:0.6rem;color:var(--sw-red);margin-top:2px;">${u.role.toUpperCase()}</div>
           </div>
-        `).join('');
-      } catch(err) {}
+        `).join('') || '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
+      } catch (err) {}
     }
 
-    window.openChat = async function(userId, userName) {
+    window.openChat = async function(userId, userName, el) {
       currentChatUser = userId;
+      document.querySelectorAll('.chat-user-item').forEach(x => x.classList.remove('active'));
+      if (el) el.classList.add('active');
       document.getElementById('chat-input').disabled = false;
       document.getElementById('chat-btn').disabled = false;
-      document.querySelectorAll('.chat-user-item').forEach(el => el.style.background = 'transparent');
-      event.currentTarget.style.background = 'var(--bg-input)';
-      
       try {
         const res = await window.api.fetch(`/chat/${userId}`);
         const box = document.getElementById('chat-messages');
-        if(res.messages.length === 0) {
-          box.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:auto; margin-bottom:auto;">Sin mensajes con ${userName}</p>`;
+        if (!res.messages || res.messages.length === 0) {
+          box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${userName}</span>`;
         } else {
           box.innerHTML = res.messages.map(m => {
             const isMe = m.sender_id === currentUser.id;
-            return `
-              <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'var(--gradient-primary)' : 'var(--bg-card)'}; border: 1px solid ${isMe ? 'transparent' : 'var(--border-color)'}; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; color: #fff;">
-                ${m.content}
-              </div>
-            `;
+            return `<div class="${isMe ? 'chat-msg-me' : 'chat-msg-other'}">${m.content}</div>`;
           }).join('');
           box.scrollTop = box.scrollHeight;
         }
-      } catch(err) {}
-    }
+      } catch (err) {}
+    };
 
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if(!currentChatUser) return;
+      if (!currentChatUser) return;
       const input = document.getElementById('chat-input');
-      const text = input.value;
+      const text = input.value.trim();
+      if (!text) return;
       input.value = '';
       try {
         await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: text } });
-        openChat(currentChatUser, ''); // recargar
-      } catch(err) { window.app.showToast(err.message, true); }
+        window.openChat(currentChatUser, '', null);
+      } catch (err) { window.app.showToast(err.message, true); }
     });
   </script>
 </body>

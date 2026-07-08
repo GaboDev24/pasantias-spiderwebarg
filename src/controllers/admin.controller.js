@@ -147,21 +147,38 @@ async function deleteSkill(req, res) {
 // ──────────────────────────────────────────────
 // PROYECTOS
 // ──────────────────────────────────────────────
+async function listProjects(req, res) {
+  try {
+    const result = await sql.query(
+      `SELECT p.id, p.title, p.description, p.status, p.start_date, p.end_date, p.conf_link, p.created_at,
+              (SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id) AS applicant_count
+       FROM projects p
+       ORDER BY p.created_at DESC`
+    );
+    return res.json({ projects: result.data || [] });
+  } catch (err) {
+    console.error('[ADMIN/LIST-PROJECTS]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo proyectos.' });
+  }
+}
+
 async function createProject(req, res) {
   try {
     const { title, description, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
 
-    if (!title || !description || !start_date || !end_date) {
-      return res.status(400).json({ error: 'Titulo, descripcion, fecha inicio y fin son requeridos.' });
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Titulo y descripcion son requeridos.' });
     }
 
-    const tagsValue = required_tags ? `'${JSON.stringify(required_tags)}'` : 'NULL';
-    const mediaValue = media_file_ids ? `'${JSON.stringify(media_file_ids)}'` : 'NULL';
+    const tagsValue = required_tags && required_tags.length ? `'${JSON.stringify(required_tags)}'` : "'[]'";
+    const mediaValue = media_file_ids && media_file_ids.length ? `'${JSON.stringify(media_file_ids)}'` : "'[]'";
     const confValue = conf_link ? `'${conf_link.replace(/'/g, "''")}'` : 'NULL';
+    const startValue = start_date ? `'${start_date}'` : 'NULL';
+    const endValue = end_date ? `'${end_date}'` : 'NULL';
 
     const result = await sql.query(
       `INSERT INTO projects (title, description, media_file_ids, required_tags, conf_link, start_date, end_date, created_by)
-       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${mediaValue}, ${tagsValue}, ${confValue}, '${start_date}', '${end_date}', ${req.user.id})`
+       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${mediaValue}, ${tagsValue}, ${confValue}, ${startValue}, ${endValue}, ${req.user.id})`
     );
 
     return res.status(201).json({ message: 'Proyecto publicado correctamente.', id: result.insertId });
@@ -322,7 +339,7 @@ module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser,
   generateToken, listTokens,
   listSkills, createSkill, deleteSkill,
-  createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
+  listProjects, createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
   createNews, updateNews, deleteNews,
   uploadMedia,
 };

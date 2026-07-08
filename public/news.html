@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | Noticia</title>
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .news-page { max-width: 860px; margin: 0 auto; padding: clamp(1rem, 4vw, 2.5rem); padding-top: 90px; padding-bottom: 50px; }
+    .news-cover { width: 100%; max-height: 380px; object-fit: cover; border: 1px solid var(--sw-border); margin-bottom: 2rem; display: block; }
+    .news-meta { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.15em; color: var(--sw-red); text-transform: uppercase; margin-bottom: 0.75rem; }
+    .news-title { font-family: var(--sw-font-h); font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; margin-bottom: 1.5rem; line-height: 1.1; }
+    .news-content { font-family: var(--sw-font-b); font-size: 1rem; line-height: 1.8; color: var(--sw-text-muted); white-space: pre-wrap; }
+    .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sw-text-muted); text-decoration: none; margin-bottom: 2rem; transition: color 0.2s; }
+    .back-btn:hover { color: var(--sw-red); }
+    .tac-divider { border: none; border-top: 1px solid var(--sw-border); margin: 2rem 0; }
+    .loading-state { text-align: center; padding: 4rem 2rem; font-family: var(--sw-font-m); font-size: 0.75rem; letter-spacing: 0.15em; color: var(--sw-text-muted); }
+  </style>
+</head>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <nav class="sw-nav scrolled">
+    <div class="sw-nav__inner">
+      <a href="/" style="display:flex;align-items:center;">
+        <img src="/img/logo blanco.png" alt="Logo" style="height:34px;">
+      </a>
+      <div class="sw-nav__links">
+        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
+        <a href="/" class="sw-nav__link">← Volver al Inicio</a>
+        <a href="/dashboard.html" class="sw-nav__link auth-only" style="display:none;">Mi Panel</a>
+      </div>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="news-page">
+    <div id="loading" class="loading-state">CARGANDO INFORME...</div>
+    <div id="content" style="display:none;">
+      <a href="/" class="back-btn">← Volver al índice</a>
+      <img id="cover" class="news-cover" src="" alt="Cover" style="display:none;">
+      <div id="meta" class="news-meta"></div>
+      <h1 id="title" class="news-title"></h1>
+      <hr class="tac-divider">
+      <div id="body" class="news-content"></div>
+    </div>
+    <div id="error" class="loading-state" style="display:none; color:#f87171;">Noticia no encontrada.</div>
+  </div>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <span class="sw-footer__copy">© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
+      <div class="sw-footer__status"><span class="sw-pulse"></span> Sistema en línea</div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) { showError(); return; }
+
+      try {
+        const res = await fetch(`/api/public/news/${id}`);
+        if (!res.ok) { showError(); return; }
+        const { news } = await res.json();
+
+        document.title = `${news.title} | Spider-Web ARG`;
+        document.getElementById('meta').innerText =
+          `${new Date(news.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — REDACCIÓN: ${news.author}`;
+        document.getElementById('title').innerText = news.title;
+        document.getElementById('body').innerText = news.content;
+
+        if (news.cover_url) {
+          const img = document.getElementById('cover');
+          img.src = news.cover_url;
+          img.style.display = 'block';
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } catch (err) {
+        showError();
+      }
+    });
+
+    function showError() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

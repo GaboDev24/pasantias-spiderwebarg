@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spider-Web ARG | Login</title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/tactical.css">
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="tac-page">
   <div class="sw-scanlines"></div>
@@ -13,11 +14,16 @@
 
   <nav class="sw-nav scrolled">
     <div class="sw-nav__inner">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <a href="/" style="display: flex; align-items: center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px;"></a>
-      </div>
+      <a href="/" style="display: flex; align-items: center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px;"></a>
       <div class="sw-nav__links">
+        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
         <a href="/register.html" class="sw-nav__link">Registro</a>
+      </div>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
@@ -44,7 +50,7 @@
           </div>
           <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" style="margin-top: 1rem;">INICIAR SESIÓN</button>
         </form>
-        <p style="text-align:center; margin-top: 1.5rem; font-family: var(--sw-font-m); font-size: 0.7rem; color: rgba(245,245,245,0.4);">
+        <p style="text-align:center; margin-top: 1.5rem; font-family: var(--sw-font-m); font-size: 0.7rem; color: var(--sw-text-muted);">
           ¿No tienes cuenta? <a href="/register.html" style="color: var(--sw-red); text-decoration: none;">Regístrate</a>
         </p>
       </div>

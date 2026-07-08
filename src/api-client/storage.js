@@ -52,10 +52,15 @@ async function uploadFile(fileBuffer, filename, mimeType, projectId = PROJECT_ID
   const form = new FormData();
   form.append('files', fileBuffer, { filename, contentType: mimeType });
 
+  const body = form.getBuffer();
+  const headers = {
+    ...form.getHeaders(),
+  };
+
   return request(`/storage/projects/${projectId}/files`, {
     method: 'POST',
-    headers: form.getHeaders(),
-    body: form,
+    headers,
+    body,
     isFormData: true,
   });
 }
@@ -72,10 +77,15 @@ async function replaceFile(fileId, fileBuffer, filename, mimeType) {
   const form = new FormData();
   form.append('files', fileBuffer, { filename, contentType: mimeType });
 
+  const body = form.getBuffer();
+  const headers = {
+    ...form.getHeaders(),
+  };
+
   return request(`/storage/files/${fileId}`, {
     method: 'PUT',
-    headers: form.getHeaders(),
-    body: form,
+    headers,
+    body,
     isFormData: true,
   });
 }
@@ -88,8 +98,8 @@ async function deleteFile(fileId) {
  * Construye la URL publica de un archivo para mostrarlo en img/video
  */
 function getFileUrl(fileId) {
-  const API_BASE = process.env.API_BASE || 'https://spiderwebargapi.com.ar/api/v1';
-  return `${API_BASE}/storage/files/${fileId}`;
+  // Usar proxy local que sirve el archivo con el content-type correcto
+  return `/api/media/${fileId}`;
 }
 
 module.exports = {
