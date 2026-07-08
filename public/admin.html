@@ -112,6 +112,7 @@
     .status-badge.accepted { border-color: rgba(34,197,94,0.4); color: #4ade80; }
     .status-badge.rejected { border-color: rgba(239,68,68,0.4); color: #f87171; }
   </style>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body class="tac-page">
   <div class="sw-scanlines"></div>
@@ -283,8 +284,11 @@
     <!-- ════════ TAB: CHAT ════════ -->
     <div id="tab-chat" class="tab-content">
       <div class="tac-card">
-        <div class="tac-card-title">Chat con Pasantes</div>
-        <div style="display:grid;grid-template-columns:200px 1fr;gap:16px;">
+        <div class="tac-card-title" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="document.getElementById('chat-mobile-content-admin').classList.toggle('open'); document.getElementById('chat-mobile-icon-admin').classList.toggle('open');">
+          <span>Chat con Pasantes</span>
+          <i id="chat-mobile-icon-admin" class="fa-solid fa-chevron-down chat-mobile-icon"></i>
+        </div>
+        <div id="chat-mobile-content-admin" style="display:grid;grid-template-columns:200px 1fr;gap:16px;" class="chat-grid chat-mobile-content">
           <div>
             <div style="font-family:var(--sw-font-m);font-size:0.58rem;letter-spacing:0.15em;color:var(--sw-text-muted);text-transform:uppercase;margin-bottom:0.5rem;">Usuarios</div>
             <div id="chat-users-admin" style="display:flex;flex-direction:column;gap:4px;"></div>

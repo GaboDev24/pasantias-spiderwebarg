@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/styles.css?v=2">
   <link rel="stylesheet" href="/css/tactical.css?v=2">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body class="tac-page">
   <div class="sw-scanlines"></div>
@@ -50,7 +51,12 @@
           </div>
           <div class="sw-input-group">
             <label class="sw-label">Contraseña (Min 8)</label>
-            <input type="password" id="password" class="sw-input" required autocomplete="new-password">
+            <div style="position: relative;">
+              <input type="password" id="password" class="sw-input" required autocomplete="new-password" style="padding-right: 40px;">
+              <button type="button" tabindex="-1" onclick="window.app.togglePassword('password', this.querySelector('i'))" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--sw-text-muted); cursor: pointer; padding: 0;">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" style="margin-top: 1rem;">CREAR CUENTA</button>
         </form>

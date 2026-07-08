@@ -168,5 +168,18 @@ function showToast(message, isError = false) {
   }, 4000);
 }
 
+function togglePassword(inputId, iconElement) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    iconElement.classList.remove('fa-eye');
+    iconElement.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    iconElement.classList.remove('fa-eye-slash');
+    iconElement.classList.add('fa-eye');
+  }
+}
+
 // Global scope
-window.app = { logout, showToast, checkAuthState, toggleTheme };
+window.app = { logout, showToast, checkAuthState, toggleTheme, togglePassword };
