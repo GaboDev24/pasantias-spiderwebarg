@@ -144,6 +144,8 @@ app.use((req, res, next) => {
 // ──────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
+  const { initDB } = require('./src/database/init');
+  initDB().catch(err => console.error('[DB-INIT WARNING]', err.message));
   app.listen(PORT, () => {
     console.log(`[SERVER] Spider-Web ARG Pasantias corriendo en http://localhost:${PORT}`);
   });

@@ -320,20 +320,28 @@
     <div id="tab-chat" class="tab-content">
       <div class="tac-card">
         <div class="tac-card-title" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="document.getElementById('chat-mobile-content-admin').classList.toggle('open'); document.getElementById('chat-mobile-icon-admin').classList.toggle('open');">
-          <span>Chat con Pasantes</span>
+          <span>Chat Interno / Amigos</span>
           <i id="chat-mobile-icon-admin" class="fa-solid fa-chevron-down chat-mobile-icon"></i>
         </div>
-        <div id="chat-mobile-content-admin" style="display:grid;grid-template-columns:200px 1fr;gap:16px;" class="chat-grid chat-mobile-content">
+        <div id="chat-mobile-content-admin" style="display:grid;grid-template-columns:220px 1fr;gap:16px;" class="chat-grid chat-mobile-content">
           <div>
-            <div style="font-family:var(--sw-font-m);font-size:0.58rem;letter-spacing:0.15em;color:var(--sw-text-muted);text-transform:uppercase;margin-bottom:0.5rem;">Usuarios</div>
-            <div id="chat-users-admin" style="display:flex;flex-direction:column;gap:4px;"></div>
+            <div style="font-family:var(--sw-font-m);font-size:0.58rem;letter-spacing:0.15em;color:var(--sw-text-muted);text-transform:uppercase;margin-bottom:0.4rem;display:flex;justify-content:space-between;">
+              <span>Usuarios</span>
+              <span id="chat-user-count-admin" style="color:var(--sw-red);"></span>
+            </div>
+            <input type="text" id="chat-search-input-admin" class="tac-input" style="margin-bottom:8px; padding:0.4rem 0.6rem; font-size:0.7rem;" placeholder="Buscar usuario..." oninput="filterAdminChatUsers(this.value)">
+            <div id="chat-users-admin" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto;"></div>
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="chat-box" id="chat-messages-admin">
+            <div id="chat-active-header-admin" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); padding:0.4rem 0.75rem; border:1px solid var(--sw-border); font-family:var(--sw-font-m); font-size:0.75rem; min-height:36px;">
+              <span id="chat-active-name-admin" style="color:var(--sw-text-muted);">Selecciona un usuario</span>
+              <div id="chat-active-actions-admin"></div>
+            </div>
+            <div class="chat-box" id="chat-messages-admin" style="height:250px;">
               <span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Selecciona un usuario</span>
             </div>
             <form id="chat-form-admin" style="display:flex;gap:8px;">
-              <input type="text" id="chat-input-admin" class="tac-input" style="margin:0;flex:1;" placeholder="Escribe o pega un token..." disabled>
+              <input type="text" id="chat-input-admin" class="tac-input" style="margin:0;flex:1;" placeholder="Escribe un mensaje o token..." disabled>
               <button type="submit" class="sw-btn sw-btn--primary" id="chat-btn-admin" disabled>ENVIAR</button>
             </form>
           </div>
@@ -646,25 +654,75 @@
     });
 
     // ── CHAT ──────────────────────────────────────────
+    let allAdminChatUsers = [];
+
     async function loadChatUsers() {
       try {
         const res = await window.api.fetch('/chat/users');
-        const list = document.getElementById('chat-users-admin');
-        list.innerHTML = (res.users || []).map(u => `
-          <div class="chat-user-item" onclick="openAdminChat(${u.id}, '${u.name}', this)">
-            <div>${u.name}</div>
-            <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${u.email}</div>
-          </div>
-        `).join('') || '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
+        allAdminChatUsers = res.users || [];
+        renderAdminChatUsersList(allAdminChatUsers);
       } catch (err) {}
+    }
+
+    function renderAdminChatUsersList(users) {
+      const list = document.getElementById('chat-users-admin');
+      document.getElementById('chat-user-count-admin').innerText = `${users.length}`;
+      list.innerHTML = users.map(u => `
+        <div class="chat-user-item ${currentChatUser === u.id ? 'active' : ''}" onclick="openAdminChat(${u.id}, '${u.name.replace(/'/g, "\\'")}', ${u.is_friend ? 1 : 0}, this)">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${u.name}</span>
+            ${u.is_friend ? '<i class="fa-solid fa-star" style="color:var(--sw-red); font-size:0.65rem;" title="Amigo"></i>' : ''}
+          </div>
+          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${u.email} (${u.role.toUpperCase()})</div>
+        </div>
+      `).join('') || '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
+    }
+
+    window.filterAdminChatUsers = async function(query) {
+      if (!query.trim()) {
+        return renderAdminChatUsersList(allAdminChatUsers);
+      }
+      try {
+        const res = await window.api.fetch(`/chat/search?q=${encodeURIComponent(query)}`);
+        renderAdminChatUsersList(res.users || []);
+      } catch (err) {}
+    };
+
+    window.toggleAdminFriend = async function(friendId, isFriend) {
+      try {
+        if (isFriend) {
+          await window.api.fetch(`/chat/friends/${friendId}`, { method: 'DELETE' });
+          window.app.showToast('Eliminado de tus amigos');
+        } else {
+          await window.api.fetch(`/chat/friends/${friendId}`, { method: 'POST' });
+          window.app.showToast('Añadido a tus amigos');
+        }
+        await loadChatUsers();
+        const userObj = allAdminChatUsers.find(u => u.id === friendId);
+        if (userObj) {
+          updateAdminActiveHeader(userObj.id, userObj.name, userObj.is_friend ? 1 : 0);
+        }
+      } catch (err) {
+        window.app.showToast(err.message || 'Error al actualizar amigo', true);
+      }
+    };
+
+    function updateAdminActiveHeader(userId, userName, isFriend) {
+      document.getElementById('chat-active-name-admin').innerText = userName;
+      const actionsEl = document.getElementById('chat-active-actions-admin');
+      actionsEl.innerHTML = `
+        <button class="sw-btn sw-btn--ghost sw-btn--sm" style="padding:0.2rem 0.5rem; font-size:0.62rem;" onclick="toggleAdminFriend(${userId}, ${isFriend ? 1 : 0})">
+          <i class="fa-solid ${isFriend ? 'fa-star' : 'fa-user-plus'}" style="color:${isFriend ? 'var(--sw-red)' : 'inherit'}; margin-right:4px;"></i>
+          ${isFriend ? 'Amigo' : '+ Amigo'}
+        </button>
+      `;
     }
 
     window.goToChat = function(userId, userName) {
       document.querySelectorAll('.tac-tab').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-chat').classList.add('active');
-      document.querySelectorAll('.tac-tab')[3].classList.add('active');
-      // Buscar el item en la lista
+      document.querySelectorAll('.tac-tab')[4].classList.add('active');
       setTimeout(() => {
         const items = document.querySelectorAll('#chat-users-admin .chat-user-item');
         items.forEach(item => {
@@ -675,12 +733,13 @@
       }, 100);
     };
 
-    window.openAdminChat = async function(userId, userName, el) {
+    window.openAdminChat = async function(userId, userName, isFriend, el) {
       currentChatUser = userId;
       document.querySelectorAll('#chat-users-admin .chat-user-item').forEach(x => x.classList.remove('active'));
       if (el) el.classList.add('active');
       document.getElementById('chat-input-admin').disabled = false;
       document.getElementById('chat-btn-admin').disabled = false;
+      updateAdminActiveHeader(userId, userName, isFriend);
       try {
         const res = await window.api.fetch(`/chat/${userId}`);
         const box = document.getElementById('chat-messages-admin');
@@ -706,7 +765,7 @@
       input.value = '';
       try {
         await window.api.fetch('/chat/send', { method: 'POST', body: { receiver_id: currentChatUser, content: text } });
-        window.openAdminChat(currentChatUser, '', null);
+        window.openAdminChat(currentChatUser, document.getElementById('chat-active-name-admin').innerText, 0, null);
       } catch (err) { window.app.showToast(err.message, true); }
     });
 

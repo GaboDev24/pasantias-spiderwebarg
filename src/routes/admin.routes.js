@@ -31,6 +31,7 @@ router.delete('/projects/:projectId', requireAdmin, adminCtrl.deleteProject);
 router.get('/projects/:projectId/applications', requireAdmin, adminCtrl.listProjectApplications);
 router.patch('/applications/:appId/status', requireAdmin, adminCtrl.updateApplicationStatus);
 router.get('/projects/:projectId/progress', requireAdmin, adminCtrl.listProjectProgress);
+router.post('/projects/:projectId/progress', requireAdmin, adminCtrl.createProjectProgress);
 
 // Noticias
 router.post('/news', requireAdmin, adminCtrl.createNews);

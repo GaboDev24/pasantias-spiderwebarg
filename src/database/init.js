@@ -119,6 +119,17 @@ const tablas = [
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
+
+  // ──────────────────────────────────────────────
+  // AMIGOS / CONTACTOS FAVORITOS DE CHAT
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS user_friends (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    friend_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_friend (user_id, friend_id)
+  )`,
 ];
 
 async function initDB() {

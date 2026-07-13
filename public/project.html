@@ -132,13 +132,13 @@
         <div id="progress-log"></div>
       </div>
 
-      <!-- Formulario de Registro de Progreso (solo para pasantes aceptados en proceso) -->
+      <!-- Formulario de Registro de Progreso (solo para administradores) -->
       <div id="add-progress-card" class="tac-card auth-only" style="display:none; border-color:rgba(167,139,250,0.35);">
         <div class="tac-card-title" style="color:#a78bfa;"><i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i>Registrar Progreso</div>
         <p style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-text-muted);margin-bottom:1rem;line-height:1.6;">
-          Compartí tus avances, aportes o dificultades en el proyecto.
+          Registrar avance, hito o novedad oficial del proyecto.
         </p>
-        <textarea id="progress-input" class="tac-input" rows="4" placeholder="Describí tu aporte o avance..."></textarea>
+        <textarea id="progress-input" class="tac-input" rows="4" placeholder="Describí el avance o novedad del proyecto..."></textarea>
         <button id="progress-btn" class="sw-btn sw-btn--primary" onclick="submitProgress()" style="background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4);color:#a78bfa;">
           <i class="fa-solid fa-paper-plane"></i> ENVIAR PROGRESO
         </button>
@@ -270,11 +270,10 @@
           `).join('');
         }
 
-        // Formulario de progreso (solo en proceso + pasante aceptado)
+        // Formulario de progreso (solo administradores)
         if (token && ds === 'En proceso') {
-          const isAccepted = accepted.some(u => currentUser && u.id === currentUser.id);
           const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'ceo');
-          if (isAccepted || isAdmin) {
+          if (isAdmin) {
             document.getElementById('add-progress-card').style.display = 'block';
           }
         }

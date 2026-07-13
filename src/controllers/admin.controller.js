@@ -331,13 +331,9 @@ async function createProjectProgress(req, res) {
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'El contenido del progreso es requerido.' });
     }
-    // Verificar que el usuario esté aceptado en el proyecto
-    const appCheck = await sql.query(
-      `SELECT id FROM project_applications WHERE project_id = ${parseInt(projectId)} AND user_id = ${req.user.id} AND status = 'accepted'`
-    );
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'ceo';
-    if (!isAdmin && (!appCheck.data || appCheck.data.length === 0)) {
-      return res.status(403).json({ error: 'Solo los pasantes aceptados pueden registrar progreso.' });
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'ceo');
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Solo los administradores pueden registrar progreso en los proyectos.' });
     }
     await sql.query(
       `INSERT INTO project_progress (project_id, user_id, content) VALUES (${parseInt(projectId)}, ${req.user.id}, '${content.trim().replace(/'/g, "''")}') `

@@ -92,25 +92,36 @@ async function getInbox(req, res) {
   }
 }
 
-// Listar todos los usuarios disponibles para chatear (admin ve todos, pasante solo admin/ceo)
+// Listar todos los usuarios disponibles para chatear e indicar si son amigos
 async function getChatUsers(req, res) {
   try {
     const myId = req.user.id;
     let query;
 
     if (req.user.role === 'admin' || req.user.role === 'ceo') {
-      query = `SELECT id, name, email, role, avatar_file_id FROM users WHERE id != ${myId} ORDER BY role DESC, name ASC`;
+      query = `SELECT u.id, u.name, u.email, u.role, u.avatar_file_id,
+                      IF(uf.id IS NOT NULL, 1, 0) AS is_friend
+               FROM users u
+               LEFT JOIN user_friends uf ON uf.friend_id = u.id AND uf.user_id = ${myId}
+               WHERE u.id != ${myId}
+               ORDER BY is_friend DESC, u.role DESC, u.name ASC`;
     } else {
-      query = `SELECT id, name, email, role, avatar_file_id FROM users WHERE id != ${myId} AND role IN ('admin', 'ceo') ORDER BY name ASC`;
+      // Pasantes ven administradores/CEOs y a los usuarios que hayan añadido como amigos
+      query = `SELECT u.id, u.name, u.email, u.role, u.avatar_file_id,
+                      IF(uf.id IS NOT NULL, 1, 0) AS is_friend
+               FROM users u
+               LEFT JOIN user_friends uf ON uf.friend_id = u.id AND uf.user_id = ${myId}
+               WHERE u.id != ${myId} AND (u.role IN ('admin', 'ceo') OR uf.id IS NOT NULL)
+               ORDER BY is_friend DESC, u.name ASC`;
     }
 
     const result = await sql.query(query);
     let users = result.data || [];
 
-    // Si el usuario es pasante, agregar el CEO del sistema (admin bypass) como entrada virtual
+    // Si el usuario es pasante, agregar el CEO del sistema como entrada virtual si no está en la lista
     if (req.user.role !== 'admin' && req.user.role !== 'ceo') {
       users = [
-        { id: 9999, name: 'Spider-Web ARG CEO', email: 'admin@spiderweb.com', role: 'ceo', avatar_file_id: null },
+        { id: 9999, name: 'Spider-Web ARG CEO', email: 'admin@spiderweb.com', role: 'ceo', avatar_file_id: null, is_friend: 1 },
         ...users,
       ];
     }
@@ -135,4 +146,83 @@ async function getUnreadCount(req, res) {
   }
 }
 
-module.exports = { sendMessage, getConversation, getInbox, getChatUsers, getUnreadCount };
+// Buscar usuarios en toda la plataforma por término de búsqueda (nombre, email o rol)
+async function searchUsers(req, res) {
+  try {
+    const myId = req.user.id;
+    const q = req.query.q ? req.query.q.trim() : '';
+    if (!q) {
+      return res.json({ users: [] });
+    }
+    const safeQ = q.replace(/'/g, "''");
+    const result = await sql.query(
+      `SELECT u.id, u.name, u.email, u.role, u.avatar_file_id,
+              IF(uf.id IS NOT NULL, 1, 0) AS is_friend
+       FROM users u
+       LEFT JOIN user_friends uf ON uf.friend_id = u.id AND uf.user_id = ${myId}
+       WHERE u.id != ${myId} AND (u.name LIKE '%${safeQ}%' OR u.email LIKE '%${safeQ}%' OR u.role LIKE '%${safeQ}%')
+       ORDER BY is_friend DESC, u.name ASC
+       LIMIT 30`
+    );
+    return res.json({ users: result.data || [] });
+  } catch (err) {
+    console.error('[CHAT/SEARCH]', err.message);
+    return res.status(500).json({ error: 'Error buscando usuarios.' });
+  }
+}
+
+// Obtener lista de amigos / contactos guardados
+async function getFriends(req, res) {
+  try {
+    const myId = req.user.id;
+    const result = await sql.query(
+      `SELECT u.id, u.name, u.email, u.role, u.avatar_file_id, 1 AS is_friend
+       FROM user_friends uf
+       JOIN users u ON u.id = uf.friend_id
+       WHERE uf.user_id = ${myId}
+       ORDER BY u.name ASC`
+    );
+    return res.json({ friends: result.data || [] });
+  } catch (err) {
+    console.error('[CHAT/FRIENDS]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo amigos.' });
+  }
+}
+
+// Añadir usuario a amigos
+async function addFriend(req, res) {
+  try {
+    const myId = req.user.id;
+    const { friendId } = req.params;
+    if (parseInt(friendId) === myId) {
+      return res.status(400).json({ error: 'No puedes agregarte a ti mismo como amigo.' });
+    }
+    await sql.query(
+      `INSERT IGNORE INTO user_friends (user_id, friend_id) VALUES (${myId}, ${parseInt(friendId)})`
+    );
+    return res.json({ message: 'Añadido a amigos correctamente.' });
+  } catch (err) {
+    console.error('[CHAT/ADD-FRIEND]', err.message);
+    return res.status(500).json({ error: 'Error al agregar amigo.' });
+  }
+}
+
+// Eliminar usuario de amigos
+async function removeFriend(req, res) {
+  try {
+    const myId = req.user.id;
+    const { friendId } = req.params;
+    await sql.query(
+      `DELETE FROM user_friends WHERE user_id = ${myId} AND friend_id = ${parseInt(friendId)}`
+    );
+    return res.json({ message: 'Eliminado de amigos.' });
+  } catch (err) {
+    console.error('[CHAT/REMOVE-FRIEND]', err.message);
+    return res.status(500).json({ error: 'Error al eliminar amigo.' });
+  }
+}
+
+module.exports = {
+  sendMessage, getConversation, getInbox, getChatUsers, getUnreadCount,
+  searchUsers, getFriends, addFriend, removeFriend
+};
