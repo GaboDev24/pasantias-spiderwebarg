@@ -203,7 +203,10 @@
           <label class="tac-label">Título *</label>
           <input type="text" id="p-title" class="tac-input" required placeholder="Nombre del proyecto">
 
-          <label class="tac-label">Descripción *</label>
+          <label class="tac-label">Resumen corto * (se muestra en el index como preview)</label>
+          <input type="text" id="p-summary" class="tac-input" maxlength="200" placeholder="Máx 200 caracteres — texto que aparecerá en la tarjeta del index">
+
+          <label class="tac-label">Descripción completa *</label>
           <textarea id="p-desc" class="tac-input" rows="4" required placeholder="Detalle del proyecto..."></textarea>
 
           <div class="form-row">
@@ -288,7 +291,10 @@
           <label class="tac-label">Título *</label>
           <input type="text" id="n-title" class="tac-input" required placeholder="Título de la noticia">
 
-          <label class="tac-label">Contenido *</label>
+          <label class="tac-label">Resumen corto * (se muestra en el index como preview)</label>
+          <input type="text" id="n-summary" class="tac-input" maxlength="200" placeholder="Máx 200 caracteres — aparece bajo el titular en el index">
+
+          <label class="tac-label">Contenido completo *</label>
           <textarea id="n-content" class="tac-input" rows="6" required placeholder="Contenido de la noticia..."></textarea>
 
           <label class="tac-label">Imagen de portada (opcional)</label>
@@ -361,14 +367,20 @@
         <input type="hidden" id="edit-p-id">
         <label class="tac-label">Título</label>
         <input type="text" id="edit-p-title" class="tac-input">
+        <label class="tac-label">Resumen corto</label>
+        <input type="text" id="edit-p-summary" class="tac-input" maxlength="200">
         <label class="tac-label">Descripción</label>
         <textarea id="edit-p-desc" class="tac-input" rows="4"></textarea>
-        <label class="tac-label">Estado</label>
-        <select id="edit-p-status" class="tac-input" style="background:var(--sw-black);color:var(--sw-white);">
-          <option value="open">Abierto</option>
-          <option value="in_progress">En Progreso</option>
-          <option value="closed">Cerrado</option>
-        </select>
+        <div class="form-row">
+          <div>
+            <label class="tac-label">Fecha de Inicio</label>
+            <input type="datetime-local" id="edit-p-start" class="tac-input">
+          </div>
+          <div>
+            <label class="tac-label">Fecha de Cierre</label>
+            <input type="datetime-local" id="edit-p-end" class="tac-input">
+          </div>
+        </div>
         <label class="tac-label">Link Conferencia</label>
         <input type="url" id="edit-p-link" class="tac-input">
         <div style="margin-top:1rem;">
@@ -389,6 +401,8 @@
         <input type="hidden" id="edit-n-id">
         <label class="tac-label">Título</label>
         <input type="text" id="edit-n-title" class="tac-input">
+        <label class="tac-label">Resumen corto</label>
+        <input type="text" id="edit-n-summary" class="tac-input" maxlength="200">
         <label class="tac-label">Contenido</label>
         <textarea id="edit-n-content" class="tac-input" rows="6"></textarea>
         <div style="margin-top:1rem;">
@@ -406,6 +420,19 @@
         <button class="sw-modal-close" onclick="closeModalById('modal-user-profile')">&#x2715;</button>
       </div>
       <div class="sw-modal-body" id="modal-user-profile-body">
+        <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MODAL: PROGRESO DE PROYECTO ════════ -->
+  <div id="modal-progress" class="sw-modal-overlay" onclick="closeModal(event)">
+    <div class="sw-modal" style="max-width:780px;">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title" id="modal-progress-title">Progreso del Proyecto</span>
+        <button class="sw-modal-close" onclick="closeModalById('modal-progress')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body" id="modal-progress-body">
         <p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>
       </div>
     </div>
@@ -553,6 +580,7 @@
           body: {
             title: document.getElementById('p-title').value,
             description: document.getElementById('p-desc').value,
+            summary: document.getElementById('p-summary').value || null,
             required_tags: requiredTags,
             start_date: document.getElementById('p-start').value || null,
             end_date: document.getElementById('p-end').value || null,
@@ -597,6 +625,7 @@
           body: {
             title: document.getElementById('n-title').value,
             content: document.getElementById('n-content').value,
+            summary: document.getElementById('n-summary').value || null,
             cover_file_id: coverFileId,
           }
         });
@@ -708,36 +737,49 @@
           list.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados.</p>';
           return;
         }
-        const statusMap = { open: 'ABIERTO', in_progress: 'EN PROGRESO', closed: 'CERRADO' };
-        list.innerHTML = projects.map(p => `
+        const statusColors = {
+          'Por comenzar': { bg:'rgba(59,130,246,0.12)', border:'rgba(59,130,246,0.35)', text:'#60a5fa' },
+          'En proceso':   { bg:'rgba(234,179,8,0.12)',  border:'rgba(234,179,8,0.35)',  text:'#fbbf24' },
+          'Finalizado':   { bg:'rgba(34,197,94,0.12)',  border:'rgba(34,197,94,0.35)',  text:'#4ade80' },
+        };
+        list.innerHTML = projects.map(p => {
+          const sc = statusColors[p.dynamic_status] || { bg:'rgba(163,0,0,0.1)', border:'var(--sw-border)', text:'var(--sw-white)' };
+          const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${p.dynamic_status}</span>`;
+          const coverThumb = p.cover_url ? `<img src="${p.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">` : '';
+          const showProgress = (p.dynamic_status === 'En proceso' || p.dynamic_status === 'Finalizado');
+          return `
           <div class="pub-item">
+            ${coverThumb}
             <div class="pub-item-info">
               <div class="pub-item-title">${p.title}</div>
-              <div class="pub-item-meta">
-                ${statusMap[p.status] || p.status.toUpperCase()} &nbsp;·&nbsp;
-                ${new Date(p.created_at).toLocaleDateString('es-AR')} &nbsp;·&nbsp;
-                ${p.applicant_count || 0} postulado(s)
+              <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                ${statusBadge}
+                <span>${new Date(p.created_at).toLocaleDateString('es-AR')}</span>
+                <span>${p.applicant_count || 0} postulado(s)</span>
               </div>
             </div>
             <div class="pub-item-actions">
               <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id},'${encodeURIComponent(p.title)}','${encodeURIComponent(p.description)}','${p.status}','${p.conf_link||''}')">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id}, ${JSON.stringify(p.title)}, ${JSON.stringify(p.description)}, ${JSON.stringify(p.summary||'')}, '${p.conf_link||''}', '${p.start_date ? new Date(p.start_date).toISOString().slice(0,16) : ''}', '${p.end_date ? new Date(p.end_date).toISOString().slice(0,16) : ''}')">EDITAR</button>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
+              ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ''}
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
             </div>
           </div>
-        `).join('');
+        `}).join('');
       } catch (err) {
         list.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando proyectos.</p>';
       }
     }
 
-    function openEditProject(id, title, desc, status, link) {
+    function openEditProject(id, title, desc, summary, link, startDate, endDate) {
       document.getElementById('edit-p-id').value = id;
-      document.getElementById('edit-p-title').value = decodeURIComponent(title);
-      document.getElementById('edit-p-desc').value = decodeURIComponent(desc);
-      document.getElementById('edit-p-status').value = status;
+      document.getElementById('edit-p-title').value = title;
+      document.getElementById('edit-p-desc').value = desc;
+      document.getElementById('edit-p-summary').value = summary || '';
       document.getElementById('edit-p-link').value = link || '';
+      document.getElementById('edit-p-start').value = startDate || '';
+      document.getElementById('edit-p-end').value = endDate || '';
       openModalById('modal-edit-project');
     }
 
@@ -749,8 +791,10 @@
           body: {
             title: document.getElementById('edit-p-title').value,
             description: document.getElementById('edit-p-desc').value,
-            status: document.getElementById('edit-p-status').value,
+            summary: document.getElementById('edit-p-summary').value || null,
             conf_link: document.getElementById('edit-p-link').value || null,
+            start_date: document.getElementById('edit-p-start').value || null,
+            end_date: document.getElementById('edit-p-end').value || null,
           }
         });
         window.app.showToast('Proyecto actualizado');
@@ -799,6 +843,12 @@
             </div>
           </div>
         `).join('');
+
+        // Recargar postulados después de cambios
+        body.querySelectorAll('[onclick*="updateAppStatus"]').forEach(btn => {
+          const orig = btn.getAttribute('onclick');
+          btn.setAttribute('onclick', orig + `; setTimeout(() => openApplicants(${projectId},'${encodeURIComponent(titleEncoded)}'), 400);`);
+        });
       } catch (err) {
         body.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando postulados.</p>';
       }
@@ -849,6 +899,39 @@
     }
 
     // ══════════════════════════════════════════
+    // PROGRESO DE PROYECTO (Admin vista)
+    // ══════════════════════════════════════════
+    async function openProgress(projectId, titleEncoded) {
+      document.getElementById('modal-progress-title').innerText = `Progreso — ${decodeURIComponent(titleEncoded)}`;
+      const body = document.getElementById('modal-progress-body');
+      body.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+      openModalById('modal-progress');
+      try {
+        const res = await window.api.fetch(`/admin/projects/${projectId}/progress`);
+        const log = res.log || [];
+        if (!log.length) {
+          body.innerHTML = '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Sin registros de progreso aún.</p>';
+          return;
+        }
+        body.innerHTML = log.map(entry => `
+          <div style="display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <img src="${entry.avatar_url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>'}" 
+              style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Avatar" onerror="this.style.display='none'">
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-white);">${entry.author_name}</span>
+                <span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);">${new Date(entry.created_at).toLocaleString('es-AR')}</span>
+              </div>
+              <p style="font-family:var(--sw-font-b);font-size:0.82rem;color:var(--sw-text-muted);line-height:1.6;margin:0;white-space:pre-wrap;">${entry.content}</p>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando progreso.</p>';
+      }
+    }
+
+    // ══════════════════════════════════════════
     // LISTA DE NOTICIAS
     // ══════════════════════════════════════════
     async function loadNewsList() {
@@ -867,10 +950,11 @@
             <div class="pub-item-info">
               <div class="pub-item-title">${n.title}</div>
               <div class="pub-item-meta">${new Date(n.created_at).toLocaleDateString('es-AR')} &nbsp;·&nbsp; Por ${n.author}</div>
+              ${n.summary ? `<div style="font-family:var(--sw-font-b);font-size:0.72rem;color:var(--sw-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.summary}</div>` : ''}
             </div>
             <div class="pub-item-actions">
               <a href="/news.html?id=${n.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditNews(${n.id},'${encodeURIComponent(n.title)}','${encodeURIComponent(n.content)}')">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditNews(${n.id}, ${JSON.stringify(n.title)}, ${JSON.stringify(n.content)}, ${JSON.stringify(n.summary||'')})">EDITAR</button>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteNews(${n.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
             </div>
           </div>
@@ -880,10 +964,11 @@
       }
     }
 
-    function openEditNews(id, title, content) {
+    function openEditNews(id, title, content, summary) {
       document.getElementById('edit-n-id').value = id;
-      document.getElementById('edit-n-title').value = decodeURIComponent(title);
-      document.getElementById('edit-n-content').value = decodeURIComponent(content);
+      document.getElementById('edit-n-title').value = title;
+      document.getElementById('edit-n-content').value = content;
+      document.getElementById('edit-n-summary').value = summary || '';
       openModalById('modal-edit-news');
     }
 
@@ -895,6 +980,7 @@
           body: {
             title: document.getElementById('edit-n-title').value,
             content: document.getElementById('edit-n-content').value,
+            summary: document.getElementById('edit-n-summary').value || null,
           }
         });
         window.app.showToast('Noticia actualizada');

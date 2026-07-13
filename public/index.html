@@ -146,11 +146,13 @@
         } else {
           newsGrid.innerHTML = news.map(n => `
             <article class="feature-dossier">
-              ${n.cover_url ? `<img src="${n.cover_url}" class="dossier-image" alt="Cover">` : ''}
-              <div class="dossier-meta">${new Date(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
-              <h3 class="dossier-title">${n.title}</h3>
-              <p class="dossier-desc">${n.content.substring(0, 120)}...</p>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.open('/news.html?id=${n.id}', '_blank')">LEER INFORME</button>
+              ${n.cover_url ? `<div class="dossier-banner"><img src="${n.cover_url}" class="dossier-banner-img" alt="Portada"></div>` : ''}
+              <div class="dossier-body">
+                <div class="dossier-meta">${new Date(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
+                <h3 class="dossier-title">${n.title}</h3>
+                <p class="dossier-desc">${n.summary || n.content.substring(0, 140)}...</p>
+                <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.open('/news.html?id=${n.id}', '_blank')">LEER INFORME</button>
+              </div>
             </article>
           `).join('');
         }
@@ -161,17 +163,30 @@
           if (projects.length === 0) {
             projGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">No hay proyectos disponibles.</p>';
           } else {
-            projGrid.innerHTML = projects.map(p => `
+            projGrid.innerHTML = projects.map(p => {
+              const statusColors = {
+                'Por comenzar': { bg:'rgba(59,130,246,0.12)', border:'rgba(59,130,246,0.35)', text:'#60a5fa' },
+                'En proceso':   { bg:'rgba(234,179,8,0.12)',  border:'rgba(234,179,8,0.35)',  text:'#fbbf24' },
+                'Finalizado':   { bg:'rgba(34,197,94,0.12)',  border:'rgba(34,197,94,0.35)',  text:'#4ade80' },
+              };
+              const ds = p.dynamic_status || p.status;
+              const sc = statusColors[ds] || { bg:'rgba(163,0,0,0.1)', border:'var(--sw-border)', text:'#fff' };
+              return `
               <article class="feature-dossier">
-                <div class="dossier-meta">ESTADO: ${p.status.toUpperCase()}</div>
-                <h3 class="dossier-title">${p.title}</h3>
-                <div class="tags-list">
-                  ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
+                ${p.cover_url ? `<div class="dossier-banner"><img src="${p.cover_url}" class="dossier-banner-img" alt="Banner"></div>` : ''}
+                <div class="dossier-body">
+                  <div class="dossier-meta" style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;font-family:var(--sw-font-m);">${ds}</span>
+                  </div>
+                  <h3 class="dossier-title">${p.title}</h3>
+                  <div class="tags-list">
+                    ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
+                  </div>
+                  <p class="dossier-desc">${p.summary || p.description.substring(0, 140)}...</p>
+                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
                 </div>
-                <p class="dossier-desc">${p.description.substring(0, 120)}...</p>
-                <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
               </article>
-            `).join('');
+            `}).join('');
           }
         }
 

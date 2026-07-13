@@ -150,12 +150,31 @@ async function deleteSkill(req, res) {
 async function listProjects(req, res) {
   try {
     const result = await sql.query(
-      `SELECT p.id, p.title, p.description, p.status, p.start_date, p.end_date, p.conf_link, p.created_at,
+      `SELECT p.id, p.title, p.description, p.summary, p.status, p.start_date, p.end_date, p.conf_link, p.media_file_ids, p.created_at,
               (SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id) AS applicant_count
        FROM projects p
        ORDER BY p.created_at DESC`
     );
-    return res.json({ projects: result.data || [] });
+    const { storage } = require('../api-client/index');
+    const projects = (result.data || []).map(p => {
+      const now = new Date();
+      const start = p.start_date ? new Date(p.start_date) : null;
+      const end   = p.end_date   ? new Date(p.end_date)   : null;
+      let dynamic_status;
+      if (start && end) {
+        if (now < start) dynamic_status = 'Por comenzar';
+        else if (now <= end) dynamic_status = 'En proceso';
+        else dynamic_status = 'Finalizado';
+      } else if (start) {
+        dynamic_status = now < start ? 'Por comenzar' : 'En proceso';
+      } else {
+        const m = { open: 'Por comenzar', in_progress: 'En proceso', closed: 'Finalizado' };
+        dynamic_status = m[p.status] || p.status;
+      }
+      const ids = p.media_file_ids ? JSON.parse(p.media_file_ids) : [];
+      return { ...p, dynamic_status, cover_url: ids.length > 0 ? storage.getFileUrl(ids[0]) : null };
+    });
+    return res.json({ projects });
   } catch (err) {
     console.error('[ADMIN/LIST-PROJECTS]', err.message);
     return res.status(500).json({ error: 'Error obteniendo proyectos.' });
@@ -164,7 +183,7 @@ async function listProjects(req, res) {
 
 async function createProject(req, res) {
   try {
-    const { title, description, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
+    const { title, description, summary, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ error: 'Titulo y descripcion son requeridos.' });
@@ -175,10 +194,11 @@ async function createProject(req, res) {
     const confValue = conf_link ? `'${conf_link.replace(/'/g, "''")}'` : 'NULL';
     const startValue = start_date ? `'${start_date}'` : 'NULL';
     const endValue = end_date ? `'${end_date}'` : 'NULL';
+    const summaryValue = summary ? `'${summary.replace(/'/g, "''")}'` : 'NULL';
 
     const result = await sql.query(
-      `INSERT INTO projects (title, description, media_file_ids, required_tags, conf_link, start_date, end_date, created_by)
-       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${mediaValue}, ${tagsValue}, ${confValue}, ${startValue}, ${endValue}, ${req.user.id})`
+      `INSERT INTO projects (title, description, summary, media_file_ids, required_tags, conf_link, start_date, end_date, created_by)
+       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${summaryValue}, ${mediaValue}, ${tagsValue}, ${confValue}, ${startValue}, ${endValue}, ${req.user.id})`
     );
 
     return res.status(201).json({ message: 'Proyecto publicado correctamente.', id: result.insertId });
@@ -191,16 +211,16 @@ async function createProject(req, res) {
 async function updateProject(req, res) {
   try {
     const { projectId } = req.params;
-    const { title, description, required_tags, conf_link, start_date, end_date, status, media_file_ids } = req.body;
+    const { title, description, summary, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
 
     const updates = [];
     if (title) updates.push(`title = '${title.replace(/'/g, "''")}'`);
     if (description) updates.push(`description = '${description.replace(/'/g, "''")}'`);
+    if (summary !== undefined) updates.push(`summary = ${summary ? `'${summary.replace(/'/g, "''")}' ` : 'NULL'}`);
     if (required_tags !== undefined) updates.push(`required_tags = '${JSON.stringify(required_tags)}'`);
-    if (conf_link) updates.push(`conf_link = '${conf_link.replace(/'/g, "''")}'`);
-    if (start_date) updates.push(`start_date = '${start_date}'`);
-    if (end_date) updates.push(`end_date = '${end_date}'`);
-    if (status) updates.push(`status = '${status}'`);
+    if (conf_link !== undefined) updates.push(`conf_link = ${conf_link ? `'${conf_link.replace(/'/g, "''")}'` : 'NULL'}`);
+    if (start_date !== undefined) updates.push(`start_date = ${start_date ? `'${start_date}'` : 'NULL'}`);
+    if (end_date !== undefined) updates.push(`end_date = ${end_date ? `'${end_date}'` : 'NULL'}`);
     if (media_file_ids !== undefined) updates.push(`media_file_ids = '${JSON.stringify(media_file_ids)}'`);
 
     if (updates.length === 0) {
@@ -264,13 +284,14 @@ async function updateApplicationStatus(req, res) {
 // ──────────────────────────────────────────────
 async function createNews(req, res) {
   try {
-    const { title, content, cover_file_id } = req.body;
+    const { title, content, summary, cover_file_id } = req.body;
     if (!title || !content) return res.status(400).json({ error: 'Titulo y contenido requeridos.' });
 
     const coverValue = cover_file_id ? `'${cover_file_id}'` : 'NULL';
+    const summaryValue = summary ? `'${summary.replace(/'/g, "''")}'` : 'NULL';
     await sql.query(
-      `INSERT INTO news (title, content, cover_file_id, created_by)
-       VALUES ('${title.replace(/'/g, "''")}', '${content.replace(/'/g, "''")}', ${coverValue}, ${req.user.id})`
+      `INSERT INTO news (title, content, summary, cover_file_id, created_by)
+       VALUES ('${title.replace(/'/g, "''")}', '${content.replace(/'/g, "''")}', ${summaryValue}, ${coverValue}, ${req.user.id})`
     );
     return res.status(201).json({ message: 'Noticia publicada.' });
   } catch (err) {
@@ -282,11 +303,12 @@ async function createNews(req, res) {
 async function updateNews(req, res) {
   try {
     const { newsId } = req.params;
-    const { title, content, cover_file_id } = req.body;
+    const { title, content, summary, cover_file_id } = req.body;
 
     const updates = [];
     if (title) updates.push(`title = '${title.replace(/'/g, "''")}'`);
     if (content) updates.push(`content = '${content.replace(/'/g, "''")}'`);
+    if (summary !== undefined) updates.push(`summary = ${summary ? `'${summary.replace(/'/g, "''")}'` : 'NULL'}`);
     if (cover_file_id !== undefined) updates.push(`cover_file_id = '${cover_file_id}'`);
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
@@ -296,6 +318,56 @@ async function updateNews(req, res) {
   } catch (err) {
     console.error('[ADMIN/UPDATE-NEWS]', err.message);
     return res.status(500).json({ error: 'Error actualizando noticia.' });
+  }
+}
+
+// ──────────────────────────────────────────────
+// PROGRESO DE PROYECTO
+// ──────────────────────────────────────────────
+async function createProjectProgress(req, res) {
+  try {
+    const { projectId } = req.params;
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'El contenido del progreso es requerido.' });
+    }
+    // Verificar que el usuario esté aceptado en el proyecto
+    const appCheck = await sql.query(
+      `SELECT id FROM project_applications WHERE project_id = ${parseInt(projectId)} AND user_id = ${req.user.id} AND status = 'accepted'`
+    );
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'ceo';
+    if (!isAdmin && (!appCheck.data || appCheck.data.length === 0)) {
+      return res.status(403).json({ error: 'Solo los pasantes aceptados pueden registrar progreso.' });
+    }
+    await sql.query(
+      `INSERT INTO project_progress (project_id, user_id, content) VALUES (${parseInt(projectId)}, ${req.user.id}, '${content.trim().replace(/'/g, "''")}') `
+    );
+    return res.status(201).json({ message: 'Progreso registrado.' });
+  } catch (err) {
+    console.error('[PROGRESS/CREATE]', err.message);
+    return res.status(500).json({ error: 'Error registrando progreso.' });
+  }
+}
+
+async function listProjectProgress(req, res) {
+  try {
+    const { projectId } = req.params;
+    const result = await sql.query(
+      `SELECT pp.id, pp.content, pp.created_at, u.name AS author_name, u.avatar_file_id
+       FROM project_progress pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.project_id = ${parseInt(projectId)}
+       ORDER BY pp.created_at DESC`
+    );
+    const { storage } = require('../api-client/index');
+    const log = (result.data || []).map(r => ({
+      ...r,
+      avatar_url: r.avatar_file_id ? storage.getFileUrl(r.avatar_file_id) : null,
+    }));
+    return res.json({ log });
+  } catch (err) {
+    console.error('[PROGRESS/LIST]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo progreso.' });
   }
 }
 
@@ -374,4 +446,5 @@ module.exports = {
   createNews, updateNews, deleteNews,
   createPortfolioProject, deletePortfolioProject,
   uploadMedia,
+  createProjectProgress, listProjectProgress,
 };

@@ -24,8 +24,28 @@
     .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sw-text-muted); text-decoration: none; margin-bottom: 2rem; transition: color 0.2s; }
     .back-btn:hover { color: var(--sw-red); }
     .loading-state { text-align: center; padding: 4rem 2rem; font-family: var(--sw-font-m); font-size: 0.75rem; letter-spacing: 0.15em; color: var(--sw-text-muted); }
-    .media-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .media-grid img { width: 160px; height: 120px; object-fit: cover; border: 1px solid var(--sw-border); }
+    /* Banner 16:9 */
+    .proj-banner-wrap { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--sw-steel); border: 1px solid var(--sw-border); margin-bottom: 2rem; }
+    .proj-banner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Estado badge */
+    .status-badge-big { display: inline-flex; align-items: center; gap: 6px; font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.3rem 0.8rem; border: 1px solid; margin-bottom: 1rem; }
+    .status-badge-big.por-comenzar { border-color: rgba(59,130,246,0.4); color: #60a5fa; background: rgba(59,130,246,0.08); }
+    .status-badge-big.en-proceso   { border-color: rgba(234,179,8,0.4);  color: #fbbf24; background: rgba(234,179,8,0.08);  }
+    .status-badge-big.finalizado   { border-color: rgba(34,197,94,0.4);  color: #4ade80; background: rgba(34,197,94,0.08);  }
+    /* Pasantes asignados */
+    .pasante-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
+    .pasante-card { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    .pasante-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sw-border); background: var(--sw-steel); }
+    .pasante-name { font-family: var(--sw-font-m); font-size: 0.62rem; letter-spacing: 0.05em; color: var(--sw-text-muted); text-align: center; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Progreso */
+    .progress-entry { display: flex; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .progress-entry:last-child { border-bottom: none; }
+    .progress-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sw-border); flex-shrink: 0; background: var(--sw-steel); }
+    .progress-meta { font-family: var(--sw-font-m); font-size: 0.6rem; color: var(--sw-text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .progress-author { color: var(--sw-white); font-size: 0.72rem; }
+    .progress-content { font-family: var(--sw-font-b); font-size: 0.82rem; color: var(--sw-text-muted); line-height: 1.65; white-space: pre-wrap; margin: 0; }
+    .tac-input { width: 100%; background: var(--sw-black); border: 1px solid var(--sw-border); color: var(--sw-white); font-family: var(--sw-font-m); font-size: 0.82rem; padding: 0.65rem 0.9rem; outline: none; margin-bottom: 0.75rem; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px)); transition: border-color 0.2s; resize: vertical; }
+    .tac-input:focus { border-color: var(--sw-red); }
     @media (max-width: 600px) { .proj-grid { grid-template-columns: 1fr; } }
   </style>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -59,7 +79,13 @@
     <div id="content" style="display:none;">
       <a href="/" class="back-btn">← Volver al índice</a>
 
+      <!-- Banner 16:9 -->
+      <div id="banner-wrap" class="proj-banner-wrap" style="display:none;">
+        <img id="banner-img" class="proj-banner-img" src="" alt="Banner del proyecto">
+      </div>
+
       <div class="proj-header">
+        <div id="proj-status-badge"></div>
         <div id="proj-meta" class="proj-meta"></div>
         <h1 id="proj-title" class="proj-title"></h1>
         <div id="proj-tags" style="margin-bottom:1rem;"></div>
@@ -94,13 +120,32 @@
         </div>
       </div>
 
-      <!-- Imágenes -->
-      <div id="media-card" class="tac-card" style="display:none;">
-        <div class="tac-card-title">Material del Proyecto</div>
-        <div id="media-grid" class="media-grid"></div>
+      <!-- Pasantes asignados (visible en "En proceso" y "Finalizado") -->
+      <div id="team-card" class="tac-card" style="display:none;">
+        <div class="tac-card-title"><i class="fa-solid fa-users" style="margin-right:6px;"></i>Pasantes Asignados</div>
+        <div id="team-grid" class="pasante-grid"></div>
       </div>
 
-      <!-- Acción -->
+      <!-- Historial de Progreso -->
+      <div id="progress-card" class="tac-card" style="display:none;">
+        <div class="tac-card-title"><i class="fa-solid fa-chart-line" style="margin-right:6px;"></i>Registro de Progreso</div>
+        <div id="progress-log"></div>
+      </div>
+
+      <!-- Formulario de Registro de Progreso (solo para pasantes aceptados en proceso) -->
+      <div id="add-progress-card" class="tac-card auth-only" style="display:none; border-color:rgba(167,139,250,0.35);">
+        <div class="tac-card-title" style="color:#a78bfa;"><i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i>Registrar Progreso</div>
+        <p style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-text-muted);margin-bottom:1rem;line-height:1.6;">
+          Compartí tus avances, aportes o dificultades en el proyecto.
+        </p>
+        <textarea id="progress-input" class="tac-input" rows="4" placeholder="Describí tu aporte o avance..."></textarea>
+        <button id="progress-btn" class="sw-btn sw-btn--primary" onclick="submitProgress()" style="background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4);color:#a78bfa;">
+          <i class="fa-solid fa-paper-plane"></i> ENVIAR PROGRESO
+        </button>
+        <span id="progress-msg" style="font-family:var(--sw-font-m);font-size:0.72rem;margin-left:1rem;color:var(--sw-text-muted);"></span>
+      </div>
+
+      <!-- Acción: Postularse -->
       <div id="apply-card" class="tac-card auth-only" style="display:none; border-color:rgba(163,0,0,0.35);">
         <div class="tac-card-title">Postularse al Proyecto</div>
         <p style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-text-muted);margin-bottom:1rem;line-height:1.6;">
@@ -141,12 +186,25 @@
 
         document.title = `${project.title} | Spider-Web ARG`;
 
-        const statusMap = { open: 'ABIERTO', closed: 'CERRADO', in_progress: 'EN PROGRESO' };
+        // Banner 16:9
+        if (project.cover_url) {
+          document.getElementById('banner-img').src = project.cover_url;
+          document.getElementById('banner-wrap').style.display = 'block';
+        }
+
+        // Estado dinámico badge
+        const ds = project.dynamic_status || project.status;
+        const statusClassMap = { 'Por comenzar': 'por-comenzar', 'En proceso': 'en-proceso', 'Finalizado': 'finalizado' };
+        const statusIconMap  = { 'Por comenzar': 'fa-clock', 'En proceso': 'fa-spinner fa-spin', 'Finalizado': 'fa-check-circle' };
+        const sc = statusClassMap[ds] || 'por-comenzar';
+        const si = statusIconMap[ds] || 'fa-info-circle';
+        document.getElementById('proj-status-badge').innerHTML = `<span class="status-badge-big ${sc}"><i class="fa-solid ${si}"></i>${ds}</span>`;
+        document.getElementById('proj-status').innerText = ds;
+
         document.getElementById('proj-meta').innerText =
           `PUBLICADO: ${new Date(project.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — POR: ${project.author}`;
         document.getElementById('proj-title').innerText = project.title;
         document.getElementById('proj-desc').innerText = project.description;
-        document.getElementById('proj-status').innerText = statusMap[project.status] || project.status.toUpperCase();
         document.getElementById('proj-count').innerText = `${project.applicant_count} pasante(s)`;
 
         if (project.start_date) {
@@ -163,15 +221,6 @@
           ? tags.map(t => `<span class="tag-pill">${t}</span>`).join('')
           : '';
 
-        // Media
-        const media = project.media_urls || [];
-        if (media.length) {
-          document.getElementById('media-card').style.display = 'block';
-          document.getElementById('media-grid').innerHTML = media.map(url =>
-            `<img src="${url}" alt="Media">`
-          ).join('');
-        }
-
         // Link de conferencia
         if (project.conf_link) {
           const wrap = document.getElementById('conf-link-wrap');
@@ -179,9 +228,59 @@
           document.getElementById('conf-link').href = project.conf_link;
         }
 
-        // Botón postularse (solo usuarios logueados)
         const token = localStorage.getItem('sw_token');
-        if (token && project.status === 'open') {
+        const userStr = localStorage.getItem('sw_user');
+        const currentUser = userStr ? JSON.parse(userStr) : null;
+
+        // Lógica según estado dinámico
+        const canApply = project.can_apply;
+        const inProgressOrDone = ds === 'En proceso' || ds === 'Finalizado';
+
+        // Pasantes asignados
+        const accepted = project.accepted_applicants || [];
+        if (inProgressOrDone && accepted.length > 0) {
+          document.getElementById('team-card').style.display = 'block';
+          document.getElementById('team-grid').innerHTML = accepted.map(u => `
+            <div class="pasante-card">
+              <img class="pasante-avatar"
+                src="${u.avatar_url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>'}"
+                alt="${u.name}" onerror="this.style.background='var(--sw-steel)'">
+              <span class="pasante-name">${u.name}</span>
+            </div>
+          `).join('');
+        }
+
+        // Historial de progreso
+        const progressLog = project.progress_log || [];
+        if (progressLog.length > 0) {
+          document.getElementById('progress-card').style.display = 'block';
+          document.getElementById('progress-log').innerHTML = progressLog.map(entry => `
+            <div class="progress-entry">
+              <img class="progress-avatar"
+                src="${entry.avatar_url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>'}"
+                alt="${entry.author_name}" onerror="this.style.background='var(--sw-steel)'">
+              <div style="flex:1;">
+                <div class="progress-meta">
+                  <span class="progress-author">${entry.author_name}</span>
+                  <span>${new Date(entry.created_at).toLocaleString('es-AR')}</span>
+                </div>
+                <p class="progress-content">${entry.content}</p>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Formulario de progreso (solo en proceso + pasante aceptado)
+        if (token && ds === 'En proceso') {
+          const isAccepted = accepted.some(u => currentUser && u.id === currentUser.id);
+          const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'ceo');
+          if (isAccepted || isAdmin) {
+            document.getElementById('add-progress-card').style.display = 'block';
+          }
+        }
+
+        // Botón postularse (solo si se puede postular y el usuario está autenticado)
+        if (token && canApply) {
           document.getElementById('apply-card').style.display = 'block';
         }
 
@@ -198,13 +297,36 @@
       btn.disabled = true; btn.innerText = 'ENVIANDO...';
       try {
         await window.api.fetch(`/users/projects/${projectId}/apply`, { method: 'POST' });
-        msg.innerText = '<i class="fa-solid fa-check"></i> Postulación enviada';
+        msg.innerHTML = '<i class="fa-solid fa-check"></i> Postulación enviada';
         msg.style.color = '#4ade80';
         btn.style.display = 'none';
       } catch (err) {
         msg.innerText = err.message;
         msg.style.color = '#f87171';
         btn.disabled = false; btn.innerText = 'POSTULARME';
+      }
+    }
+
+    async function submitProgress() {
+      const btn = document.getElementById('progress-btn');
+      const msg = document.getElementById('progress-msg');
+      const input = document.getElementById('progress-input');
+      const content = input.value.trim();
+      if (!content) { msg.innerText = 'Escribí algo antes de enviar.'; msg.style.color = '#f87171'; return; }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ENVIANDO...';
+      try {
+        await window.api.fetch(`/users/projects/${projectId}/progress`, { method: 'POST', body: { content } });
+        msg.innerHTML = '<i class="fa-solid fa-check"></i> Progreso registrado';
+        msg.style.color = '#4ade80';
+        input.value = '';
+        // Refrescar log
+        setTimeout(() => location.reload(), 1200);
+      } catch (err) {
+        msg.innerText = err.message;
+        msg.style.color = '#f87171';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ENVIAR PROGRESO';
       }
     }
 

@@ -59,6 +59,7 @@ const tablas = [
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     description TEXT NOT NULL,
+    summary VARCHAR(255) DEFAULT NULL,
     media_file_ids TEXT DEFAULT NULL,
     required_tags TEXT DEFAULT NULL,
     conf_link VARCHAR(500) DEFAULT NULL,
@@ -89,6 +90,7 @@ const tablas = [
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
+    summary VARCHAR(255) DEFAULT NULL,
     cover_file_id VARCHAR(100) DEFAULT NULL,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -105,6 +107,17 @@ const tablas = [
     content TEXT NOT NULL,
     is_read TINYINT(1) DEFAULT 0,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  // ──────────────────────────────────────────────
+  // REGISTRO DE PROGRESO DE PROYECTOS
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS project_progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
 ];
 

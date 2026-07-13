@@ -21,4 +21,8 @@ router.post('/projects/:projectId/apply', requireAuth, usersCtrl.applyToProject)
 router.delete('/projects/:projectId/apply', requireAuth, usersCtrl.cancelApplication);
 router.get('/my-applications', requireAuth, usersCtrl.getMyApplications);
 
+// Progreso de proyectos
+const adminCtrl = require('../controllers/admin.controller');
+router.post('/projects/:projectId/progress', requireAuth, adminCtrl.createProjectProgress);
+
 module.exports = router;

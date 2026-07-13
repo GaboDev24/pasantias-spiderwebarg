@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .news-page { max-width: 860px; margin: 0 auto; padding: clamp(1rem, 4vw, 2.5rem); padding-top: 90px; padding-bottom: 50px; }
-    .news-cover { width: 100%; max-height: 380px; object-fit: cover; border: 1px solid var(--sw-border); margin-bottom: 2rem; display: block; }
+    /* Banner 16:9 */
+    .news-banner-wrap { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--sw-steel); border: 1px solid var(--sw-border); margin-bottom: 2rem; display: none; }
+    .news-banner-img  { width: 100%; height: 100%; object-fit: cover; display: block; }
     .news-meta { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.15em; color: var(--sw-red); text-transform: uppercase; margin-bottom: 0.75rem; }
     .news-title { font-family: var(--sw-font-h); font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; margin-bottom: 1.5rem; line-height: 1.1; }
     .news-content { font-family: var(--sw-font-b); font-size: 1rem; line-height: 1.8; color: var(--sw-text-muted); white-space: pre-wrap; }
@@ -47,7 +49,9 @@
     <div id="loading" class="loading-state">CARGANDO INFORME...</div>
     <div id="content" style="display:none;">
       <a href="/" class="back-btn">← Volver al índice</a>
-      <img id="cover" class="news-cover" src="" alt="Cover" style="display:none;">
+      <div id="banner-wrap" class="news-banner-wrap">
+        <img id="banner-img" class="news-banner-img" src="" alt="Portada">
+      </div>
       <div id="meta" class="news-meta"></div>
       <h1 id="title" class="news-title"></h1>
       <hr class="tac-divider">
@@ -83,9 +87,10 @@
         document.getElementById('body').innerText = news.content;
 
         if (news.cover_url) {
-          const img = document.getElementById('cover');
+          const wrap = document.getElementById('banner-wrap');
+          const img  = document.getElementById('banner-img');
           img.src = news.cover_url;
-          img.style.display = 'block';
+          wrap.style.display = 'block';
         }
 
         document.getElementById('loading').style.display = 'none';
