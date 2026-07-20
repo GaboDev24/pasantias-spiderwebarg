@@ -181,5 +181,29 @@ function togglePassword(inputId, iconElement) {
   }
 }
 
+/* ═══════════════════════════════════════
+   MODAL UTILITIES
+═══════════════════════════════════════ */
+function openModalById(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('open');
+}
+
+function closeModalById(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
+}
+
+function closeModal(event) {
+  if (event && event.target && event.target.classList && event.target.classList.contains('sw-modal-overlay')) {
+    event.target.classList.remove('open');
+  }
+}
+
+window.openModalById = openModalById;
+window.closeModalById = closeModalById;
+window.closeModal = closeModal;
+
 // Global scope
-window.app = { logout, showToast, checkAuthState, toggleTheme, togglePassword };
+window.app = { logout, showToast, checkAuthState, toggleTheme, togglePassword, openModalById, closeModalById, closeModal };
+

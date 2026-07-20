@@ -133,24 +133,22 @@ const tablas = [
 ];
 
 async function initDB() {
-  console.log('[DB-INIT] Iniciando creacion de tablas...');
   for (const tablaSql of tablas) {
     const nombreMatch = tablaSql.match(/CREATE TABLE IF NOT EXISTS (\w+)/);
     const nombre = nombreMatch ? nombreMatch[1] : 'desconocida';
     try {
       await sql.query(tablaSql);
-      console.log(`[DB-INIT] Tabla OK: ${nombre}`);
     } catch (err) {
       console.error(`[DB-INIT] Error en tabla ${nombre}:`, err.message);
       process.exit(1);
     }
   }
-  console.log('[DB-INIT] Base de datos inicializada correctamente.');
+  console.log(`[DB-INIT] Base de datos inicializada correctamente (${tablas.length} tablas verificadas).`);
 }
 
 // Si se ejecuta directamente
 if (require.main === module) {
-  initDB().catch(console.error);
+  initDB().then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });
 }
 
 module.exports = { initDB };
