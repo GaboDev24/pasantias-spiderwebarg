@@ -1,0 +1,3131 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spider-Web ARG | Panel Admin</title>
+    <link rel="stylesheet" href="/css/styles.css?v=2" />
+    <link rel="stylesheet" href="/css/tactical.css?v=2" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .admin-layout {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: clamp(1rem, 4vw, 2.5rem);
+        padding-top: 90px;
+        padding-bottom: 50px;
+      }
+      .tac-card {
+        background: var(--sw-dark);
+        border: 1px solid var(--sw-border);
+        clip-path: polygon(
+          0 0,
+          calc(100% - 12px) 0,
+          100% 12px,
+          100% 100%,
+          12px 100%,
+          0 calc(100% - 12px)
+        );
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+      .tac-card-title {
+        font-family: var(--sw-font-m);
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        color: var(--sw-red);
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--sw-border);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .tac-card-title::before {
+        content: "//";
+        opacity: 0.5;
+      }
+      .tac-label {
+        font-family: var(--sw-font-m);
+        font-size: 0.58rem;
+        letter-spacing: 0.15em;
+        color: rgba(163, 0, 0, 0.85);
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 0.4rem;
+      }
+      .tac-input {
+        width: 100%;
+        background: var(--sw-black);
+        border: 1px solid var(--sw-border);
+        color: var(--sw-white);
+        font-family: var(--sw-font-m);
+        font-size: 0.82rem;
+        padding: 0.65rem 0.9rem;
+        outline: none;
+        margin-bottom: 0.75rem;
+        clip-path: polygon(
+          0 0,
+          calc(100% - 5px) 0,
+          100% 5px,
+          100% 100%,
+          5px 100%,
+          0 calc(100% - 5px)
+        );
+        transition: border-color 0.2s;
+        resize: vertical;
+      }
+      .tac-input:focus {
+        border-color: var(--sw-red);
+      }
+      .tac-input::placeholder {
+        color: var(--sw-text-muted);
+      }
+      .tac-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--sw-font-m);
+        font-size: 0.75rem;
+      }
+      .tac-table th {
+        font-size: 0.58rem;
+        letter-spacing: 0.15em;
+        color: var(--sw-red);
+        text-transform: uppercase;
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--sw-border);
+      }
+      .tac-table td {
+        padding: 0.6rem 0.75rem;
+        color: var(--sw-white);
+        border-bottom: 1px solid rgba(163, 0, 0, 0.06);
+        vertical-align: middle;
+      }
+      .tac-table tr:hover td {
+        background: rgba(163, 0, 0, 0.04);
+      }
+      .tac-badge {
+        font-family: var(--sw-font-m);
+        font-size: 0.56rem;
+        padding: 0.18rem 0.5rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: rgba(163, 0, 0, 0.1);
+        border: 1px solid var(--sw-border);
+        color: var(--sw-white);
+      }
+      .tac-badge.ok {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #4ade80;
+      }
+      .tac-badge.warn {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #f87171;
+      }
+      .tac-badge.info {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #60a5fa;
+      }
+      /* Tabs */
+      .tac-tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .tac-tab {
+        font-family: var(--sw-font-m);
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 0.5rem 1.1rem;
+        cursor: pointer;
+        background: var(--sw-dark);
+        border: 1px solid var(--sw-border);
+        color: var(--sw-text-muted);
+        clip-path: polygon(
+          0 0,
+          calc(100% - 6px) 0,
+          100% 6px,
+          100% 100%,
+          6px 100%,
+          0 calc(100% - 6px)
+        );
+        transition: all 0.2s;
+      }
+      .tac-tab:hover {
+        color: var(--sw-white);
+        border-color: var(--sw-red);
+      }
+      .tac-tab.active {
+        background: var(--sw-red);
+        border-color: var(--sw-red);
+        color: var(--sw-white);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      /* Token display */
+      .token-display {
+        font-family: var(--sw-font-m);
+        letter-spacing: 0.2em;
+        font-size: 1.2rem;
+        color: #4ade80;
+        background: var(--sw-black);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        padding: 0.75rem 1.25rem;
+        margin-top: 1rem;
+        display: none;
+        clip-path: polygon(
+          0 0,
+          calc(100% - 6px) 0,
+          100% 6px,
+          100% 100%,
+          6px 100%,
+          0 calc(100% - 6px)
+        );
+      }
+      /* Chat */
+      .chat-box {
+        background: var(--sw-black);
+        border: 1px solid var(--sw-border);
+        height: 300px;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        clip-path: polygon(
+          0 0,
+          calc(100% - 8px) 0,
+          100% 8px,
+          100% 100%,
+          8px 100%,
+          0 calc(100% - 8px)
+        );
+      }
+      .chat-msg-me {
+        align-self: flex-end;
+        background: rgba(163, 0, 0, 0.15);
+        border: 1px solid var(--sw-border);
+        padding: 0.5rem 0.75rem;
+        max-width: 80%;
+        font-family: var(--sw-font-m);
+        font-size: 0.78rem;
+      }
+      .chat-msg-other {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0.5rem 0.75rem;
+        max-width: 80%;
+        font-family: var(--sw-font-m);
+        font-size: 0.78rem;
+      }
+      .chat-user-item {
+        padding: 0.5rem 0.6rem;
+        cursor: pointer;
+        border: 1px solid transparent;
+        font-family: var(--sw-font-m);
+        font-size: 0.72rem;
+        transition: all 0.2s;
+        line-height: 1.4;
+      }
+      .chat-user-item:hover,
+      .chat-user-item.active {
+        border-color: var(--sw-border);
+        background: rgba(163, 0, 0, 0.08);
+        color: var(--sw-red);
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 600px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+      /* Lista de publicaciones */
+      .pub-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 1rem;
+      }
+      .pub-item {
+        border: 1px solid var(--sw-border);
+        background: var(--sw-black);
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .pub-item-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .pub-item-title {
+        font-family: var(--sw-font-h);
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pub-item-meta {
+        font-family: var(--sw-font-m);
+        font-size: 0.6rem;
+        color: var(--sw-text-muted);
+        letter-spacing: 0.1em;
+        margin-top: 2px;
+      }
+      .pub-item-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+      }
+      /* Modal */
+      .sw-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.75);
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .sw-modal-overlay.open {
+        display: flex;
+      }
+      .sw-modal {
+        background: var(--sw-dark);
+        border: 1px solid var(--sw-border);
+        max-width: 60vw;
+        width: 100%;
+        max-height: 85vh;
+        overflow-y: auto;
+        clip-path: polygon(
+          0 0,
+          calc(100% - 12px) 0,
+          100% 12px,
+          100% 100%,
+          12px 100%,
+          0 calc(100% - 12px)
+        );
+      }
+      .sw-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--sw-border);
+      }
+      .sw-modal-title {
+        font-family: var(--sw-font-h);
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .sw-modal-close {
+        background: transparent;
+        border: none;
+        color: var(--sw-text-muted);
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 0.25rem;
+        transition: color 0.2s;
+      }
+      .sw-modal-close:hover {
+        color: var(--sw-red);
+      }
+      .sw-modal-body {
+        padding: 1.25rem;
+      }
+      .applicant-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .applicant-row:last-child {
+        border-bottom: none;
+      }
+      .applicant-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--sw-steel);
+        object-fit: cover;
+      }
+      .applicant-info {
+        flex: 1;
+      }
+      .applicant-name {
+        font-family: var(--sw-font-m);
+        font-size: 0.78rem;
+      }
+      .applicant-email {
+        font-family: var(--sw-font-m);
+        font-size: 0.62rem;
+        color: var(--sw-text-muted);
+      }
+      .status-badge {
+        font-family: var(--sw-font-m);
+        font-size: 0.58rem;
+        letter-spacing: 0.1em;
+        padding: 2px 8px;
+        border: 1px solid;
+      }
+      .status-badge.pending {
+        border-color: rgba(234, 179, 8, 0.4);
+        color: #fbbf24;
+      }
+      .status-badge.accepted {
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #4ade80;
+      }
+      .status-badge.rejected {
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #f87171;
+      }
+    </style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body class="tac-page">
+    <div class="sw-scanlines"></div>
+    <div class="noise-overlay"></div>
+
+    <nav class="sw-nav scrolled">
+      <div class="sw-nav__inner">
+        <a href="/" style="display: flex; align-items: center">
+          <img src="/img/logo blanco.png" alt="Logo" style="height: 34px" />
+        </a>
+        <div class="sw-nav__links">
+          <a href="/" class="sw-nav__link">← Inicio</a>
+          <span class="sw-pulse" style="margin-right: 0.5rem"></span>
+          <span
+            style="
+              font-family: var(--sw-font-m);
+              font-size: 0.62rem;
+              color: var(--sw-red);
+              letter-spacing: 0.15em;
+              margin-right: 0.75rem;
+            "
+            >PANEL ADMIN</span
+          >
+          <a href="/dashboard.html" class="sw-nav__link">Mi Perfil</a>
+          <a
+            href="#"
+            onclick="
+              window.app.logout();
+              return false;
+            "
+            class="sw-nav__link"
+            >Salir</a
+          >
+        </div>
+        <div class="sw-nav__controls">
+          <button
+            id="theme-toggle"
+            class="sw-theme-btn"
+            onclick="window.app.toggleTheme()"
+            title="Cambiar tema"
+            aria-label="Cambiar tema"
+          >
+            <i class="fa-solid fa-sun"></i>
+          </button>
+          <button
+            id="sidebar-toggle"
+            class="sw-theme-btn sw-sidebar-toggle"
+            onclick="toggleSidebar()"
+            title="Alternar menú lateral"
+            aria-label="Alternar menú lateral"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <button
+            id="sw-hamburger"
+            class="sw-hamburger"
+            aria-label="Menú"
+            aria-expanded="false"
+          >
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sw-admin-wrapper">
+      <!-- ════════ SIDEBAR LATERAL ════════ -->
+      <aside
+        class="sw-sidebar"
+        id="admin-sidebar"
+        aria-label="Navegación principal de administración"
+      >
+        <div class="sw-sidebar__header">// NAVEGACIÓN ADMINISTRATIVA</div>
+        <button
+          class="sw-sidebar__link active"
+          onclick="switchAdminTab('users', this)"
+          role="tab"
+          aria-selected="true"
+          aria-controls="tab-users"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-users"></i
+          ></span>
+          <span>Pasantes &amp; Tokens</span>
+        </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('projects', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-projects"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-folder-tree"></i
+          ></span>
+          <span>Gestión de Proyectos</span>
+        </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('portfolio', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-portfolio"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-briefcase"></i
+          ></span>
+          <span>Portfolio Realizado</span>
+        </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('news', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-news"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-newspaper"></i
+          ></span>
+          <span>Noticias &amp; Novedades</span>
+        </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('chat', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-chat"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-comments"></i
+          ></span>
+          <span>Chat &amp; Amigos</span>
+        </button>
+
+        <div class="sw-sidebar__footer">
+          <a
+            href="/dashboard.html"
+            class="sw-sidebar__link"
+            style="color: var(--sw-text-muted)"
+          >
+            <span class="sw-sidebar__icon"
+              ><i class="fa-solid fa-user-shield"></i
+            ></span>
+            <span>Ver Mi Perfil</span>
+          </a>
+          <button
+            class="sw-sidebar__link"
+            onclick="window.app.logout()"
+            style="color: #f87171"
+          >
+            <span class="sw-sidebar__icon"
+              ><i class="fa-solid fa-right-from-bracket"></i
+            ></span>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ════════ ÁREA DE CONTENIDO PRINCIPAL ════════ -->
+      <main class="sw-main-area">
+        <!-- ════════ TAB: USUARIOS & TOKENS ════════ -->
+        <div id="tab-users" class="tab-content active" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i
+                class="fa-solid fa-users-gear"
+                style="color: var(--sw-red)"
+              ></i>
+              Pasantes &amp; Tokens de Acceso
+            </div>
+          </div>
+
+          <!-- Grilla de KPIs -->
+          <div class="sw-kpi-grid">
+            <div class="sw-kpi-card">
+              <div class="sw-kpi-title">Pasantes Registrados</div>
+              <div class="sw-kpi-val" id="kpi-total-users">--</div>
+              <div class="sw-kpi-sub">
+                <i class="fa-solid fa-circle-check"></i> Activos en plataforma
+              </div>
+            </div>
+            <div class="sw-kpi-card">
+              <div class="sw-kpi-title">Pendientes de Validación</div>
+              <div
+                class="sw-kpi-val"
+                id="kpi-pending-users"
+                style="color: #fbbf24"
+              >
+                --
+              </div>
+              <div class="sw-kpi-sub" style="color: #fbbf24">
+                <i class="fa-solid fa-clock"></i> Requieren
+                asignación/verificación
+              </div>
+            </div>
+            <div class="sw-kpi-card">
+              <div class="sw-kpi-title">Proyectos Publicados</div>
+              <div class="sw-kpi-val" id="kpi-total-projects">--</div>
+              <div class="sw-kpi-sub">
+                <i class="fa-solid fa-folder-open"></i> Oportunidades activas
+              </div>
+            </div>
+            <div class="sw-kpi-card">
+              <div class="sw-kpi-title">Noticias en Portal</div>
+              <div class="sw-kpi-val" id="kpi-total-news">--</div>
+              <div class="sw-kpi-sub">
+                <i class="fa-solid fa-bullhorn"></i> Comunicados vigentes
+              </div>
+            </div>
+          </div>
+
+          <!-- Generar Token de Validación (Oculto por nuevo flujo de botón de aprobación directo) -->
+          <div class="tac-card" id="gen-token-card" style="display: none">
+            <div class="tac-card-title">
+              <i class="fa-solid fa-key"></i> Generar Token de Validación Rápido
+            </div>
+            <p
+              style="
+                font-family: var(--sw-font-b);
+                font-size: 0.82rem;
+                color: var(--sw-text-muted);
+                margin-bottom: 1rem;
+              "
+            >
+              Crea un código único y compártelo con un nuevo integrante o
+              pasante para que pueda validar y verificar su cuenta en el sistema
+              al registrarse o iniciar sesión.
+            </p>
+            <form
+              id="gen-token-form"
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+              "
+            >
+              <div style="flex: 1; min-width: 240px">
+                <label class="tac-label" for="token-email"
+                  >Email del pasante (opcional, para asignar token
+                  directamente)</label
+                >
+                <input
+                  type="email"
+                  id="token-email"
+                  class="tac-input"
+                  style="margin: 0"
+                  placeholder="ejemplo@email.com"
+                />
+              </div>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-bolt"></i> GENERAR TOKEN
+              </button>
+            </form>
+            <div class="token-display" id="new-token-display"></div>
+          </div>
+
+          <!-- Usuarios pendientes de validación -->
+          <div class="tac-card">
+            <div class="tac-card-title" style="justify-content: space-between">
+              <span
+                ><i class="fa-solid fa-user-clock" style="color: #fbbf24"></i>
+                Usuarios Pendientes de Validación</span
+              >
+            </div>
+            <div style="overflow-x: auto">
+              <table class="tac-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Registrado</th>
+                    <th>Email Verificado</th>
+                    <th>Acción Rápida</th>
+                  </tr>
+                </thead>
+                <tbody id="pending-users-table">
+                  <tr>
+                    <td
+                      colspan="5"
+                      style="
+                        text-align: center;
+                        color: var(--sw-text-muted);
+                        padding: 1.5rem;
+                      "
+                    >
+                      Cargando usuarios pendientes...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Todos los usuarios -->
+          <div class="tac-card">
+            <div
+              class="tac-card-title"
+              style="justify-content: space-between; flex-wrap: wrap; gap: 10px"
+            >
+              <span
+                ><i class="fa-solid fa-user-shield"></i> Directorio General de
+                Usuarios</span
+              >
+              <div style="min-width: 260px; flex: 1; max-width: 360px">
+                <input
+                  type="text"
+                  id="filter-users-input"
+                  class="tac-input"
+                  style="margin: 0; padding: 0.45rem 0.75rem; font-size: 0.8rem"
+                  placeholder="🔍 Filtrar por nombre o email..."
+                  oninput="filterAllUsersTable(this.value)"
+                />
+              </div>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="tac-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol Asignado</th>
+                    <th>Validado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="all-users-table">
+                  <tr>
+                    <td
+                      colspan="5"
+                      style="
+                        text-align: center;
+                        color: var(--sw-text-muted);
+                        padding: 1.5rem;
+                      "
+                    >
+                      Cargando lista de usuarios...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ TAB: PROYECTOS ════════ -->
+        <div id="tab-projects" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i
+                class="fa-solid fa-diagram-project"
+                style="color: var(--sw-red)"
+              ></i>
+              Gestión de Proyectos
+            </div>
+            <button
+              class="sw-btn sw-btn--primary"
+              onclick="openModalById('modal-create-project')"
+            >
+              <i class="fa-solid fa-plus"></i> PUBLICAR NUEVO PROYECTO
+            </button>
+          </div>
+
+          <!-- Barra de filtrado rápido de proyectos -->
+          <div class="tac-card" style="padding: 1rem 1.25rem">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+              "
+            >
+              <span
+                style="
+                  font-family: var(--sw-font-m);
+                  font-size: 0.75rem;
+                  color: var(--sw-text-muted);
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                "
+                >Filtrar Proyectos Publicados</span
+              >
+              <input
+                type="text"
+                id="filter-projects-input"
+                class="tac-input"
+                style="
+                  margin: 0;
+                  max-width: 380px;
+                  padding: 0.45rem 0.75rem;
+                  font-size: 0.8rem;
+                "
+                placeholder="🔍 Buscar por título o tag..."
+                oninput="filterProjectsList(this.value)"
+              />
+            </div>
+          </div>
+
+          <!-- Lista de proyectos publicados -->
+          <div class="tac-card">
+            <div class="tac-card-title">Proyectos Publicados en el Portal</div>
+            <div id="projects-list" class="pub-list">
+              <p
+                style="
+                  font-family: var(--sw-font-m);
+                  font-size: 0.72rem;
+                  color: var(--sw-text-muted);
+                "
+              >
+                Cargando oportunidades...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ TAB: PORTFOLIO ════════ -->
+        <div id="tab-portfolio" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i
+                class="fa-solid fa-laptop-code"
+                style="color: var(--sw-red)"
+              ></i>
+              Proyectos Realizados (Portfolio)
+            </div>
+            <button
+              class="sw-btn sw-btn--primary"
+              onclick="openModalById('modal-create-portfolio')"
+            >
+              <i class="fa-solid fa-plus"></i> PUBLICAR EN PORTFOLIO
+            </button>
+          </div>
+
+          <!-- Lista de portfolio -->
+          <div class="tac-card">
+            <div class="tac-card-title">Proyectos Realizados Publicados</div>
+            <div id="portfolio-list" class="pub-list">
+              <p
+                style="
+                  font-family: var(--sw-font-m);
+                  font-size: 0.72rem;
+                  color: var(--sw-text-muted);
+                "
+              >
+                Cargando trabajos...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ TAB: NOTICIAS ════════ -->
+        <div id="tab-news" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i class="fa-solid fa-newspaper" style="color: var(--sw-red)"></i>
+              Noticias &amp; Novedades
+            </div>
+            <button
+              class="sw-btn sw-btn--primary"
+              onclick="openModalById('modal-create-news')"
+            >
+              <i class="fa-solid fa-plus"></i> PUBLICAR NOTICIA
+            </button>
+          </div>
+
+          <!-- Lista de noticias publicadas -->
+          <div class="tac-card">
+            <div class="tac-card-title">Noticias Publicadas en el Portal</div>
+            <div id="news-list" class="pub-list">
+              <p
+                style="
+                  font-family: var(--sw-font-m);
+                  font-size: 0.72rem;
+                  color: var(--sw-text-muted);
+                "
+              >
+                Cargando comunicados...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ TAB: CHAT INTERNO ════════ -->
+        <div id="tab-chat" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i class="fa-solid fa-comments" style="color: var(--sw-red)"></i>
+              Chat Interno &amp; Contactos Favoritos
+            </div>
+          </div>
+
+          <div class="tac-card" style="padding: 1.25rem">
+            <div
+              class="tac-card-title"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+              "
+              onclick="
+                document
+                  .getElementById('chat-mobile-content-admin')
+                  .classList.toggle('open');
+                document
+                  .getElementById('chat-mobile-icon-admin')
+                  .classList.toggle('open');
+              "
+            >
+              <span>Canal de Comunicación / Amigos</span>
+              <i
+                id="chat-mobile-icon-admin"
+                class="fa-solid fa-chevron-down chat-mobile-icon"
+              ></i>
+            </div>
+            <div
+              id="chat-mobile-content-admin"
+              style="display: grid; grid-template-columns: 260px 1fr; gap: 20px"
+              class="chat-grid chat-mobile-content"
+            >
+              <div
+                style="
+                  border-right: 1px solid var(--sw-border);
+                  padding-right: 12px;
+                "
+              >
+                <div
+                  style="
+                    font-family: var(--sw-font-m);
+                    font-size: 0.62rem;
+                    letter-spacing: 0.15em;
+                    color: var(--sw-text-muted);
+                    text-transform: uppercase;
+                    margin-bottom: 0.5rem;
+                    display: flex;
+                    justify-content: space-between;
+                  "
+                >
+                  <span>Directorio de Contactos</span>
+                  <span
+                    id="chat-user-count-admin"
+                    style="color: var(--sw-red); font-weight: bold"
+                    >0</span
+                  >
+                </div>
+                <input
+                  type="text"
+                  id="chat-search-input-admin"
+                  class="tac-input"
+                  style="
+                    margin-bottom: 12px;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.8rem;
+                  "
+                  placeholder="🔍 Buscar contacto..."
+                  oninput="filterAdminChatUsers(this.value)"
+                />
+                <div
+                  id="chat-users-admin"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    max-height: 480px;
+                    overflow-y: auto;
+                    padding-right: 4px;
+                  "
+                ></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <div
+                  id="chat-active-header-admin"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: rgba(255, 255, 255, 0.03);
+                    padding: 0.65rem 1rem;
+                    border: 1px solid var(--sw-border);
+                    font-family: var(--sw-font-b);
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    min-height: 46px;
+                  "
+                >
+                  <span
+                    id="chat-active-name-admin"
+                    style="color: var(--sw-text-muted)"
+                    >Selecciona un usuario del directorio para chatear</span
+                  >
+                  <div id="chat-active-actions-admin"></div>
+                </div>
+                <div
+                  class="chat-box"
+                  id="chat-messages-admin"
+                  style="height: 400px; min-height: 380px"
+                >
+                  <span
+                    style="
+                      margin: auto;
+                      font-family: var(--sw-font-b);
+                      font-size: 0.85rem;
+                      color: var(--sw-text-muted);
+                    "
+                    >Selecciona un usuario para cargar la conversación</span
+                  >
+                </div>
+                <form id="chat-form-admin" style="display: flex; gap: 10px">
+                  <input
+                    type="text"
+                    id="chat-input-admin"
+                    class="tac-input"
+                    style="
+                      margin: 0;
+                      flex: 1;
+                      font-size: 0.88rem;
+                      padding: 0.75rem 1rem;
+                    "
+                    placeholder="Escribe tu mensaje aquí..."
+                    disabled
+                  />
+                  <button
+                    type="submit"
+                    class="sw-btn sw-btn--primary"
+                    id="chat-btn-admin"
+                    style="padding: 0.75rem 1.5rem"
+                    disabled
+                  >
+                    <i class="fa-solid fa-paper-plane"></i> ENVIAR
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- /sw-admin-wrapper -->
+
+    <!-- ════════ MODAL CREAR PROYECTO ════════ -->
+    <div
+      id="modal-create-project"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-p-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="create-p-title-label"
+            ><i
+              class="fa-solid fa-diagram-project"
+              style="color: var(--sw-red)"
+            ></i>
+            Publicar Nuevo Proyecto</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-create-project')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="project-form">
+            <label class="tac-label" for="p-title">Título del Proyecto *</label>
+            <input
+              type="text"
+              id="p-title"
+              class="tac-input"
+              required
+              placeholder="Ej: Rediseño UX Plataforma Web"
+            />
+
+            <label class="tac-label" for="p-summary"
+              >Resumen corto * (preview en index)</label
+            >
+            <input
+              type="text"
+              id="p-summary"
+              class="tac-input"
+              maxlength="200"
+              placeholder="Máx 200 caracteres — síntesis atractiva para tarjetas"
+            />
+
+            <label class="tac-label" for="p-desc"
+              >Descripción completa y requerimientos *</label
+            >
+            <textarea
+              id="p-desc"
+              class="tac-input"
+              rows="4"
+              required
+              placeholder="Detalla los objetivos, tareas a realizar y condiciones del proyecto..."
+            ></textarea>
+
+            <div class="form-row">
+              <div>
+                <label class="tac-label" for="p-start"
+                  >Fecha de Inicio (opcional)</label
+                >
+                <input type="datetime-local" id="p-start" class="tac-input" />
+              </div>
+              <div>
+                <label class="tac-label" for="p-end"
+                  >Fecha de Cierre (opcional)</label
+                >
+                <input type="datetime-local" id="p-end" class="tac-input" />
+              </div>
+            </div>
+
+            <label class="tac-label">Tags Requeridos (Aptitudes)</label>
+            <div
+              id="p-tags"
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 1.25rem;
+              "
+            >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input type="checkbox" name="ptags" value="Programacion" />
+                Programación</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input type="checkbox" name="ptags" value="Diseño Grafico" />
+                Diseño Gráfico</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input type="checkbox" name="ptags" value="Redes Sociales" />
+                Redes Sociales</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  name="ptags"
+                  value="Edicion de Videos"
+                />
+                Edición de Videos</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input type="checkbox" name="ptags" value="QA" /> QA /
+                Testing</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input type="checkbox" name="ptags" value="Marketing" />
+                Marketing</label
+              >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.82rem;
+                  cursor: pointer;
+                "
+                ><input
+                  type="checkbox"
+                  name="ptags"
+                  value="IT (Soporte técnico)"
+                />
+                IT (Soporte Técnico)</label
+              >
+            </div>
+
+            <label class="tac-label" for="p-link"
+              >Link de Conferencia (Google Meet / Zoom, opcional)</label
+            >
+            <input
+              type="url"
+              id="p-link"
+              class="tac-input"
+              placeholder="https://meet.google.com/..."
+            />
+
+            <label class="tac-label" for="p-image"
+              >Imagen de Portada (opcional)</label
+            >
+            <input
+              type="file"
+              id="p-image"
+              class="tac-input"
+              accept="image/*"
+              style="cursor: pointer"
+            />
+            <div
+              id="p-image-preview"
+              style="display: none; margin-bottom: 1rem"
+            >
+              <img
+                id="p-preview-img"
+                style="
+                  max-width: 100%;
+                  max-height: 180px;
+                  border: 1px solid var(--sw-border);
+                  border-radius: 4px;
+                "
+                alt="Preview"
+              />
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 1rem;
+              "
+            >
+              <button
+                type="button"
+                class="sw-btn sw-btn--ghost"
+                onclick="closeModalById('modal-create-project')"
+              >
+                CANCELAR
+              </button>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> PUBLICAR PROYECTO
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL CREAR PORTFOLIO ════════ -->
+    <div
+      id="modal-create-portfolio"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-port-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="create-port-title-label"
+            ><i class="fa-solid fa-briefcase" style="color: var(--sw-red)"></i>
+            Publicar en Portfolio Realizado</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-create-portfolio')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="portfolio-form">
+            <label class="tac-label" for="port-title"
+              >Título del Proyecto Realizado *</label
+            >
+            <input
+              type="text"
+              id="port-title"
+              class="tac-input"
+              required
+              placeholder="Ej: App Móvil para Gestión Logística"
+            />
+
+            <label class="tac-label" for="port-content"
+              >Descripción del Trabajo *</label
+            >
+            <textarea
+              id="port-content"
+              class="tac-input"
+              rows="4"
+              required
+              placeholder="Detalla los logros, tecnologías utilizadas y el impacto del trabajo realizado..."
+            ></textarea>
+
+            <label class="tac-label" for="port-image"
+              >Imagen de Portada (opcional)</label
+            >
+            <input
+              type="file"
+              id="port-image"
+              class="tac-input"
+              accept="image/*"
+              style="cursor: pointer"
+            />
+
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 1rem;
+              "
+            >
+              <button
+                type="button"
+                class="sw-btn sw-btn--ghost"
+                onclick="closeModalById('modal-create-portfolio')"
+              >
+                CANCELAR
+              </button>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> PUBLICAR EN PORTFOLIO
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL CREAR NOTICIA ════════ -->
+    <div
+      id="modal-create-news"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-n-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="create-n-title-label"
+            ><i class="fa-solid fa-newspaper" style="color: var(--sw-red)"></i>
+            Publicar Nueva Noticia</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-create-news')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="news-form">
+            <label class="tac-label" for="n-title"
+              >Titular de la Noticia *</label
+            >
+            <input
+              type="text"
+              id="n-title"
+              class="tac-input"
+              required
+              placeholder="Ej: Nuevas Oportunidades de Pasantía para el Trimestre"
+            />
+
+            <label class="tac-label" for="n-summary"
+              >Resumen corto * (preview en index)</label
+            >
+            <input
+              type="text"
+              id="n-summary"
+              class="tac-input"
+              maxlength="200"
+              placeholder="Máx 200 caracteres — bajada para la tarjeta"
+            />
+
+            <label class="tac-label" for="n-content"
+              >Contenido completo *</label
+            >
+            <textarea
+              id="n-content"
+              class="tac-input"
+              rows="6"
+              required
+              placeholder="Escribe el artículo completo aquí..."
+            ></textarea>
+
+            <label class="tac-label" for="n-image"
+              >Imagen de Portada (opcional)</label
+            >
+            <input
+              type="file"
+              id="n-image"
+              class="tac-input"
+              accept="image/*"
+              style="cursor: pointer"
+            />
+            <div
+              id="n-image-preview"
+              style="display: none; margin-bottom: 1rem"
+            >
+              <img
+                id="n-preview-img"
+                style="
+                  max-width: 100%;
+                  max-height: 180px;
+                  border: 1px solid var(--sw-border);
+                  border-radius: 4px;
+                "
+                alt="Preview"
+              />
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 1rem;
+              "
+            >
+              <button
+                type="button"
+                class="sw-btn sw-btn--ghost"
+                onclick="closeModalById('modal-create-news')"
+              >
+                CANCELAR
+              </button>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> PUBLICAR NOTICIA
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: POSTULADOS ════════ -->
+    <div
+      id="modal-applicants"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-applicants-title"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="modal-applicants-title"
+            >Postulados al Proyecto</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-applicants')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body" id="modal-applicants-body">
+          <p
+            style="
+              font-family: var(--sw-font-m);
+              font-size: 0.72rem;
+              color: var(--sw-text-muted);
+            "
+          >
+            Cargando...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: EDITAR PROYECTO ════════ -->
+    <div
+      id="modal-edit-project"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-p-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="edit-p-title-label"
+            ><i
+              class="fa-solid fa-pen-to-square"
+              style="color: var(--sw-red)"
+            ></i>
+            Editar Proyecto</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-edit-project')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <input type="hidden" id="edit-p-id" />
+          <label class="tac-label" for="edit-p-title">Título</label>
+          <input type="text" id="edit-p-title" class="tac-input" />
+          <label class="tac-label" for="edit-p-summary">Resumen corto</label>
+          <input
+            type="text"
+            id="edit-p-summary"
+            class="tac-input"
+            maxlength="200"
+          />
+          <label class="tac-label" for="edit-p-desc">Descripción</label>
+          <textarea id="edit-p-desc" class="tac-input" rows="4"></textarea>
+          <div class="form-row">
+            <div>
+              <label class="tac-label" for="edit-p-start"
+                >Fecha de Inicio</label
+              >
+              <input
+                type="datetime-local"
+                id="edit-p-start"
+                class="tac-input"
+              />
+            </div>
+            <div>
+              <label class="tac-label" for="edit-p-end">Fecha de Cierre</label>
+              <input type="datetime-local" id="edit-p-end" class="tac-input" />
+            </div>
+          </div>
+          <label class="tac-label">Tags Requeridos (Aptitudes)</label>
+          <div
+            id="edit-p-tags"
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+              margin-bottom: 1.25rem;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input type="checkbox" name="edit-ptags" value="Programacion" />
+              Programación</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input
+                type="checkbox"
+                name="edit-ptags"
+                value="Diseño Grafico"
+              />
+              Diseño Gráfico</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input
+                type="checkbox"
+                name="edit-ptags"
+                value="Redes Sociales"
+              />
+              Redes Sociales</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input
+                type="checkbox"
+                name="edit-ptags"
+                value="Edicion de Videos"
+              />
+              Edición de Videos</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input type="checkbox" name="edit-ptags" value="QA" /> QA /
+              Testing</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input type="checkbox" name="edit-ptags" value="Marketing" />
+              Marketing</label
+            >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                cursor: pointer;
+              "
+              ><input
+                type="checkbox"
+                name="edit-ptags"
+                value="IT (Soporte técnico)"
+              />
+              IT (Soporte Técnico)</label
+            >
+          </div>
+          <label class="tac-label" for="edit-p-link">Link Conferencia</label>
+          <input type="url" id="edit-p-link" class="tac-input" />
+          <label class="tac-label" for="edit-p-image"
+            >Imagen del Proyecto (dejar vacío para mantener la actual)</label
+          >
+          <input
+            type="file"
+            id="edit-p-image"
+            class="tac-input"
+            accept="image/*"
+            style="cursor: pointer"
+          />
+          <div
+            id="edit-p-image-preview"
+            style="display: none; margin-bottom: 1rem"
+          >
+            <img
+              id="edit-p-preview-img"
+              style="
+                max-width: 100%;
+                max-height: 180px;
+                border: 1px solid var(--sw-border);
+                border-radius: 4px;
+              "
+              alt="Preview"
+            />
+          </div>
+          <div
+            style="
+              display: flex;
+              justify-content: flex-end;
+              gap: 10px;
+              margin-top: 1rem;
+            "
+          >
+            <button
+              type="button"
+              class="sw-btn sw-btn--ghost"
+              onclick="closeModalById('modal-edit-project')"
+            >
+              CANCELAR
+            </button>
+            <button
+              class="sw-btn sw-btn--primary"
+              id="save-edit-project-btn"
+              onclick="saveEditProject()"
+            >
+              <i class="fa-solid fa-check"></i> GUARDAR CAMBIOS
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: EDITAR NOTICIA ════════ -->
+    <div
+      id="modal-edit-news"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-n-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="edit-n-title-label"
+            ><i
+              class="fa-solid fa-pen-to-square"
+              style="color: var(--sw-red)"
+            ></i>
+            Editar Noticia</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-edit-news')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <input type="hidden" id="edit-n-id" />
+          <label class="tac-label" for="edit-n-title">Título</label>
+          <input type="text" id="edit-n-title" class="tac-input" />
+          <label class="tac-label" for="edit-n-summary">Resumen corto</label>
+          <input
+            type="text"
+            id="edit-n-summary"
+            class="tac-input"
+            maxlength="200"
+          />
+          <label class="tac-label" for="edit-n-content">Contenido</label>
+          <textarea
+            id="edit-n-content"
+            class="tac-input"
+            rows="6"
+            style="height: 40vh"
+          ></textarea>
+          <div
+            style="
+              display: flex;
+              justify-content: flex-end;
+              gap: 10px;
+              margin-top: 1rem;
+            "
+          >
+            <button
+              type="button"
+              class="sw-btn sw-btn--ghost"
+              onclick="closeModalById('modal-edit-news')"
+            >
+              CANCELAR
+            </button>
+            <button class="sw-btn sw-btn--primary" onclick="saveEditNews()">
+              <i class="fa-solid fa-check"></i> GUARDAR CAMBIOS
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: EDITAR PORTFOLIO ════════ -->
+    <div
+      id="modal-edit-portfolio"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-port-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="edit-port-title-label"
+            ><i
+              class="fa-solid fa-pen-to-square"
+              style="color: var(--sw-red)"
+            ></i>
+            Editar Proyecto de Portfolio</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-edit-portfolio')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <input type="hidden" id="edit-port-id" />
+          <label class="tac-label" for="edit-port-title">Título</label>
+          <input type="text" id="edit-port-title" class="tac-input" />
+          <label class="tac-label" for="edit-port-desc">Descripción</label>
+          <textarea id="edit-port-desc" class="tac-input" rows="4"></textarea>
+          <label class="tac-label" for="edit-port-image"
+            >Imagen de Portada (dejar vacío para mantener la actual)</label
+          >
+          <input
+            type="file"
+            id="edit-port-image"
+            class="tac-input"
+            accept="image/*"
+            style="cursor: pointer"
+          />
+          <div
+            id="edit-port-image-preview"
+            style="display: none; margin-bottom: 1rem"
+          >
+            <img
+              id="edit-port-preview-img"
+              style="
+                max-width: 100%;
+                max-height: 180px;
+                border: 1px solid var(--sw-border);
+                border-radius: 4px;
+              "
+              alt="Preview"
+            />
+          </div>
+          <div
+            style="
+              display: flex;
+              justify-content: flex-end;
+              gap: 10px;
+              margin-top: 1rem;
+            "
+          >
+            <button
+              type="button"
+              class="sw-btn sw-btn--ghost"
+              onclick="closeModalById('modal-edit-portfolio')"
+            >
+              CANCELAR
+            </button>
+            <button
+              class="sw-btn sw-btn--primary"
+              id="save-edit-portfolio-btn"
+              onclick="saveEditPortfolio()"
+            >
+              <i class="fa-solid fa-check"></i> GUARDAR CAMBIOS
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: PERFIL PASANTE ════════ -->
+    <div
+      id="modal-user-profile"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-user-title-label"
+    >
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="profile-user-title-label"
+            ><i class="fa-solid fa-id-card" style="color: var(--sw-red)"></i>
+            Perfil del Pasante</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-user-profile')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body" id="modal-user-profile-body">
+          <p
+            style="
+              font-family: var(--sw-font-m);
+              font-size: 0.72rem;
+              color: var(--sw-text-muted);
+            "
+          >
+            Cargando...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL: PROGRESO DE PROYECTO ════════ -->
+    <div
+      id="modal-progress"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+    >
+      <div class="sw-modal" style="max-width: 780px">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="modal-progress-title"
+            >Progreso del Proyecto</span
+          >
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-progress')"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body" id="modal-progress-body">
+          <p
+            style="
+              font-family: var(--sw-font-m);
+              font-size: 0.72rem;
+              color: var(--sw-text-muted);
+            "
+          >
+            Cargando...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="sw-footer">
+      <div class="sw-footer__inner">
+        <span class="sw-footer__copy"
+          >© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span
+        >
+        <div class="sw-footer__status">
+          <span class="sw-pulse"></span> Sistema en línea
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+      let currentChatUser = null;
+      let currentAdminUser = null;
+      window.adminAllUsersCache = [];
+      window.adminProjectsCache = [];
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const userStr = localStorage.getItem("sw_user");
+        if (!userStr) return (window.location.href = "/login.html");
+        const user = JSON.parse(userStr);
+        if (user.role !== "admin" && user.role !== "ceo")
+          return (window.location.href = "/dashboard.html");
+        currentAdminUser = user;
+        await Promise.all([
+          loadPendingUsers(),
+          loadAllUsers(),
+          loadChatUsers(),
+          loadProjectsList(),
+          loadPortfolioList(),
+          loadNewsList(),
+        ]);
+        updateKpiCards();
+      });
+
+      // Cierre accesible de modales con tecla Escape
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document
+            .querySelectorAll(".sw-modal-overlay.open")
+            .forEach((el) => el.classList.remove("open"));
+        }
+      });
+
+      function toggleSidebar() {
+        const sidebar = document.getElementById("admin-sidebar");
+        const toggleBtn = document.getElementById("sidebar-toggle");
+        if (sidebar && toggleBtn) {
+          sidebar.classList.toggle("open");
+          toggleBtn.classList.toggle("active");
+        }
+      }
+
+      function switchAdminTab(tabId, btn) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((el) => el.classList.remove("active"));
+        document.querySelectorAll(".sw-sidebar__link").forEach((el) => {
+          if (el.getAttribute("role") === "tab") {
+            el.classList.remove("active");
+            el.setAttribute("aria-selected", "false");
+          }
+        });
+        const targetTab = document.getElementById("tab-" + tabId);
+        if (targetTab) targetTab.classList.add("active");
+        if (btn) {
+          btn.classList.add("active");
+          btn.setAttribute("aria-selected", "true");
+        }
+        // En móviles o drawer, cerrar automáticamente el sidebar luego de seleccionar
+        if (window.innerWidth <= 1024) {
+          const sidebar = document.getElementById("admin-sidebar");
+          const toggleBtn = document.getElementById("sidebar-toggle");
+          if (sidebar) sidebar.classList.remove("open");
+          if (toggleBtn) toggleBtn.classList.remove("active");
+        }
+      }
+
+      function updateKpiCards() {
+        const totalUsersEl = document.getElementById("kpi-total-users");
+        const pendingUsersEl = document.getElementById("kpi-pending-users");
+        const totalProjectsEl = document.getElementById("kpi-total-projects");
+        const totalNewsEl = document.getElementById("kpi-total-news");
+
+        if (totalUsersEl && window.adminAllUsersCache)
+          totalUsersEl.innerText = window.adminAllUsersCache.length;
+        if (pendingUsersEl) {
+          const pendingCount = (window.adminAllUsersCache || []).filter(
+            (u) => !parseInt(u.is_token_validated),
+          ).length;
+          pendingUsersEl.innerText = pendingCount;
+        }
+        if (totalProjectsEl && window.adminProjectsCache)
+          totalProjectsEl.innerText = window.adminProjectsCache.length;
+        if (totalNewsEl && window.adminNewsCache)
+          totalNewsEl.innerText = window.adminNewsCache.length;
+      }
+
+      // ── GENERAR TOKEN ──────────────────────────────────
+      document
+        .getElementById("gen-token-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = document.getElementById("token-email").value;
+          try {
+            const res = await window.api.fetch("/admin/tokens/generate", {
+              method: "POST",
+              body: { assigned_to_email: email || null },
+            });
+            const display = document.getElementById("new-token-display");
+            display.style.display = "block";
+            display.innerHTML = `TOKEN GENERADO: <span style="user-select:all;color:#fff;">${res.token}</span>
+          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:6px;letter-spacing:0.08em;">Cópialo y envíalo al pasante por el chat</div>`;
+            window.app.showToast("Token generado");
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+        });
+
+      // ── USUARIOS PENDIENTES ────────────────────────────
+      async function loadPendingUsers() {
+        try {
+          const res = await window.api.fetch("/admin/users/pending");
+          const tbody = document.getElementById("pending-users-table");
+          if (!res.users || res.users.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios pendientes</td></tr>';
+            return;
+          }
+          tbody.innerHTML = res.users
+            .map(
+              (u) => `
+          <tr>
+            <td>${u.name}</td>
+            <td style="color:var(--sw-text-muted);">${u.email}</td>
+            <td>${new Date(u.created_at).toLocaleDateString("es-AR")}</td>
+            <td><span class="tac-badge ${parseInt(u.is_email_verified) ? "ok" : "warn"}">${parseInt(u.is_email_verified) ? "SÍ" : "NO"}</span></td>
+            <td>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="goToChat(${u.id},'${u.name}')" style="margin-right:4px;">CHAT</button>
+              <button class="sw-btn sw-btn--sm" style="background:#22c55e;color:#fff;border:none;" onclick="validateUser(${u.id})"><i class="fa-solid fa-check"></i> ACEPTAR</button>
+            </td>
+          </tr>
+        `,
+            )
+            .join("");
+        } catch (err) {}
+      }
+
+      // ── TODOS LOS USUARIOS ────────────────────────────
+      async function loadAllUsers() {
+        try {
+          const res = await window.api.fetch("/admin/users");
+          window.adminAllUsersCache = res.users || [];
+          renderAllUsersTable(window.adminAllUsersCache);
+          updateKpiCards();
+        } catch (err) {}
+      }
+
+      function renderAllUsersTable(users) {
+        const tbody = document.getElementById("all-users-table");
+        if (!users || users.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios encontrados</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users
+          .map(
+            (u) => `
+        <tr>
+          <td>${u.name}</td>
+          <td style="color:var(--sw-text-muted);font-size:0.75rem;">${u.email}</td>
+          <td>
+            <select class="tac-input" style="margin:0;padding:0.28rem 0.5rem;font-size:0.75rem;" onchange="changeRole(${u.id}, this.value)" aria-label="Cambiar rol para ${u.name}">
+              <option ${u.role === "pasante" ? "selected" : ""}>pasante</option>
+              <option ${u.role === "admin" ? "selected" : ""}>admin</option>
+              <option ${u.role === "ceo" ? "selected" : ""}>ceo</option>
+            </select>
+          </td>
+          <td><span class="tac-badge ${parseInt(u.is_token_validated) ? "ok" : "warn"}">${parseInt(u.is_token_validated) ? "SÍ" : "NO"}</span></td>
+          <td>
+            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="viewUserProfile(${u.id})" style="color:#60a5fa;border-color:rgba(96,165,250,0.3);margin-right:4px;"><i class="fa-solid fa-id-card"></i> PERFIL</button>
+            ${!parseInt(u.is_token_validated) ? `<button class="sw-btn sw-btn--sm" style="background:#22c55e;color:#fff;border:none;margin-right:4px;" onclick="validateUser(${u.id})"><i class="fa-solid fa-check"></i> ACEPTAR</button>` : ""}
+            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteUser(${u.id})" style="border-color:rgba(239,68,68,0.4);color:#f87171;">ELIMINAR</button>
+          </td>
+        </tr>
+      `,
+          )
+          .join("");
+      }
+
+      function filterAllUsersTable(query) {
+        if (!query.trim()) {
+          renderAllUsersTable(window.adminAllUsersCache);
+          return;
+        }
+        const q = query.toLowerCase();
+        const filtered = (window.adminAllUsersCache || []).filter(
+          (u) =>
+            (u.name && u.name.toLowerCase().includes(q)) ||
+            (u.email && u.email.toLowerCase().includes(q)),
+        );
+        renderAllUsersTable(filtered);
+      }
+
+      window.changeRole = async function (userId, role) {
+        try {
+          await window.api.fetch(`/admin/users/${userId}/role`, {
+            method: "PUT",
+            body: { role },
+          });
+          window.app.showToast("Rol actualizado");
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
+
+      window.deleteUser = async function (userId) {
+        if (!confirm("¿Eliminar este usuario?")) return;
+        try {
+          await window.api.fetch(`/admin/users/${userId}`, {
+            method: "DELETE",
+          });
+          loadAllUsers();
+          loadPendingUsers();
+          window.app.showToast("Usuario eliminado");
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
+
+      window.validateUser = async function (userId) {
+        if (
+          !confirm(
+            "¿Deseas aceptar y verificar a este alumno? Se le habilitará el acceso completo a la plataforma.",
+          )
+        )
+          return;
+        try {
+          await window.api.fetch(`/admin/users/${userId}/validate`, {
+            method: "PATCH",
+          });
+          window.app.showToast("Alumno verificado y aceptado correctamente");
+          loadAllUsers();
+          loadPendingUsers();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
+
+      // ── PUBLICAR PROYECTO ─────────────────────────────
+      document
+        .getElementById("project-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.innerText = "PUBLICANDO...";
+            btn.disabled = true;
+          }
+          try {
+            let mediaFileIds = [];
+            const imgFile = document.getElementById("p-image").files[0];
+            if (imgFile) {
+              const formData = new FormData();
+              formData.append("file", imgFile);
+              const uploadRes = await window.api.fetch("/admin/upload", {
+                method: "POST",
+                body: formData,
+              });
+              if (uploadRes.file_id) mediaFileIds = [uploadRes.file_id];
+            }
+
+            const tagsCheckboxes = document.querySelectorAll(
+              'input[name="ptags"]:checked',
+            );
+            const requiredTags = Array.from(tagsCheckboxes).map(
+              (cb) => cb.value,
+            );
+
+            await window.api.fetch("/admin/projects", {
+              method: "POST",
+              body: {
+                title: document.getElementById("p-title").value,
+                description: document.getElementById("p-desc").value,
+                summary: document.getElementById("p-summary").value || null,
+                required_tags: requiredTags,
+                start_date: document.getElementById("p-start").value || null,
+                end_date: document.getElementById("p-end").value || null,
+                conf_link: document.getElementById("p-link").value || null,
+                media_file_ids: mediaFileIds,
+              },
+            });
+            window.app.showToast("Proyecto publicado correctamente");
+            e.target.reset();
+            document.getElementById("p-image-preview").style.display = "none";
+            closeModalById("modal-create-project");
+            loadProjectsList();
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+          if (btn) {
+            btn.innerHTML =
+              '<i class="fa-solid fa-check"></i> PUBLICAR PROYECTO';
+            btn.disabled = false;
+          }
+        });
+
+      // Preview imagen proyecto
+      document
+        .getElementById("p-image")
+        .addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            document.getElementById("p-preview-img").src =
+              URL.createObjectURL(file);
+            document.getElementById("p-image-preview").style.display = "block";
+          }
+        });
+
+      // ── PUBLICAR NOTICIA ──────────────────────────────
+      document
+        .getElementById("news-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.innerText = "PUBLICANDO...";
+            btn.disabled = true;
+          }
+          try {
+            let coverFileId = null;
+            const imgFile = document.getElementById("n-image").files[0];
+            if (imgFile) {
+              const formData = new FormData();
+              formData.append("file", imgFile);
+              const uploadRes = await window.api.fetch("/admin/upload", {
+                method: "POST",
+                body: formData,
+              });
+              coverFileId = uploadRes.file_id || null;
+            }
+
+            await window.api.fetch("/admin/news", {
+              method: "POST",
+              body: {
+                title: document.getElementById("n-title").value,
+                content: document.getElementById("n-content").value,
+                summary: document.getElementById("n-summary").value || null,
+                cover_file_id: coverFileId,
+              },
+            });
+            window.app.showToast("Noticia publicada correctamente");
+            e.target.reset();
+            document.getElementById("n-image-preview").style.display = "none";
+            closeModalById("modal-create-news");
+            loadNewsList();
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+          if (btn) {
+            btn.innerHTML =
+              '<i class="fa-solid fa-check"></i> PUBLICAR NOTICIA';
+            btn.disabled = false;
+          }
+        });
+
+      // Preview imagen noticia
+      document
+        .getElementById("n-image")
+        .addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            document.getElementById("n-preview-img").src =
+              URL.createObjectURL(file);
+            document.getElementById("n-image-preview").style.display = "block";
+          }
+        });
+
+      // ── CHAT ──────────────────────────────────────────
+      let allAdminChatUsers = [];
+
+      async function loadChatUsers() {
+        try {
+          const res = await window.api.fetch("/chat/users");
+          allAdminChatUsers = res.users || [];
+          renderAdminChatUsersList(allAdminChatUsers);
+        } catch (err) {}
+      }
+
+      function renderAdminChatUsersList(users) {
+        const list = document.getElementById("chat-users-admin");
+        document.getElementById("chat-user-count-admin").innerText =
+          `${users.length}`;
+        list.innerHTML =
+          users
+            .map(
+              (u) => `
+        <div class="chat-user-item ${currentChatUser === u.id ? "active" : ""}" onclick="openAdminChat(${u.id}, '${u.name.replace(/'/g, "\\'")}', ${u.is_friend ? 1 : 0}, this)">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${u.name}</span>
+            ${u.is_friend ? '<i class="fa-solid fa-star" style="color:var(--sw-red); font-size:0.65rem;" title="Amigo"></i>' : ""}
+          </div>
+          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${u.email} (${u.role.toUpperCase()})</div>
+        </div>
+      `,
+            )
+            .join("") ||
+          '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
+      }
+
+      window.filterAdminChatUsers = async function (query) {
+        if (!query.trim()) {
+          return renderAdminChatUsersList(allAdminChatUsers);
+        }
+        try {
+          const res = await window.api.fetch(
+            `/chat/search?q=${encodeURIComponent(query)}`,
+          );
+          renderAdminChatUsersList(res.users || []);
+        } catch (err) {}
+      };
+
+      window.toggleAdminFriend = async function (friendId, isFriend) {
+        try {
+          if (isFriend) {
+            await window.api.fetch(`/chat/friends/${friendId}`, {
+              method: "DELETE",
+            });
+            window.app.showToast("Eliminado de tus amigos");
+          } else {
+            await window.api.fetch(`/chat/friends/${friendId}`, {
+              method: "POST",
+            });
+            window.app.showToast("Añadido a tus amigos");
+          }
+          await loadChatUsers();
+          const userObj = allAdminChatUsers.find((u) => u.id === friendId);
+          if (userObj) {
+            updateAdminActiveHeader(
+              userObj.id,
+              userObj.name,
+              userObj.is_friend ? 1 : 0,
+            );
+          }
+        } catch (err) {
+          window.app.showToast(
+            err.message || "Error al actualizar amigo",
+            true,
+          );
+        }
+      };
+
+      function updateAdminActiveHeader(userId, userName, isFriend) {
+        document.getElementById("chat-active-name-admin").innerText = userName;
+        const actionsEl = document.getElementById("chat-active-actions-admin");
+        actionsEl.innerHTML = `
+        <button class="sw-btn sw-btn--ghost sw-btn--sm" style="padding:0.2rem 0.5rem; font-size:0.62rem;" onclick="toggleAdminFriend(${userId}, ${isFriend ? 1 : 0})">
+          <i class="fa-solid ${isFriend ? "fa-star" : "fa-user-plus"}" style="color:${isFriend ? "var(--sw-red)" : "inherit"}; margin-right:4px;"></i>
+          ${isFriend ? "Amigo" : "+ Amigo"}
+        </button>
+      `;
+      }
+
+      window.goToChat = function (userId, userName) {
+        document
+          .querySelectorAll(".tac-tab")
+          .forEach((el) => el.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById("tab-chat").classList.add("active");
+        document.querySelectorAll(".tac-tab")[4].classList.add("active");
+        setTimeout(() => {
+          const items = document.querySelectorAll(
+            "#chat-users-admin .chat-user-item",
+          );
+          items.forEach((item) => {
+            if (item.textContent.includes(userName)) {
+              item.click();
+            }
+          });
+        }, 100);
+      };
+
+      window.openAdminChat = async function (userId, userName, isFriend, el) {
+        currentChatUser = userId;
+        document
+          .querySelectorAll("#chat-users-admin .chat-user-item")
+          .forEach((x) => x.classList.remove("active"));
+        if (el) el.classList.add("active");
+        document.getElementById("chat-input-admin").disabled = false;
+        document.getElementById("chat-btn-admin").disabled = false;
+        updateAdminActiveHeader(userId, userName, isFriend);
+        try {
+          const res = await window.api.fetch(`/chat/${userId}`);
+          const box = document.getElementById("chat-messages-admin");
+          if (!res.messages || res.messages.length === 0) {
+            box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${userName}</span>`;
+          } else {
+            const myId = currentAdminUser.id;
+            box.innerHTML = res.messages
+              .map((m) => {
+                const isMe = m.sender_id === myId || m.sender_id === 9999;
+                return `<div class="${isMe ? "chat-msg-me" : "chat-msg-other"}">${m.content}</div>`;
+              })
+              .join("");
+            box.scrollTop = box.scrollHeight;
+          }
+        } catch (err) {}
+      };
+
+      document
+        .getElementById("chat-form-admin")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!currentChatUser) return;
+          const input = document.getElementById("chat-input-admin");
+          const text = input.value.trim();
+          if (!text) return;
+          input.value = "";
+          try {
+            await window.api.fetch("/chat/send", {
+              method: "POST",
+              body: { receiver_id: currentChatUser, content: text },
+            });
+            const activeItem = document.querySelector(
+              "#chat-users-admin .chat-user-item.active",
+            );
+            const isFriend =
+              activeItem && activeItem.innerHTML.includes("fa-star") ? 1 : 0;
+            window.openAdminChat(
+              currentChatUser,
+              document.getElementById("chat-active-name-admin").innerText,
+              isFriend,
+              activeItem,
+            );
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+        });
+
+      // ══════════════════════════════════════════
+      // LISTA DE PROYECTOS
+      // ══════════════════════════════════════════
+      window.adminProjectsCache = [];
+
+      async function loadProjectsList() {
+        const list = document.getElementById("projects-list");
+        try {
+          const res = await window.api.fetch("/admin/projects?limit=50");
+          const projects = res.projects || [];
+          window.adminProjectsCache = projects;
+          renderProjectsList(projects);
+          updateKpiCards();
+        } catch (err) {
+          list.innerHTML =
+            '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando proyectos.</p>';
+        }
+      }
+
+      function renderProjectsList(projects) {
+        const list = document.getElementById("projects-list");
+        if (!projects.length) {
+          list.innerHTML =
+            '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados o que coincidan con la búsqueda.</p>';
+          return;
+        }
+        const statusColors = {
+          "Por comenzar": {
+            bg: "rgba(59,130,246,0.12)",
+            border: "rgba(59,130,246,0.35)",
+            text: "#60a5fa",
+          },
+          "En proceso": {
+            bg: "rgba(234,179,8,0.12)",
+            border: "rgba(234,179,8,0.35)",
+            text: "#fbbf24",
+          },
+          Finalizado: {
+            bg: "rgba(34,197,94,0.12)",
+            border: "rgba(34,197,94,0.35)",
+            text: "#4ade80",
+          },
+        };
+        list.innerHTML = projects
+          .map((p) => {
+            const sc = statusColors[p.dynamic_status] || {
+              bg: "rgba(163,0,0,0.1)",
+              border: "var(--sw-border)",
+              text: "var(--sw-white)",
+            };
+            const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${p.dynamic_status}</span>`;
+            const coverThumb = p.cover_url
+              ? `<img src="${p.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">`
+              : "";
+            const showProgress =
+              p.dynamic_status === "En proceso" ||
+              p.dynamic_status === "Finalizado";
+            return `
+        <div class="pub-item">
+          ${coverThumb}
+          <div class="pub-item-info">
+            <div class="pub-item-title">${p.title}</div>
+            <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
+              ${statusBadge}
+              <span>${new Date(p.created_at).toLocaleDateString("es-AR")}</span>
+              <span>${p.applicant_count || 0} postulado(s)</span>
+            </div>
+          </div>
+          <div class="pub-item-actions">
+            <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id})">EDITAR</button>
+            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
+            ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ""}
+            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+          </div>
+        </div>
+      `;
+          })
+          .join("");
+      }
+
+      function filterProjectsList(query) {
+        if (!query.trim()) {
+          renderProjectsList(window.adminProjectsCache);
+          return;
+        }
+        const q = query.toLowerCase();
+        const filtered = (window.adminProjectsCache || []).filter(
+          (p) =>
+            (p.title && p.title.toLowerCase().includes(q)) ||
+            (p.summary && p.summary.toLowerCase().includes(q)) ||
+            (p.dynamic_status && p.dynamic_status.toLowerCase().includes(q)) ||
+            (p.required_tags &&
+              JSON.stringify(p.required_tags).toLowerCase().includes(q)),
+        );
+        renderProjectsList(filtered);
+      }
+
+      function openEditProject(id) {
+        const p = (window.adminProjectsCache || []).find((x) => x.id === id);
+        if (!p) return;
+        document.getElementById("edit-p-id").value = p.id;
+        document.getElementById("edit-p-title").value = p.title || "";
+        document.getElementById("edit-p-desc").value = p.description || "";
+        document.getElementById("edit-p-summary").value = p.summary || "";
+        document.getElementById("edit-p-link").value = p.conf_link || "";
+        document.getElementById("edit-p-start").value = p.start_date
+          ? new Date(p.start_date).toISOString().slice(0, 16)
+          : "";
+        document.getElementById("edit-p-end").value = p.end_date
+          ? new Date(p.end_date).toISOString().slice(0, 16)
+          : "";
+
+        let reqTags = [];
+        if (p.required_tags) {
+          try {
+            reqTags =
+              typeof p.required_tags === "string"
+                ? JSON.parse(p.required_tags)
+                : p.required_tags;
+          } catch (e) {}
+        }
+        if (!Array.isArray(reqTags)) reqTags = [];
+        document.querySelectorAll('input[name="edit-ptags"]').forEach((cb) => {
+          cb.checked = reqTags.includes(cb.value);
+        });
+
+        document.getElementById("edit-p-image").value = "";
+        if (p.cover_url) {
+          document.getElementById("edit-p-preview-img").src = p.cover_url;
+          document.getElementById("edit-p-image-preview").style.display =
+            "block";
+        } else {
+          document.getElementById("edit-p-image-preview").style.display =
+            "none";
+        }
+
+        openModalById("modal-edit-project");
+      }
+
+      const editPImgInput = document.getElementById("edit-p-image");
+      if (editPImgInput) {
+        editPImgInput.addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            document.getElementById("edit-p-preview-img").src =
+              URL.createObjectURL(file);
+            document.getElementById("edit-p-image-preview").style.display =
+              "block";
+          }
+        });
+      }
+
+      async function saveEditProject() {
+        const id = parseInt(document.getElementById("edit-p-id").value);
+        const btn = document.getElementById("save-edit-project-btn");
+        if (btn) {
+          btn.innerText = "GUARDANDO...";
+          btn.disabled = true;
+        }
+        try {
+          const p = (window.adminProjectsCache || []).find((x) => x.id === id);
+          let mediaFileIds =
+            p && p.media_file_ids
+              ? typeof p.media_file_ids === "string"
+                ? JSON.parse(p.media_file_ids)
+                : p.media_file_ids
+              : [];
+
+          const imgFile = document.getElementById("edit-p-image").files[0];
+          if (imgFile) {
+            const formData = new FormData();
+            formData.append("file", imgFile);
+            const uploadRes = await window.api.fetch("/admin/upload", {
+              method: "POST",
+              body: formData,
+            });
+            if (uploadRes.file_id) mediaFileIds = [uploadRes.file_id];
+          }
+
+          const tagsCheckboxes = document.querySelectorAll(
+            'input[name="edit-ptags"]:checked',
+          );
+          const requiredTags = Array.from(tagsCheckboxes).map((cb) => cb.value);
+
+          await window.api.fetch(`/admin/projects/${id}`, {
+            method: "PUT",
+            body: {
+              title: document.getElementById("edit-p-title").value,
+              description: document.getElementById("edit-p-desc").value,
+              summary: document.getElementById("edit-p-summary").value || null,
+              conf_link: document.getElementById("edit-p-link").value || null,
+              start_date: document.getElementById("edit-p-start").value || null,
+              end_date: document.getElementById("edit-p-end").value || null,
+              required_tags: requiredTags,
+              media_file_ids: mediaFileIds,
+            },
+          });
+          window.app.showToast("Proyecto actualizado");
+          closeModalById("modal-edit-project");
+          loadProjectsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+        if (btn) {
+          btn.innerText = "GUARDAR CAMBIOS";
+          btn.disabled = false;
+        }
+      }
+
+      async function deleteProject(id) {
+        if (
+          !confirm("¿Eliminar este proyecto? Esta acción no se puede deshacer.")
+        )
+          return;
+        try {
+          await window.api.fetch(`/admin/projects/${id}`, { method: "DELETE" });
+          window.app.showToast("Proyecto eliminado");
+          loadProjectsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      }
+
+      // ══════════════════════════════════════════
+      // POSTULADOS DE UN PROYECTO
+      // ══════════════════════════════════════════
+      async function openApplicants(projectId, titleEncoded) {
+        document.getElementById("modal-applicants-title").innerText =
+          `Postulados — ${decodeURIComponent(titleEncoded)}`;
+        const body = document.getElementById("modal-applicants-body");
+        body.innerHTML =
+          '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+        openModalById("modal-applicants");
+
+        try {
+          const res = await window.api.fetch(
+            `/admin/projects/${projectId}/applications`,
+          );
+          const apps = res.applications || [];
+          if (!apps.length) {
+            body.innerHTML =
+              '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Aún no hay postulados.</p>';
+            return;
+          }
+          body.innerHTML = apps
+            .map(
+              (a) => `
+          <div class="applicant-row">
+            <img class="applicant-avatar" src="${a.avatar_file_id ? "/api/media/" + a.avatar_file_id : "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" alt="Avatar" onerror="this.style.display='none'">
+            <div class="applicant-info">
+              <div class="applicant-name">${a.name}</div>
+              <div class="applicant-email">${a.email}</div>
+            </div>
+            <span class="status-badge ${a.status}">${a.status.toUpperCase()}</span>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="viewUserProfile(${a.user_id})">PERFIL</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" style="color:#4ade80;border-color:rgba(74,222,128,0.3);" onclick="updateAppStatus(${a.id},'accepted')"><i class="fa-solid fa-check"></i></button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" style="color:#f87171;border-color:rgba(248,113,113,0.3);" onclick="updateAppStatus(${a.id},'rejected')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+
+          // Recargar postulados después de cambios
+          body
+            .querySelectorAll('[onclick*="updateAppStatus"]')
+            .forEach((btn) => {
+              const orig = btn.getAttribute("onclick");
+              btn.setAttribute(
+                "onclick",
+                orig +
+                  `; setTimeout(() => openApplicants(${projectId},'${encodeURIComponent(titleEncoded)}'), 400);`,
+              );
+            });
+        } catch (err) {
+          body.innerHTML =
+            '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando postulados.</p>';
+        }
+      }
+
+      async function updateAppStatus(appId, status) {
+        try {
+          await window.api.fetch(`/admin/applications/${appId}/status`, {
+            method: "PATCH",
+            body: { status },
+          });
+          window.app.showToast(
+            status === "accepted"
+              ? "Postulante aceptado"
+              : "Postulante rechazado",
+          );
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      }
+
+      // ══════════════════════════════════════════
+      // PERFIL DE PASANTE (con CV)
+      // ══════════════════════════════════════════
+      async function viewUserProfile(userId) {
+        const body = document.getElementById("modal-user-profile-body");
+        body.innerHTML =
+          '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+        openModalById("modal-user-profile");
+        try {
+          const res = await window.api.fetch(`/users/${userId}/profile`);
+          const u = res.user;
+          const tags = (u.tags || [])
+            .map(
+              (t) =>
+                `<span style="font-family:var(--sw-font-m);font-size:0.6rem;padding:2px 8px;border:1px solid var(--sw-border);margin:2px;">${t}</span>`,
+            )
+            .join("");
+          body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+            ${u.avatar_url ? `<img src="${u.avatar_url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);" alt="Avatar">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--sw-steel);border:1px solid var(--sw-border);"></div>'}
+            <div>
+              <div style="font-family:var(--sw-font-h);font-size:1.5rem;font-weight:800;text-transform:uppercase;">${u.name}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">${u.email}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-red);letter-spacing:0.1em;margin-top:2px;">${u.role.toUpperCase()}</div>
+            </div>
+          </div>
+          ${tags ? `<div style="margin-bottom:1rem;"><div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">APTITUDES</div>${tags}</div>` : ""}
+          <div style="margin-bottom:1rem;">
+            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">CURRICULUM VITAE</div>
+            ${
+              u.cv_url
+                ? `<a href="${u.cv_url}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm"><i class="fa-solid fa-file-lines"></i> VER / DESCARGAR CV</a>`
+                : '<span style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Sin CV cargado</span>'
+            }
+          </div>
+          <div>
+            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);letter-spacing:0.1em;">Miembro desde ${new Date(u.created_at).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}</div>
+          </div>
+        `;
+        } catch (err) {
+          body.innerHTML =
+            '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando perfil.</p>';
+        }
+      }
+
+      // ══════════════════════════════════════════
+      // PROGRESO DE PROYECTO (Admin vista)
+      // ══════════════════════════════════════════
+      async function openProgress(projectId, titleEncoded) {
+        document.getElementById("modal-progress-title").innerText =
+          `Progreso — ${decodeURIComponent(titleEncoded)}`;
+        const body = document.getElementById("modal-progress-body");
+        body.innerHTML =
+          '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Cargando...</p>';
+        openModalById("modal-progress");
+        try {
+          const res = await window.api.fetch(
+            `/admin/projects/${projectId}/progress`,
+          );
+          const log = res.log || [];
+          if (!log.length) {
+            body.innerHTML =
+              '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Sin registros de progreso aún.</p>';
+            return;
+          }
+          body.innerHTML = log
+            .map(
+              (entry) => `
+          <div style="display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <img src="${entry.avatar_url || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" 
+              style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Avatar" onerror="this.style.display='none'">
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-white);">${entry.author_name}</span>
+                <span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);">${new Date(entry.created_at).toLocaleString("es-AR")}</span>
+              </div>
+              <p style="font-family:var(--sw-font-b);font-size:0.82rem;color:var(--sw-text-muted);line-height:1.6;margin:0;white-space:pre-wrap;">${entry.content}</p>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        } catch (err) {
+          body.innerHTML =
+            '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando progreso.</p>';
+        }
+      }
+
+      // ══════════════════════════════════════════
+      // LISTA DE NOTICIAS
+      // ══════════════════════════════════════════
+      window.adminNewsCache = [];
+
+      async function loadNewsList() {
+        const list = document.getElementById("news-list");
+        try {
+          const res = await fetch("/api/public/news?limit=50");
+          const data = await res.json();
+          const news = data.news || [];
+          window.adminNewsCache = news;
+          updateKpiCards();
+          if (!news.length) {
+            list.innerHTML =
+              '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay noticias publicadas.</p>';
+            return;
+          }
+          list.innerHTML = news
+            .map(
+              (n) => `
+          <div class="pub-item">
+            ${n.cover_url ? `<img src="${n.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Cover">` : ""}
+            <div class="pub-item-info">
+              <div class="pub-item-title">${n.title}</div>
+              <div class="pub-item-meta">${new Date(n.created_at).toLocaleDateString("es-AR")} &nbsp;·&nbsp; Por ${n.author}</div>
+              ${n.summary ? `<div style="font-family:var(--sw-font-b);font-size:0.72rem;color:var(--sw-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.summary}</div>` : ""}
+            </div>
+            <div class="pub-item-actions">
+              <a href="/news.html?id=${n.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditNews(${n.id})">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteNews(${n.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        } catch (err) {
+          list.innerHTML =
+            '<p style="color:#f87171;font-family:var(--sw-font-m);font-size:0.72rem;">Error cargando noticias.</p>';
+        }
+      }
+
+      function openEditNews(id) {
+        const news = (window.adminNewsCache || []).find(
+          (n) => n.id === id || n.id === Number(id),
+        );
+        if (!news) return;
+        document.getElementById("edit-n-id").value = news.id;
+        document.getElementById("edit-n-title").value = news.title || "";
+        document.getElementById("edit-n-content").value = news.content || "";
+        document.getElementById("edit-n-summary").value = news.summary || "";
+        openModalById("modal-edit-news");
+      }
+
+      async function saveEditNews() {
+        const id = document.getElementById("edit-n-id").value;
+        try {
+          await window.api.fetch(`/admin/news/${id}`, {
+            method: "PUT",
+            body: {
+              title: document.getElementById("edit-n-title").value,
+              content: document.getElementById("edit-n-content").value,
+              summary: document.getElementById("edit-n-summary").value || null,
+            },
+          });
+          window.app.showToast("Noticia actualizada");
+          closeModalById("modal-edit-news");
+          loadNewsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      }
+
+      async function deleteNews(id) {
+        if (
+          !confirm("¿Eliminar esta noticia? Esta acción no se puede deshacer.")
+        )
+          return;
+        try {
+          await window.api.fetch(`/admin/news/${id}`, { method: "DELETE" });
+          window.app.showToast("Noticia eliminada");
+          loadNewsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      }
+
+      // ── PORTFOLIO ──────────────────────────────────
+      document
+        .getElementById("portfolio-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.innerText = "PUBLICANDO...";
+            btn.disabled = true;
+          }
+          try {
+            let coverFileId = null;
+            const imgFile = document.getElementById("port-image").files[0];
+            if (imgFile) {
+              const formData = new FormData();
+              formData.append("file", imgFile);
+              const uploadRes = await window.api.fetch("/admin/upload", {
+                method: "POST",
+                body: formData,
+              });
+              coverFileId = uploadRes.file_id || null;
+            }
+
+            await window.api.fetch("/admin/portfolio", {
+              method: "POST",
+              body: {
+                title: document.getElementById("port-title").value,
+                description: document.getElementById("port-content").value,
+                cover_file_id: coverFileId,
+              },
+            });
+            window.app.showToast("Proyecto realizado publicado");
+            e.target.reset();
+            closeModalById("modal-create-portfolio");
+            loadPortfolioList();
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+          if (btn) {
+            btn.innerHTML =
+              '<i class="fa-solid fa-check"></i> PUBLICAR PROYECTO';
+            btn.disabled = false;
+          }
+        });
+
+      window.adminPortfolioCache = [];
+
+      async function loadPortfolioList() {
+        const list = document.getElementById("portfolio-list");
+        try {
+          const res = await fetch("/api/public/portfolio");
+          const data = await res.json();
+          const port = data.portfolio || [];
+          window.adminPortfolioCache = port;
+          updateKpiCards();
+          if (!port.length) {
+            list.innerHTML =
+              '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados.</p>';
+            return;
+          }
+          list.innerHTML = port
+            .map(
+              (p) => `
+          <div class="pub-item">
+            ${p.cover_url ? `<img src="${p.cover_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;background:var(--sw-steel);" alt="Cover">` : ""}
+            <div class="pub-item-info">
+              <div class="pub-item-title">${p.title}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-text-muted);margin-top:2px;">
+                Publicado: ${new Date(p.created_at).toLocaleDateString("es-AR")}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditPortfolio(${p.id})">EDITAR</button>
+              <button class="sw-btn sw-btn--danger sw-btn--sm" onclick="deletePortfolio(${p.id})">ELIMINAR</button>
+            </div>
+          </div>
+        `,
+            )
+            .join("");
+        } catch (err) {
+          list.innerHTML =
+            '<p style="color:#f87171;">Error cargando portfolio.</p>';
+        }
+      }
+
+      function openEditPortfolio(id) {
+        const p = (window.adminPortfolioCache || []).find((x) => x.id === id);
+        if (!p) return;
+        document.getElementById("edit-port-id").value = p.id;
+        document.getElementById("edit-port-title").value = p.title || "";
+        document.getElementById("edit-port-desc").value = p.description || "";
+        document.getElementById("edit-port-image").value = "";
+        if (p.cover_url) {
+          document.getElementById("edit-port-preview-img").src = p.cover_url;
+          document.getElementById("edit-port-image-preview").style.display =
+            "block";
+        } else {
+          document.getElementById("edit-port-image-preview").style.display =
+            "none";
+        }
+        openModalById("modal-edit-portfolio");
+      }
+
+      const editPortImgInput = document.getElementById("edit-port-image");
+      if (editPortImgInput) {
+        editPortImgInput.addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            document.getElementById("edit-port-preview-img").src =
+              URL.createObjectURL(file);
+            document.getElementById("edit-port-image-preview").style.display =
+              "block";
+          }
+        });
+      }
+
+      async function saveEditPortfolio() {
+        const id = parseInt(document.getElementById("edit-port-id").value);
+        const btn = document.getElementById("save-edit-portfolio-btn");
+        if (btn) {
+          btn.innerText = "GUARDANDO...";
+          btn.disabled = true;
+        }
+        try {
+          const p = (window.adminPortfolioCache || []).find((x) => x.id === id);
+          let coverFileId = p && p.cover_file_id ? p.cover_file_id : null;
+          const imgFile = document.getElementById("edit-port-image").files[0];
+          if (imgFile) {
+            const formData = new FormData();
+            formData.append("file", imgFile);
+            const uploadRes = await window.api.fetch("/admin/upload", {
+              method: "POST",
+              body: formData,
+            });
+            if (uploadRes.file_id) coverFileId = uploadRes.file_id;
+          }
+
+          await window.api.fetch(`/admin/portfolio/${id}`, {
+            method: "PUT",
+            body: {
+              title: document.getElementById("edit-port-title").value,
+              description: document.getElementById("edit-port-desc").value,
+              cover_file_id: coverFileId,
+            },
+          });
+          window.app.showToast("Proyecto de portfolio actualizado");
+          closeModalById("modal-edit-portfolio");
+          loadPortfolioList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+        if (btn) {
+          btn.innerText = "GUARDAR CAMBIOS";
+          btn.disabled = false;
+        }
+      }
+
+      async function deletePortfolio(id) {
+        if (!confirm("¿Eliminar este proyecto de portfolio?")) return;
+        try {
+          await window.api.fetch(`/admin/portfolio/${id}`, {
+            method: "DELETE",
+          });
+          window.app.showToast("Proyecto eliminado");
+          loadPortfolioList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      }
+    </script>
+  </body>
+</html>
