@@ -50,6 +50,36 @@ async function updateUserRole(req, res) {
   }
 }
 
+async function validateUser(req, res) {
+  try {
+    const { userId } = req.params;
+    const uid = parseInt(userId);
+    if (isNaN(uid)) return res.status(400).json({ error: 'ID de usuario inválido.' });
+
+    const uRes = await sql.query(`SELECT id, name, email, is_token_validated FROM users WHERE id = ${uid}`);
+    const userObj = uRes.data && uRes.data.length ? uRes.data[0] : null;
+    if (!userObj) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    await sql.query(`UPDATE users SET is_token_validated = 1 WHERE id = ${uid}`);
+
+    if (!parseInt(userObj.is_token_validated)) {
+      try {
+        const welcomeMsg = `¡Hola, ${userObj.name}! Tu cuenta ha sido verificada y aceptada por la Administración. Ya tienes acceso completo a todos los proyectos y funciones del portal. ¡Bienvenido al equipo!`;
+        await sql.query(
+          `INSERT INTO chat_messages (sender_id, receiver_id, content) VALUES (${req.user.id}, ${uid}, '${welcomeMsg.replace(/'/g, "''")}')`
+        );
+      } catch (chatErr) {
+        console.error('[ADMIN/VALIDATE-CHAT-MSG]', chatErr.message);
+      }
+    }
+
+    return res.json({ message: 'Alumno verificado y aceptado correctamente.', user: { id: uid, is_token_validated: 1 } });
+  } catch (err) {
+    console.error('[ADMIN/VALIDATE-USER]', err.message);
+    return res.status(500).json({ error: 'Error al verificar y aceptar alumno.' });
+  }
+}
+
 async function deleteUser(req, res) {
   try {
     const { userId } = req.params;
@@ -150,7 +180,7 @@ async function deleteSkill(req, res) {
 async function listProjects(req, res) {
   try {
     const result = await sql.query(
-      `SELECT p.id, p.title, p.description, p.summary, p.status, p.start_date, p.end_date, p.conf_link, p.media_file_ids, p.created_at,
+      `SELECT p.id, p.title, p.description, p.summary, p.status, p.start_date, p.end_date, p.conf_link, p.media_file_ids, p.required_tags, p.created_at,
               (SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id) AS applicant_count
        FROM projects p
        ORDER BY p.created_at DESC`
@@ -423,6 +453,26 @@ async function createPortfolioProject(req, res) {
   }
 }
 
+async function updatePortfolioProject(req, res) {
+  try {
+    const { portfolioId } = req.params;
+    const { title, description, cover_file_id } = req.body;
+
+    const updates = [];
+    if (title) updates.push(`title = '${title.replace(/'/g, "''")}'`);
+    if (description) updates.push(`description = '${description.replace(/'/g, "''")}'`);
+    if (cover_file_id !== undefined) updates.push(`cover_file_id = ${cover_file_id ? `'${cover_file_id}'` : 'NULL'}`);
+
+    if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
+
+    await sql.query(`UPDATE portfolio_projects SET ${updates.join(', ')} WHERE id = ${parseInt(portfolioId)}`);
+    return res.json({ message: 'Proyecto de portfolio actualizado.' });
+  } catch (err) {
+    console.error('[ADMIN/UPDATE-PORTFOLIO]', err.message);
+    return res.status(500).json({ error: 'Error actualizando proyecto de portfolio.' });
+  }
+}
+
 async function deletePortfolioProject(req, res) {
   try {
     const { portfolioId } = req.params;
@@ -435,12 +485,12 @@ async function deletePortfolioProject(req, res) {
 }
 
 module.exports = {
-  listAllUsers, listPendingUsers, updateUserRole, deleteUser,
+  listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
   listSkills, createSkill, deleteSkill,
   listProjects, createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
   createNews, updateNews, deleteNews,
-  createPortfolioProject, deletePortfolioProject,
+  createPortfolioProject, updatePortfolioProject, deletePortfolioProject,
   uploadMedia,
   createProjectProgress, listProjectProgress,
 };

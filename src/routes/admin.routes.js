@@ -12,6 +12,7 @@ router.get('/users', requireAdmin, adminCtrl.listAllUsers);
 router.get('/users/pending', requireAdmin, adminCtrl.listPendingUsers);
 router.patch('/users/:userId/role', requireAdmin, adminCtrl.updateUserRole);
 router.put('/users/:userId/role', requireAdmin, adminCtrl.updateUserRole);
+router.patch('/users/:userId/validate', requireAdmin, adminCtrl.validateUser);
 router.delete('/users/:userId', requireAdmin, adminCtrl.deleteUser);
 
 // Tokens de validacion
@@ -40,6 +41,7 @@ router.delete('/news/:newsId', requireAdmin, adminCtrl.deleteNews);
 
 // Portfolio
 router.post('/portfolio', requireAdmin, adminCtrl.createPortfolioProject);
+router.put('/portfolio/:portfolioId', requireAdmin, adminCtrl.updatePortfolioProject);
 router.delete('/portfolio/:portfolioId', requireAdmin, adminCtrl.deletePortfolioProject);
 
 // Upload de medios

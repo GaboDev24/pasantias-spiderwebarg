@@ -81,7 +81,7 @@
         <img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 34px;">
       </a>
       <div class="sw-nav__links">
-        <a href="https://spiderwebargapi.com.ar/" class="sw-nav__link" target="_blank" style="color: var(--sw-red); font-weight: bold;"><i class="fa-solid fa-server" style="margin-right: 5px;"></i> Servicio API</a>
+        <a href="/" class="sw-nav__link">← Inicio</a>
         <span class="sw-pulse" style="margin-right:0.5rem;"></span>
         <span id="nav-username" style="font-family:var(--sw-font-m); font-size:0.65rem; color:var(--sw-text-muted); margin-right:0.5rem;"></span>
         <a href="/admin.html" class="sw-nav__link admin-only" style="display:none; color:var(--sw-red);">Admin</a>
@@ -131,14 +131,18 @@
 
     <!-- MAIN -->
     <main>
-      <!-- TOKEN CARD -->
-      <div class="tac-card" id="token-card" style="display:none; border-color:rgba(239,68,68,0.35);">
-        <div class="tac-card-title" style="color:#f87171;">Validación de Cuenta Requerida</div>
-        <p style="font-family:var(--sw-font-m); font-size:0.75rem; color:var(--sw-text-muted); margin-bottom:1rem; line-height:1.6;">Tu cuenta aún no fue validada. Contacta a un CEO a través del chat y solicitá tu token de acceso.</p>
-        <form id="token-form" style="display:flex; gap:10px;">
-          <input type="text" id="token-input" class="tac-input" style="margin:0; flex:1;" placeholder="XXXX-XXXX-XXXX-XXXX" required>
-          <button type="submit" class="sw-btn sw-btn--primary">VALIDAR</button>
-        </form>
+      <!-- REVIEW STATUS CARD -->
+      <div class="tac-card" id="token-card" style="display:none; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.03);">
+        <div class="tac-card-title" style="color:#fbbf24; display:flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-clock"></i> Solicitud de Cuenta en Revisión
+        </div>
+        <p style="font-family:var(--sw-font-m); font-size:0.78rem; color:var(--sw-text-muted); margin-bottom:1rem; line-height:1.6;">
+          Tu registro ha sido recibido correctamente. Un Administrador o CEO se encuentra revisando tu perfil para habilitar y verificar tu cuenta en el portal.
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="sw-btn sw-btn--ghost sw-btn--sm" onclick="document.getElementById('chat-input').focus(); document.getElementById('chat-mobile-content').classList.add('open');"><i class="fa-solid fa-comments"></i> Consultar por Chat Interno</button>
+          <span style="font-family:var(--sw-font-m); font-size:0.68rem; color:var(--sw-text-muted);"><i class="fa-solid fa-circle-info"></i> Recibirás un mensaje automático al ser aprobado</span>
+        </div>
       </div>
 
       <!-- CHAT -->
@@ -233,10 +237,10 @@
 
       const vStatus = document.getElementById('validation-status');
       if (parseInt(currentUser.is_token_validated) === 1) {
-        vStatus.innerHTML = '<span class="tac-badge ok">CUENTA VALIDADA</span>';
+        vStatus.innerHTML = '<span class="tac-badge ok">CUENTA VERIFICADA</span>';
         document.getElementById('token-card').style.display = 'none';
       } else {
-        vStatus.innerHTML = '<span class="tac-badge warn">NO VALIDADO</span>';
+        vStatus.innerHTML = '<span class="tac-badge warn" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">EN REVISIÓN</span>';
         document.getElementById('token-card').style.display = 'block';
       }
 
@@ -313,17 +317,20 @@
       }
     });
 
-    document.getElementById('token-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const token = document.getElementById('token-input').value;
-      try {
-        const res = await window.api.fetch('/auth/validate-token', { method: 'POST', body: { token_string: token } });
-        localStorage.setItem('sw_token', res.token);
-        currentUser.is_token_validated = 1;
-        renderProfile();
-        window.app.showToast(res.message);
-      } catch (err) { window.app.showToast(err.message, true); }
-    });
+    const tokenForm = document.getElementById('token-form');
+    if (tokenForm) {
+      tokenForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = document.getElementById('token-input').value;
+        try {
+          const res = await window.api.fetch('/auth/validate-token', { method: 'POST', body: { token_string: token } });
+          localStorage.setItem('sw_token', res.token);
+          currentUser.is_token_validated = 1;
+          renderProfile();
+          window.app.showToast(res.message);
+        } catch (err) { window.app.showToast(err.message, true); }
+      });
+    }
 
     async function loadApps() {
       try {
