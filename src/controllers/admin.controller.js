@@ -174,6 +174,30 @@ async function deleteSkill(req, res) {
   }
 }
 
+async function updateSkill(req, res) {
+  try {
+    const { skillId } = req.params;
+    const { name, color } = req.body;
+
+    const updates = [];
+    if (name) updates.push(`name = '${name.replace(/'/g, "''")}'`);
+    if (color) updates.push(`color = '${color.replace(/'/g, "''")}'`);
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron campos para actualizar.' });
+    }
+
+    await sql.query(`UPDATE skills SET ${updates.join(', ')} WHERE id = ${parseInt(skillId)}`);
+    return res.json({ message: 'Aptitud actualizada correctamente.' });
+  } catch (err) {
+    if (err.message && err.message.includes('Duplicate')) {
+      return res.status(409).json({ error: 'Ya existe una aptitud con ese nombre.' });
+    }
+    console.error('[ADMIN/UPDATE-SKILL]', err.message);
+    return res.status(500).json({ error: 'Error actualizando aptitud.' });
+  }
+}
+
 // ──────────────────────────────────────────────
 // PROYECTOS
 // ──────────────────────────────────────────────
@@ -487,7 +511,7 @@ async function deletePortfolioProject(req, res) {
 module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
-  listSkills, createSkill, deleteSkill,
+  listSkills, createSkill, updateSkill, deleteSkill,
   listProjects, createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
   createNews, updateNews, deleteNews,
   createPortfolioProject, updatePortfolioProject, deletePortfolioProject,

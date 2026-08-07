@@ -170,6 +170,18 @@ async function applyToProject(req, res) {
       return res.status(400).json({ error: 'Este proyecto no esta abierto para inscripciones.' });
     }
 
+    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+    const requiredTags = project.required_tags ? JSON.parse(project.required_tags) : [];
+    if (req.user.role === 'pasante' && requiredTags.length > 0) {
+      const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
+      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const userTagSet = new Set(userTags.map(normalizeTag));
+      const hasMatch = requiredTags.some(t => userTagSet.has(normalizeTag(t)));
+      if (!hasMatch) {
+        return res.status(403).json({ error: 'No tienes los tags requeridos para postularte a este proyecto.' });
+      }
+    }
+
     await sql.query(
       `INSERT IGNORE INTO project_applications (project_id, user_id) VALUES (${parseInt(projectId)}, ${req.user.id})`
     );

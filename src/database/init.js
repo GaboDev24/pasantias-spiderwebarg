@@ -144,6 +144,29 @@ async function initDB() {
     }
   }
   console.log(`[DB-INIT] Base de datos inicializada correctamente (${tablas.length} tablas verificadas).`);
+
+  // Sembrar skills iniciales si la tabla está vacía
+  try {
+    const sRes = await sql.query('SELECT COUNT(*) AS count FROM skills');
+    const count = sRes.data && sRes.data[0] ? parseInt(sRes.data[0].count) : 0;
+    if (count === 0) {
+      const defaultSkills = [
+        { name: 'Programación', color: '#3b82f6' },
+        { name: 'Diseño Gráfico', color: '#ec4899' },
+        { name: 'Redes Sociales', color: '#8b5cf6' },
+        { name: 'Edición de Videos', color: '#f59e0b' },
+        { name: 'QA / Testing', color: '#10b981' },
+        { name: 'Marketing', color: '#ef4444' },
+        { name: 'IT (Soporte Técnico)', color: '#06b6d4' },
+      ];
+      for (const sk of defaultSkills) {
+        await sql.query(`INSERT INTO skills (name, color, created_by) VALUES ('${sk.name.replace(/'/g, "''")}', '${sk.color}', 1)`);
+      }
+      console.log(`[DB-INIT] Se sembraron ${defaultSkills.length} aptitudes predeterminadas.`);
+    }
+  } catch (sErr) {
+    console.error('[DB-INIT] Error al sembrar skills iniciales:', sErr.message);
+  }
 }
 
 // Si se ejecuta directamente

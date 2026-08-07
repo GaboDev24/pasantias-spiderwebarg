@@ -244,22 +244,35 @@
         document.getElementById('token-card').style.display = 'block';
       }
 
-      const tagsContainer = document.getElementById('tags-container');
-      const ALL_TAGS = ["Programacion", "Diseño Grafico", "Redes Sociales", "Edicion de Videos", "QA", "Marketing", "IT (Soporte técnico)"];
-      const userTags = currentUser.tags || [];
-      
-      tagsContainer.innerHTML = ALL_TAGS.map(t => {
-        const isChecked = userTags.includes(t) ? 'checked' : '';
-        return `
-          <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;">
-            <input type="checkbox" name="tags" value="${t}" ${isChecked}>
-            ${t}
-          </label>
-        `;
-      }).join('');
+      loadUserTagsCheckboxes(currentUser.tags || []);
 
       if (currentUser.cv_url) {
         document.getElementById('cv-status').innerHTML = `<a href="${currentUser.cv_url}" target="_blank" style="color:var(--sw-red);text-decoration:none;"><i class="fa-solid fa-check"></i> CV cargado (Ver actual)</a>`;
+      }
+    }
+
+    async function loadUserTagsCheckboxes(userTags = []) {
+      const tagsContainer = document.getElementById('tags-container');
+      if (!tagsContainer) return;
+      try {
+        const res = await window.api.fetch('/public/skills');
+        const skills = res.skills || [];
+        if (!skills.length) {
+          tagsContainer.innerHTML = '<span style="font-size:0.75rem;color:var(--sw-text-muted);">Sin aptitudes disponibles</span>';
+          return;
+        }
+        tagsContainer.innerHTML = skills.map(s => {
+          const isChecked = userTags.includes(s.name) ? 'checked' : '';
+          return `
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;background:rgba(255,255,255,0.03);padding:4px 8px;border:1px solid var(--sw-border);">
+              <input type="checkbox" name="tags" value="${s.name}" ${isChecked}>
+              <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#A30000'};"></span>
+              ${s.name}
+            </label>
+          `;
+        }).join('');
+      } catch (err) {
+        tagsContainer.innerHTML = '<span style="font-size:0.75rem;color:#f87171;">Error cargando aptitudes</span>';
       }
     }
 

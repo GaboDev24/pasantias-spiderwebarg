@@ -179,9 +179,7 @@
       if (!projectId) { showError(); return; }
 
       try {
-        const res = await fetch(`/api/public/projects/${projectId}`);
-        if (!res.ok) { showError(); return; }
-        const { project } = await res.json();
+        const { project } = await window.api.fetch(`/public/projects/${projectId}`);
 
         document.title = `${project.title} | Spider-Web ARG`;
 
@@ -285,7 +283,7 @@
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
       } catch (err) {
-        showError();
+        showError(err.message);
       }
     });
 
@@ -328,9 +326,13 @@
       }
     }
 
-    function showError() {
+    function showError(msgText) {
       document.getElementById('loading').style.display = 'none';
-      document.getElementById('error').style.display = 'block';
+      const errEl = document.getElementById('error');
+      if (msgText) {
+        errEl.innerHTML = `<h2 class="section-title" style="color:#f87171;">ACCESO RESTRENGIDO</h2><p style="font-family:var(--sw-font-m);color:var(--sw-text-muted);margin-top:1rem;">${msgText}</p><a href="/" class="sw-btn sw-btn--ghost" style="margin-top:1.5rem;display:inline-block;">VOLVER AL INICIO</a>`;
+      }
+      errEl.style.display = 'block';
     }
   </script>
 </body>

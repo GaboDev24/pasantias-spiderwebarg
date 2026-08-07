@@ -542,6 +542,18 @@
           ></span>
           <span>Chat &amp; Amigos</span>
         </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('skills', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-skills"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-tags"></i
+          ></span>
+          <span>Tags &amp; Aptitudes</span>
+        </button>
 
         <div class="sw-sidebar__footer">
           <a
@@ -1046,6 +1058,93 @@
             </div>
           </div>
         </div>
+
+        <!-- ════════ TAB: TAGS & APTITUDES ════════ -->
+        <div id="tab-skills" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i class="fa-solid fa-tags" style="color: var(--sw-red)"></i>
+              Gestión de Tags &amp; Aptitudes
+            </div>
+          </div>
+
+          <!-- Card crear Tag -->
+          <div class="tac-card">
+            <div class="tac-card-title">
+              <i class="fa-solid fa-plus"></i> Crear Nuevo Tag / Aptitud
+            </div>
+            <form
+              id="create-skill-form"
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+              "
+            >
+              <div style="flex: 2; min-width: 200px">
+                <label class="tac-label" for="skill-name"
+                  >Nombre del Tag / Aptitud *</label
+                >
+                <input
+                  type="text"
+                  id="skill-name"
+                  class="tac-input"
+                  style="margin: 0"
+                  placeholder="Ej: Python, React, Ilustración, etc."
+                  required
+                />
+              </div>
+              <div style="flex: 1; min-width: 140px">
+                <label class="tac-label" for="skill-color">Color distintivo</label>
+                <input
+                  type="color"
+                  id="skill-color"
+                  class="tac-input"
+                  style="margin: 0; padding: 0.2rem; height: 38px; cursor: pointer"
+                  value="#A30000"
+                />
+              </div>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> AGREGAR TAG
+              </button>
+            </form>
+          </div>
+
+          <!-- Lista de Tags -->
+          <div class="tac-card">
+            <div class="tac-card-title">
+              <i class="fa-solid fa-list-check"></i> Tags Registrados en el Sistema
+            </div>
+            <div style="overflow-x: auto">
+              <table class="tac-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tag / Aptitud</th>
+                    <th>Color Preview</th>
+                    <th>Fecha de Creación</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="skills-table-body">
+                  <tr>
+                    <td
+                      colspan="5"
+                      style="
+                        text-align: center;
+                        color: var(--sw-text-muted);
+                        padding: 1.5rem;
+                      "
+                    >
+                      Cargando tags y aptitudes...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
     <!-- /sw-admin-wrapper -->
@@ -1133,93 +1232,7 @@
                 gap: 10px;
                 margin-bottom: 1.25rem;
               "
-            >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input type="checkbox" name="ptags" value="Programacion" />
-                Programación</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input type="checkbox" name="ptags" value="Diseño Grafico" />
-                Diseño Gráfico</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input type="checkbox" name="ptags" value="Redes Sociales" />
-                Redes Sociales</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  name="ptags"
-                  value="Edicion de Videos"
-                />
-                Edición de Videos</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input type="checkbox" name="ptags" value="QA" /> QA /
-                Testing</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input type="checkbox" name="ptags" value="Marketing" />
-                Marketing</label
-              >
-              <label
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                  font-size: 0.82rem;
-                  cursor: pointer;
-                "
-                ><input
-                  type="checkbox"
-                  name="ptags"
-                  value="IT (Soporte técnico)"
-                />
-                IT (Soporte Técnico)</label
-              >
-            </div>
+            ></div>
 
             <label class="tac-label" for="p-link"
               >Link de Conferencia (Google Meet / Zoom, opcional)</label
@@ -1571,101 +1584,7 @@
               gap: 10px;
               margin-bottom: 1.25rem;
             "
-          >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input type="checkbox" name="edit-ptags" value="Programacion" />
-              Programación</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input
-                type="checkbox"
-                name="edit-ptags"
-                value="Diseño Grafico"
-              />
-              Diseño Gráfico</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input
-                type="checkbox"
-                name="edit-ptags"
-                value="Redes Sociales"
-              />
-              Redes Sociales</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input
-                type="checkbox"
-                name="edit-ptags"
-                value="Edicion de Videos"
-              />
-              Edición de Videos</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input type="checkbox" name="edit-ptags" value="QA" /> QA /
-              Testing</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input type="checkbox" name="edit-ptags" value="Marketing" />
-              Marketing</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.82rem;
-                cursor: pointer;
-              "
-              ><input
-                type="checkbox"
-                name="edit-ptags"
-                value="IT (Soporte técnico)"
-              />
-              IT (Soporte Técnico)</label
-            >
-          </div>
+          ></div>
           <label class="tac-label" for="edit-p-link">Link Conferencia</label>
           <input type="url" id="edit-p-link" class="tac-input" />
           <label class="tac-label" for="edit-p-image"
@@ -1938,6 +1857,63 @@
           </p>
         </div>
       </div>
+    <!-- ════════ MODAL: EDITAR TAG / APTITUD ════════ -->
+    <div
+      id="modal-edit-skill"
+      class="sw-modal-overlay"
+      onclick="closeModal(event)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-skill-title-label"
+    >
+      <div class="sw-modal" style="max-width: 500px">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title" id="edit-skill-title-label">
+            <i class="fa-solid fa-pen-to-square" style="color: var(--sw-red)"></i>
+            Editar Tag / Aptitud
+          </span>
+          <button
+            class="sw-modal-close"
+            onclick="closeModalById('modal-edit-skill')"
+            aria-label="Cerrar modal"
+          >
+            &#x2715;
+          </button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="edit-skill-form" onsubmit="saveEditSkill(event)">
+            <input type="hidden" id="edit-skill-id" />
+            <label class="tac-label" for="edit-skill-name">Nombre de Aptitud *</label>
+            <input type="text" id="edit-skill-name" class="tac-input" required />
+            <label class="tac-label" for="edit-skill-color">Color Distintivo</label>
+            <input
+              type="color"
+              id="edit-skill-color"
+              class="tac-input"
+              style="padding: 0.2rem; height: 38px; cursor: pointer"
+            />
+            <div
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 1rem;
+              "
+            >
+              <button
+                type="button"
+                class="sw-btn sw-btn--ghost"
+                onclick="closeModalById('modal-edit-skill')"
+              >
+                CANCELAR
+              </button>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> GUARDAR CAMBIOS
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <footer class="sw-footer">
@@ -1973,6 +1949,7 @@
           loadProjectsList(),
           loadPortfolioList(),
           loadNewsList(),
+          loadSkillsList(),
         ]);
         updateKpiCards();
       });
@@ -2606,9 +2583,7 @@
           } catch (e) {}
         }
         if (!Array.isArray(reqTags)) reqTags = [];
-        document.querySelectorAll('input[name="edit-ptags"]').forEach((cb) => {
-          cb.checked = reqTags.includes(cb.value);
-        });
+        renderProjectTagsCheckboxes("edit-p-tags", "edit-ptags", reqTags);
 
         document.getElementById("edit-p-image").value = "";
         if (p.cover_url) {
@@ -3126,6 +3101,145 @@
           window.app.showToast(err.message, true);
         }
       }
+
+      // ══════════════════════════════════════════
+      // GESTIÓN DE TAGS / APTITUDES
+      // ══════════════════════════════════════════
+      window.adminSkillsCache = [];
+
+      async function loadSkillsList() {
+        try {
+          const res = await window.api.fetch("/admin/skills");
+          window.adminSkillsCache = res.skills || [];
+          renderSkillsTable(window.adminSkillsCache);
+          renderProjectTagsCheckboxes("p-tags", "ptags");
+        } catch (err) {
+          console.error("Error cargando aptitudes:", err);
+        }
+      }
+
+      function renderSkillsTable(skills) {
+        const tbody = document.getElementById("skills-table-body");
+        if (!tbody) return;
+        if (!skills || skills.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1.5rem;">Sin tags o aptitudes registradas</td></tr>';
+          return;
+        }
+        tbody.innerHTML = skills
+          .map(
+            (s) => `
+          <tr>
+            <td>${s.id}</td>
+            <td style="font-weight:bold;">${s.name}</td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sw-font-m);font-size:0.7rem;padding:2px 8px;border:1px solid ${s.color || '#A30000'};background:${s.color ? s.color + '22' : 'rgba(163,0,0,0.1)'};color:${s.color || 'var(--sw-white)'};clip-path:polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));">
+                <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#A30000'};"></span>
+                ${s.name}
+              </span>
+            </td>
+            <td style="color:var(--sw-text-muted);">${s.created_at ? new Date(s.created_at).toLocaleDateString("es-AR") : '-'}</td>
+            <td>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditSkill(${s.id})" style="margin-right:4px;">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteSkill(${s.id})" style="border-color:rgba(239,68,68,0.4);color:#f87171;">ELIMINAR</button>
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      function renderProjectTagsCheckboxes(containerId, inputName, selectedTags = []) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (!window.adminSkillsCache || window.adminSkillsCache.length === 0) {
+          container.innerHTML = '<span style="font-size:0.8rem;color:var(--sw-text-muted);">Sin tags registrados en el sistema.</span>';
+          return;
+        }
+        container.innerHTML = window.adminSkillsCache
+          .map(
+            (s) => `
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer;background:rgba(255,255,255,0.03);padding:4px 8px;border:1px solid var(--sw-border);">
+            <input type="checkbox" name="${inputName}" value="${s.name}" ${selectedTags.includes(s.name) ? "checked" : ""} />
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#A30000'};"></span>
+            ${s.name}
+          </label>
+        `
+          )
+          .join("");
+      }
+
+      // Crear Skill Form Submit
+      const createSkillForm = document.getElementById("create-skill-form");
+      if (createSkillForm) {
+        createSkillForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("skill-name").value.trim();
+          const color = document.getElementById("skill-color").value;
+          if (!name) return;
+          try {
+            await window.api.fetch("/admin/skills", {
+              method: "POST",
+              body: { name, color },
+            });
+            window.app.showToast("Tag / Aptitud creada correctamente");
+            createSkillForm.reset();
+            document.getElementById("skill-color").value = "#A30000";
+            await loadSkillsList();
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+        });
+      }
+
+      function formatHexColor(hex) {
+        if (!hex) return "#a30000";
+        hex = String(hex).trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) return hex.toLowerCase();
+        if (/^#[0-9A-Fa-f]{3}$/.test(hex)) {
+          return "#" + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+        }
+        return "#a30000";
+      }
+
+      window.openEditSkill = function (id) {
+        const skill = (window.adminSkillsCache || []).find((s) => String(s.id) === String(id));
+        if (!skill) return;
+        document.getElementById("edit-skill-id").value = skill.id;
+        document.getElementById("edit-skill-name").value = skill.name || "";
+        document.getElementById("edit-skill-color").value = formatHexColor(skill.color);
+        openModalById("modal-edit-skill");
+      };
+
+      window.saveEditSkill = async function (e) {
+        if (e) e.preventDefault();
+        const id = document.getElementById("edit-skill-id").value;
+        const name = document.getElementById("edit-skill-name").value.trim();
+        const color = document.getElementById("edit-skill-color").value;
+        if (!name) return;
+        try {
+          await window.api.fetch(`/admin/skills/${id}`, {
+            method: "PUT",
+            body: { name, color },
+          });
+          window.app.showToast("Tag / Aptitud actualizada correctamente");
+          closeModalById("modal-edit-skill");
+          await loadSkillsList();
+        } catch (err) {
+          window.app.showToast(err.message || "Error al actualizar aptitud", true);
+        }
+      };
+
+      window.deleteSkill = async function (id) {
+        if (!confirm("¿Eliminar este tag / aptitud?")) return;
+        try {
+          await window.api.fetch(`/admin/skills/${id}`, { method: "DELETE" });
+          window.app.showToast("Tag / Aptitud eliminada");
+          await loadSkillsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
     </script>
   </body>
 </html>

@@ -22,6 +22,7 @@ router.get('/tokens', requireAdmin, adminCtrl.listTokens);
 // Aptitudes
 router.get('/skills', requireAdmin, adminCtrl.listSkills);
 router.post('/skills', requireAdmin, adminCtrl.createSkill);
+router.put('/skills/:skillId', requireAdmin, adminCtrl.updateSkill);
 router.delete('/skills/:skillId', requireAdmin, adminCtrl.deleteSkill);
 
 // Proyectos

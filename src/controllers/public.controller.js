@@ -97,16 +97,17 @@ async function getLatestProjects(req, res) {
       })(),
     }));
 
+    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+
     // Filtrar por tags si es pasante
-    if (req.user) {
-      if (req.user.role === 'pasante') {
-        const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-        const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
-        projects = projects.filter(p => {
-          if (!p.required_tags || p.required_tags.length === 0) return true;
-          return p.required_tags.some(t => userTags.includes(t));
-        });
-      }
+    if (req.user && req.user.role === 'pasante') {
+      const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
+      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const userTagSet = new Set(userTags.map(normalizeTag));
+      projects = projects.filter(p => {
+        if (!p.required_tags || p.required_tags.length === 0) return true;
+        return p.required_tags.some(t => userTagSet.has(normalizeTag(t)));
+      });
     }
 
     projects = projects.slice(0, limit);
@@ -142,7 +143,8 @@ async function getProject(req, res) {
     if (req.user && req.user.role === 'pasante' && project.required_tags.length > 0) {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
       const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
-      const hasMatch = project.required_tags.some(t => userTags.includes(t));
+      const userTagSet = new Set(userTags.map(normalizeTag));
+      const hasMatch = project.required_tags.some(t => userTagSet.has(normalizeTag(t)));
       if (!hasMatch) {
         return res.status(403).json({ error: 'No tienes los tags requeridos para ver este proyecto.' });
       }
