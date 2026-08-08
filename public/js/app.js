@@ -235,8 +235,11 @@ function showToast(message, isError = false) {
     background: `var(--sw-dark)`,
     color: isError ? "#f87171" : "#4ade80",
     boxShadow: `0 4px 24px ${isError ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)"}`,
+<<<<<<< HEAD
     WebkitClipPath:
       "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
+=======
+>>>>>>> ab2f921 (adds)
     clipPath:
       "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
     transition: "opacity 0.3s",
@@ -304,15 +307,23 @@ window.app = {
   closeModal,
   acceptTerms,
   openTermsTextModal,
+<<<<<<< HEAD
   parseDate,
 };
 
 /* ═══════════════════════════════════════
    TERMS AND CONDITIONS MODAL (FORZADO)
+=======
+};
+
+/* ═══════════════════════════════════════
+   TERMS AND CONDITIONS MODAL
+>>>>>>> ab2f921 (adds)
 ═══════════════════════════════════════ */
 function showTermsModal() {
   if (document.getElementById("sw-terms-modal")) return;
 
+<<<<<<< HEAD
   // Inyectar estilos del modal si no existen
   if (!document.getElementById('sw-terms-modal-styles')) {
     const style = document.createElement('style');
@@ -474,6 +485,36 @@ function showTermsModal() {
         <div class="sw-terms-legal-note">
           LEY 25.326 — PROTECCIÓN DE DATOS PERSONALES &nbsp;|&nbsp; LEY 24.240 — DEFENSA DEL CONSUMIDOR<br>
           REPÚBLICA ARGENTINA &nbsp;·&nbsp; 2026
+=======
+  const modalHtml = `
+    <div id="sw-terms-modal" class="sw-modal-overlay open" style="z-index: 999;display: flex;position: fixed;height: 100%;width: 100%;justify-content: center;align-items: center;">
+      <div class="sw-modal" style="
+    height: fit-content;
+    width: 80%;
+    padding: 4rem 2rem;
+    background: #8c4343;
+    border-radius: 2rem;
+    border: #eee 2px solid;
+">
+        <div class="sw-modal-header" style="
+    display: flex;
+    justify-content: center;
+">
+          <div class="sw-auth-dot r"></div>
+          <div class="sw-auth-dot y"></div>
+          <div class="sw-auth-dot g"></div>
+          <span style="margin-left: 10px; font-family: var(--sw-font-m); font-size: 0.6rem; color: rgba(163,0,0,0.8); letter-spacing: 0.2em;">ACCIÓN REQUERIDA</span>
+        </div>
+        <div class="sw-modal-body" style="text-align: center;">
+          <h3 style="font-family: var(--sw-font-h); font-size: 1.5rem; color: var(--sw-white); margin-bottom: 1rem; text-transform: uppercase;">Actualización de Términos</h3>
+          <p style="font-family: var(--sw-font-r); font-size: 0.9rem; color: var(--sw-text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+            Hemos actualizado nuestros <a href="#" onclick="window.app.openTermsTextModal(event)" style="color: var(--sw-red); text-decoration: none; font-weight: bold;">Términos y Condiciones</a>. Debes aceptarlos para continuar utilizando la plataforma Spider-Web ARG.
+          </p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="window.app.logout()" class="sw-btn" style="background: transparent; border: 1px solid var(--sw-border);">CANCELAR Y SALIR</button>
+            <button id="btn-accept-terms" onclick="window.app.acceptTerms()" class="sw-btn sw-btn--primary">ACEPTAR TÉRMINOS</button>
+          </div>
+>>>>>>> ab2f921 (adds)
         </div>
       </div>
     </div>
@@ -484,7 +525,11 @@ function showTermsModal() {
 async function acceptTerms() {
   const btn = document.getElementById("btn-accept-terms");
   if (btn) {
+<<<<<<< HEAD
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>PROCESANDO...';
+=======
+    btn.innerText = "PROCESANDO...";
+>>>>>>> ab2f921 (adds)
     btn.disabled = true;
   }
   try {
@@ -501,6 +546,7 @@ async function acceptTerms() {
       localStorage.setItem("sw_token", res.token);
     }
     const modal = document.getElementById("sw-terms-modal");
+<<<<<<< HEAD
     if (modal) {
       modal.style.animation = 'none';
       modal.style.opacity = '0';
@@ -512,13 +558,25 @@ async function acceptTerms() {
     showToast(err.message || "Error al aceptar términos", true);
     if (btn) {
       btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right:6px;"></i>ACEPTAR TÉRMINOS';
+=======
+    if (modal) modal.remove();
+    showToast(res.message || "Términos aceptados.");
+  } catch (err) {
+    showToast(err.message || "Error al aceptar términos", true);
+    if (btn) {
+      btn.innerText = "ACEPTAR TÉRMINOS";
+>>>>>>> ab2f921 (adds)
       btn.disabled = false;
     }
   }
 }
 
 /* ═══════════════════════════════════════
+<<<<<<< HEAD
    TERMS TEXT MODAL (FOOTER / REGISTRO)
+=======
+   TERMS TEXT MODAL
+>>>>>>> ab2f921 (adds)
 ═══════════════════════════════════════ */
 function openTermsTextModal(e) {
   if (e) e.preventDefault();
@@ -527,6 +585,7 @@ function openTermsTextModal(e) {
     return;
   }
 
+<<<<<<< HEAD
   if (!document.getElementById('sw-terms-text-modal-styles')) {
     const style = document.createElement('style');
     style.id = 'sw-terms-text-modal-styles';
@@ -790,6 +849,38 @@ function openTermsTextModal(e) {
           </button>
         </div>
 
+=======
+  const modalHtml = `
+    <div id="sw-terms-text-modal" class="sw-modal-overlay open" style="z-index: 20; display: flex;" onclick="if(event.target===this) this.classList.remove('open')">
+      <div class="sw-modal" style="max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div class="sw-modal-header" style="justify-content: space-between;">
+          <div style="display:flex; align-items:center;">
+            <div class="sw-auth-dot r"></div>
+            <div class="sw-auth-dot y"></div>
+            <div class="sw-auth-dot g"></div>
+            <span style="margin-left: 10px; font-family: var(--sw-font-m); font-size: 0.6rem; color: rgba(163,0,0,0.8); letter-spacing: 0.2em;">INFORMACIÓN LEGAL</span>
+          </div>
+          <button onclick="document.getElementById('sw-terms-text-modal').classList.remove('open')" style="background:none; border:none; color:var(--sw-white); cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sw-modal-body" style="text-align: left; padding: 20px;">
+          <h3 style="font-family: var(--sw-font-h); font-size: 1.5rem; color: var(--sw-white); margin-bottom: 1rem; text-transform: uppercase;">Términos y Condiciones</h3>
+          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+            Al acceder o utilizar la plataforma de Spider-Web ARG, aceptas estar sujeto a estos términos y condiciones de uso. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al servicio.
+          </p>
+          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">2. Uso de la plataforma</h4>
+          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+            Como pasante, te comprometes a utilizar la plataforma únicamente para fines legítimos y de manera que no infrinja los derechos de, restrinja o inhiba el uso y disfrute de la plataforma por parte de cualquier tercero.
+          </p>
+          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">3. Privacidad y Datos</h4>
+          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+            Tu privacidad es importante para nosotros. Cualquier información personal que proporciones será tratada de acuerdo con nuestras políticas internas, garantizando la confidencialidad de tus datos.
+          </p>
+          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">4. Modificaciones</h4>
+          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 0;">
+            Nos reservamos el derecho de modificar o reemplazar estos términos en cualquier momento. Al continuar accediendo o utilizando nuestro servicio después de que esas revisiones se vuelvan efectivas, aceptas estar sujeto a los términos revisados.
+          </p>
+        </div>
+>>>>>>> ab2f921 (adds)
       </div>
     </div>
   `;

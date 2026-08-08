@@ -463,14 +463,27 @@
         if (!res.applications || res.applications.length === 0) {
           tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin postulaciones</td></tr>';
         } else {
-          tbody.innerHTML = res.applications.map(a => `
+          tbody.innerHTML = res.applications.map(a => {
+            let meetingHtml = '';
+            if (a.status === 'accepted' && a.next_meeting_date) {
+              const mDate = new Date(a.next_meeting_date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+              meetingHtml = `<div style="margin-top:8px; padding:8px; background:rgba(163,0,0,0.1); border:1px solid var(--sw-red); border-left:4px solid var(--sw-red); font-size:0.65rem;">
+                <strong style="color:var(--sw-red);"><i class="fa-solid fa-video"></i> PRÓXIMA REUNIÓN:</strong> ${mDate}<br>
+                <a href="${a.next_meeting_link}" target="_blank" style="color:var(--sw-white); text-decoration:underline; display:inline-block; margin-top:4px;">Unirse a la reunión</a>
+              </div>`;
+            }
+            return `
             <tr>
-              <td><strong>${a.title}</strong></td>
-              <td><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'')}">${a.status.toUpperCase()}</span></td>
-              <td>${window.app.parseDate(a.applied_at).toLocaleDateString('es-AR')}</td>
-              <td>${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${a.project_id})">Cancelar</button>`:'-'}</td>
+              <td>
+                <strong>${a.title}</strong>
+                ${meetingHtml}
+              </td>
+              <td style="vertical-align:top;"><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'')}">${a.status.toUpperCase()}</span></td>
+              <td style="vertical-align:top;">${window.app.parseDate(a.applied_at).toLocaleDateString('es-AR')}</td>
+              <td style="vertical-align:top;">${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${a.project_id})">Cancelar</button>`:'-'}</td>
             </tr>
-          `).join('');
+            `;
+          }).join('');
         }
       } catch (err) {}
     }

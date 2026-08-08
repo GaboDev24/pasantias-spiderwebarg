@@ -71,6 +71,15 @@
       </div>
     </section>
 
+    <!-- Capacitaciones -->
+    <section id="trainings" style="margin-bottom: 5rem; display: none;">
+      <h2 class="section-title">Capacitaciones Disponibles</h2>
+      <p style="text-align:center; color:var(--sw-text-muted); font-family:var(--sw-font-m); font-size:0.75rem; margin-bottom:2rem;">Solicita unirte a una capacitación. Cuando se llene el cupo, se agendará una reunión grupal.</p>
+      <div class="features-grid-tac" id="trainings-grid">
+        <!-- Renderizado por JS -->
+      </div>
+    </section>
+
     <!-- Noticias -->
     <section id="news">
       <h2 class="section-title">Últimas Noticias</h2>
@@ -134,15 +143,19 @@
       const portGrid = document.getElementById('portfolio-grid');
       const isAuth = !!localStorage.getItem('sw_user');
 
-      // Mostrar sección de propuestas solo si está autenticado
+      // Mostrar sección de propuestas y capacitaciones solo si está autenticado
       if (isAuth) {
         document.getElementById('projects').style.display = 'block';
+        document.getElementById('trainings').style.display = 'block';
       }
 
       // Mostrar estado de carga
       const loadingMsg = '<p style="color: rgba(255,255,255,0.3); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem; letter-spacing: 0.1em;">CARGANDO...</p>';
       newsGrid.innerHTML = loadingMsg;
-      if (isAuth) projGrid.innerHTML = loadingMsg;
+      if (isAuth) {
+        projGrid.innerHTML = loadingMsg;
+        document.getElementById('trainings-grid').innerHTML = loadingMsg;
+      }
       portGrid.innerHTML = loadingMsg;
 
       try {
@@ -153,12 +166,14 @@
         
         if (isAuth) {
           promises.push(window.api.fetch('/public/projects'));
+          promises.push(window.api.fetch('/public/trainings'));
         }
 
         const resArray = await Promise.all(promises);
         const newsRes = resArray[0];
         const portRes = resArray[1];
         const projectsRes = isAuth ? resArray[2] : null;
+        const trainingsRes = isAuth ? resArray[3] : null;
 
         // Render Portfolio
         const portfolio = portRes.portfolio || [];
@@ -224,6 +239,56 @@
             `}).join('');
           }
         }
+        
+        // Render Capacitaciones
+        if (isAuth && trainingsRes) {
+          const trainingsGrid = document.getElementById('trainings-grid');
+          const trainings = trainingsRes.trainings || [];
+          if (trainings.length === 0) {
+            trainingsGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">No hay capacitaciones disponibles.</p>';
+          } else {
+            trainingsGrid.innerHTML = trainings.map(t => {
+              const applied = t.applied_count || 0;
+              const quota = t.min_quota || 2;
+              let btnHtml = '';
+              let statusText = '';
+              let statusColor = '#fff';
+              
+              if (t.status === 'open') {
+                statusText = `ABIERTA (${applied}/${quota} cupos)`;
+                statusColor = '#60a5fa'; // blue
+                if (t.user_applied) {
+                  btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>YA SOLICITASTE</button>`;
+                } else {
+                  btnHtml = `<button class="sw-btn sw-btn--primary sw-btn--sm" onclick="applyToTraining(${t.id})">SOLICITAR CAPACITACIÓN</button>`;
+                }
+              } else if (t.status === 'quota_filled') {
+                statusText = `CUPO LLENO (A programar)`;
+                statusColor = '#fbbf24'; // yellow
+                btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>CUPO LLENO</button>`;
+              } else if (t.status === 'scheduled') {
+                const md = t.meeting_date ? new Date(t.meeting_date).toLocaleString('es-AR') : '';
+                statusText = `PROGRAMADA: ${md}`;
+                statusColor = '#4ade80'; // green
+                btnHtml = t.user_applied ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>AGENDADA</button>` : `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>CERRADA</button>`;
+              } else {
+                statusText = `FINALIZADA`;
+                statusColor = '#9ca3af'; // gray
+                btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>FINALIZADA</button>`;
+              }
+
+              return `
+              <article class="feature-dossier">
+                <div class="dossier-body">
+                  <div class="dossier-meta" style="color:${statusColor}; font-weight:bold;">${statusText}</div>
+                  <h3 class="dossier-title">${t.title}</h3>
+                  <p class="dossier-desc">${t.description || 'Sin descripción.'}</p>
+                  <div style="margin-top:1rem;">${btnHtml}</div>
+                </div>
+              </article>
+            `}).join('');
+          }
+        }
 
       } catch (err) {
         console.error('Error cargando datos:', err);
@@ -232,6 +297,17 @@
         portGrid.innerHTML = '<p style="color: #f87171; padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">Error cargando portfolio.</p>';
       }
     });
+
+    window.applyToTraining = async function(id) {
+      if (!confirm('¿Seguro que deseas solicitar esta capacitación?')) return;
+      try {
+        await window.api.fetch('/users/trainings/' + id + '/apply', { method: 'POST' });
+        window.app.showToast('Solicitud de capacitación enviada exitosamente.');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch(err) {
+        window.app.showToast(err.message || 'Error al solicitar', true);
+      }
+    };
   </script>
 </body>
 </html>

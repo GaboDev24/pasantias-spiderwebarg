@@ -555,6 +555,18 @@
           ></span>
           <span>Tags &amp; Aptitudes</span>
         </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('trainings', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-trainings"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-chalkboard-user"></i
+          ></span>
+          <span>Capacitaciones</span>
+        </button>
 
         <div class="sw-sidebar__footer">
           <a
@@ -1146,9 +1158,139 @@
             </div>
           </div>
         </div>
+        <!-- ════════ TAB: CAPACITACIONES ════════ -->
+        <div id="tab-trainings" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i class="fa-solid fa-chalkboard-user" style="color: var(--sw-red)"></i>
+              Gestión de Capacitaciones
+            </div>
+            <button class="sw-btn sw-btn--primary" onclick="openModalById('modal-create-training')">
+              <i class="fa-solid fa-plus"></i> NUEVA CAPACITACIÓN
+            </button>
+          </div>
+          
+          <div class="tac-card">
+            <div class="tac-card-title">Listado de Capacitaciones</div>
+            <div style="overflow-x: auto">
+              <table class="tac-table">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Postulados / Cupo</th>
+                    <th>Reunión</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="trainings-table">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--sw-text-muted); padding: 1.5rem;">Cargando capacitaciones...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </main>
     </div>
     <!-- /sw-admin-wrapper -->
+
+    <!-- ════════ MODAL NUEVA CAPACITACIÓN ════════ -->
+    <div id="modal-create-training" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title">NUEVA CAPACITACIÓN</span>
+          <button class="sw-modal-close" onclick="closeModalById('modal-create-training')">&#x2715;</button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="form-create-training">
+            <label class="tac-label">Título</label>
+            <input type="text" id="train-title" class="tac-input" required />
+            <label class="tac-label">Descripción</label>
+            <textarea id="train-desc" class="tac-input" rows="3" required></textarea>
+            <label class="tac-label">Cupo mínimo (por defecto 2)</label>
+            <input type="number" id="train-quota" class="tac-input" value="2" min="1" required />
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;">
+              <button type="button" class="sw-btn sw-btn--ghost" onclick="closeModalById('modal-create-training')">Cancelar</button>
+              <button type="submit" class="sw-btn sw-btn--primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL PROGRAMAR CAPACITACIÓN ════════ -->
+    <div id="modal-schedule-training" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title">PROGRAMAR CAPACITACIÓN</span>
+          <button class="sw-modal-close" onclick="closeModalById('modal-schedule-training')">&#x2715;</button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="form-schedule-training">
+            <input type="hidden" id="sch-train-id" />
+            <label class="tac-label">Fecha y Hora</label>
+            <input type="datetime-local" id="sch-train-date" class="tac-input" required />
+            <label class="tac-label">Link de la Reunión (Zoom, Meet, etc)</label>
+            <input type="url" id="sch-train-link" class="tac-input" required />
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;">
+              <button type="button" class="sw-btn sw-btn--ghost" onclick="closeModalById('modal-schedule-training')">Cancelar</button>
+              <button type="submit" class="sw-btn sw-btn--primary">Programar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL PROGRAMAR REUNIÓN PROYECTO ════════ -->
+    <div id="modal-schedule-project-meeting" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title">PROGRAMAR REUNIÓN DE PROYECTO</span>
+          <button class="sw-modal-close" onclick="closeModalById('modal-schedule-project-meeting')">&#x2715;</button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="form-schedule-project-meeting">
+            <input type="hidden" id="sch-proj-id" />
+            <label class="tac-label">Fecha y Hora</label>
+            <input type="datetime-local" id="sch-proj-date" class="tac-input" required />
+            <label class="tac-label">Link de la Reunión</label>
+            <input type="url" id="sch-proj-link" class="tac-input" required />
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;">
+              <button type="button" class="sw-btn sw-btn--ghost" onclick="closeModalById('modal-schedule-project-meeting')">Cancelar</button>
+              <button type="submit" class="sw-btn sw-btn--primary">Programar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ MODAL REGISTRAR ACTA REUNIÓN ════════ -->
+    <div id="modal-record-project-meeting" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title">REGISTRAR ACTA DE REUNIÓN</span>
+          <button class="sw-modal-close" onclick="closeModalById('modal-record-project-meeting')">&#x2715;</button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="form-record-project-meeting">
+            <input type="hidden" id="rec-proj-id" />
+            <label class="tac-label">Fecha y Hora de la Reunión</label>
+            <input type="datetime-local" id="rec-proj-date" class="tac-input" required />
+            <label class="tac-label">Notas del Acta</label>
+            <textarea id="rec-proj-notes" class="tac-input" rows="4" required></textarea>
+            <label class="tac-label">Participantes (Nombres, separados por coma)</label>
+            <input type="text" id="rec-proj-attendees" class="tac-input" placeholder="Ej: Juan, Maria, Carlos" required />
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;">
+              <button type="button" class="sw-btn sw-btn--ghost" onclick="closeModalById('modal-record-project-meeting')">Cancelar</button>
+              <button type="submit" class="sw-btn sw-btn--primary">Guardar Acta</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <!-- ════════ MODAL CREAR PROYECTO ════════ -->
     <div
@@ -2016,6 +2158,7 @@
           loadPortfolioList(),
           loadNewsList(),
           loadSkillsList(),
+          loadTrainingsList(),
         ]);
         updateKpiCards();
       });
@@ -2530,6 +2673,138 @@
         });
 
       // ══════════════════════════════════════════
+      // CAPACITACIONES Y REUNIONES DE PROYECTOS
+      // ══════════════════════════════════════════
+      
+      async function loadTrainingsList() {
+        const list = document.getElementById("trainings-table");
+        try {
+          const res = await window.api.fetch("/admin/trainings");
+          const trainings = res.trainings || [];
+          if (!trainings.length) {
+            list.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--sw-text-muted); padding: 1.5rem;">No hay capacitaciones creadas.</td></tr>';
+            return;
+          }
+          list.innerHTML = trainings.map(t => {
+            const md = t.meeting_date ? new Date(t.meeting_date).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'}) : 'No programada';
+            const ml = t.meeting_link ? `<a href="${t.meeting_link}" target="_blank" style="color:var(--sw-red);"><i class="fa-solid fa-link"></i></a>` : '';
+            return `
+              <tr>
+                <td><strong>${t.title}</strong></td>
+                <td><span class="tac-badge ${t.status === 'open' ? 'info' : (t.status === 'scheduled' ? 'ok' : 'warn')}">${t.status.toUpperCase()}</span></td>
+                <td>${t.applied_count || 0} / ${t.min_quota || 2}</td>
+                <td>${md} ${ml}</td>
+                <td>
+                  ${t.status !== 'scheduled' ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleTraining(${t.id})">PROGRAMAR</button>` : ''}
+                </td>
+              </tr>
+            `;
+          }).join("");
+        } catch (err) {
+          list.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #f87171; padding: 1.5rem;">Error cargando capacitaciones.</td></tr>';
+        }
+      }
+
+      function openScheduleTraining(id) {
+        document.getElementById('sch-train-id').value = id;
+        document.getElementById('sch-train-date').value = '';
+        document.getElementById('sch-train-link').value = '';
+        openModalById('modal-schedule-training');
+      }
+
+      document.getElementById('form-create-training').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          await window.api.fetch('/admin/trainings', {
+            method: 'POST',
+            body: {
+              title: document.getElementById('train-title').value,
+              description: document.getElementById('train-desc').value,
+              min_quota: parseInt(document.getElementById('train-quota').value)
+            }
+          });
+          window.app.showToast('Capacitación creada.');
+          closeModalById('modal-create-training');
+          loadTrainingsList();
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
+      });
+
+      document.getElementById('form-schedule-training').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const id = document.getElementById('sch-train-id').value;
+          await window.api.fetch(`/admin/trainings/${id}/schedule`, {
+            method: 'POST',
+            body: {
+              meeting_date: document.getElementById('sch-train-date').value,
+              meeting_link: document.getElementById('sch-train-link').value
+            }
+          });
+          window.app.showToast('Capacitación programada.');
+          closeModalById('modal-schedule-training');
+          loadTrainingsList();
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
+      });
+
+      function openScheduleProjectMeeting(id) {
+        document.getElementById('sch-proj-id').value = id;
+        document.getElementById('sch-proj-date').value = '';
+        document.getElementById('sch-proj-link').value = '';
+        openModalById('modal-schedule-project-meeting');
+      }
+
+      function openRecordProjectMeeting(id) {
+        document.getElementById('rec-proj-id').value = id;
+        document.getElementById('rec-proj-date').value = '';
+        document.getElementById('rec-proj-notes').value = '';
+        document.getElementById('rec-proj-attendees').value = '';
+        openModalById('modal-record-project-meeting');
+      }
+
+      document.getElementById('form-schedule-project-meeting').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const id = document.getElementById('sch-proj-id').value;
+          await window.api.fetch(`/admin/projects/${id}/schedule-meeting`, {
+            method: 'POST',
+            body: {
+              meeting_date: document.getElementById('sch-proj-date').value,
+              meeting_link: document.getElementById('sch-proj-link').value
+            }
+          });
+          window.app.showToast('Reunión de proyecto programada.');
+          closeModalById('modal-schedule-project-meeting');
+          loadProjectsList();
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
+      });
+
+      document.getElementById('form-record-project-meeting').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const id = document.getElementById('rec-proj-id').value;
+          await window.api.fetch(`/admin/projects/${id}/meeting-record`, {
+            method: 'POST',
+            body: {
+              meeting_date: document.getElementById('rec-proj-date').value,
+              record_notes: document.getElementById('rec-proj-notes').value,
+              attendees: document.getElementById('rec-proj-attendees').value.split(',').map(x => x.trim())
+            }
+          });
+          window.app.showToast('Acta de reunión registrada.');
+          closeModalById('modal-record-project-meeting');
+          // Actualizamos la lista de proyectos, pero no muestra historial, solo lo guarda en project_meetings
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
+      });
+
+      // ══════════════════════════════════════════
       // LISTA DE PROYECTOS
       // ══════════════════════════════════════════
       window.adminProjectsCache = [];
@@ -2597,13 +2872,15 @@
               <span>${p.applicant_count || 0} postulado(s)</span>
             </div>
           </div>
-          <div class="pub-item-actions">
-            <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
-            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id})">EDITAR</button>
-            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
-            ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ""}
-            <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
-          </div>
+            <div class="pub-item-actions">
+              <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id})">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
+              ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ""}
+              ${!p.next_meeting_date && (p.dynamic_status === 'En proceso' || p.dynamic_status === 'Por comenzar') ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleProjectMeeting(${p.id})" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);"><i class="fa-solid fa-video"></i> AGENDAR REUNIÓN</button>` : ""}
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openRecordProjectMeeting(${p.id})" style="color:#2dd4bf;border-color:rgba(45,212,191,0.3);"><i class="fa-solid fa-file-signature"></i> ACTA REUNIÓN</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+            </div>
         </div>
       `;
           })

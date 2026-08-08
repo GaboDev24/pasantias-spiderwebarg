@@ -224,4 +224,32 @@ async function getPortfolioProjects(req, res) {
   }
 }
 
-module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills, getPortfolioProjects };
+async function getTrainings(req, res) {
+  try {
+    const result = await sql.query(`
+      SELECT t.id, t.title, t.description, t.min_quota, t.status, t.meeting_date, t.created_at,
+        (SELECT COUNT(*) FROM training_applications ta WHERE ta.training_id = t.id) as applied_count
+      FROM trainings t
+      ORDER BY t.created_at DESC
+    `);
+    
+    // Si el usuario está autenticado, indicar a cuáles ya se postuló
+    let userApplications = [];
+    if (req.user) {
+      const apps = await sql.query(`SELECT training_id FROM training_applications WHERE user_id = ${req.user.id}`);
+      userApplications = (apps.data || []).map(a => a.training_id);
+    }
+    
+    const trainings = (result.data || []).map(t => ({
+      ...t,
+      user_applied: userApplications.includes(t.id)
+    }));
+    
+    return res.json({ trainings });
+  } catch (err) {
+    console.error('[PUBLIC/TRAININGS]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo capacitaciones.' });
+  }
+}
+
+module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills, getPortfolioProjects, getTrainings };

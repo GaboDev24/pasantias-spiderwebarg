@@ -242,7 +242,7 @@ async function cancelApplication(req, res) {
 async function getMyApplications(req, res) {
   try {
     const result = await sql.query(
-      `SELECT pa.id, pa.status, pa.applied_at, p.id AS project_id, p.title, p.description, p.start_date, p.end_date, p.status AS project_status
+      `SELECT pa.id, pa.status, pa.applied_at, p.id AS project_id, p.title, p.description, p.start_date, p.end_date, p.status AS project_status, p.next_meeting_date, p.next_meeting_link
        FROM project_applications pa
        JOIN projects p ON p.id = pa.project_id
        WHERE pa.user_id = ${req.user.id}
@@ -319,8 +319,62 @@ async function getUserPublicProfile(req, res) {
   }
 }
 
+// ──────────────────────────────────────────────
+// CAPACITACIONES
+// ──────────────────────────────────────────────
+async function applyToTraining(req, res) {
+  try {
+    const { trainingId } = req.params;
+    const userId = req.user.id;
+
+    // Verificar si ya se postuló
+    const existing = await sql.query(`SELECT id FROM training_applications WHERE user_id = ${userId} AND training_id = ${parseInt(trainingId)}`);
+    if (existing.data && existing.data.length > 0) {
+      return res.status(400).json({ error: 'Ya solicitaste esta capacitación.' });
+    }
+
+    // Insertar postulación
+    await sql.query(`INSERT INTO training_applications (training_id, user_id) VALUES (${parseInt(trainingId)}, ${userId})`);
+
+    // Verificar cupos
+    const tr = await sql.query(`
+      SELECT t.min_quota, t.status, t.title,
+        (SELECT COUNT(*) FROM training_applications ta WHERE ta.training_id = t.id) as applied_count
+      FROM trainings t WHERE t.id = ${parseInt(trainingId)}
+    `);
+    
+    if (tr.data && tr.data.length > 0) {
+      const training = tr.data[0];
+      if (training.status === 'open' && training.applied_count >= training.min_quota) {
+        // Cupo alcanzado
+        await sql.query(`UPDATE trainings SET status = 'quota_filled' WHERE id = ${parseInt(trainingId)}`);
+        
+        // Avisar a admins y CEOs
+        const admins = await sql.query(`SELECT email FROM users WHERE role IN ('admin', 'ceo')`);
+        const { sendNotificationEmail } = require('../helpers/email');
+        const adminEmails = (admins.data || []).map(u => u.email).join(', ');
+        
+        if (adminEmails) {
+          const msg = `
+            <h3>Cupo de Capacitación Lleno</h3>
+            <p>La capacitación "<strong>${training.title}</strong>" ha alcanzado su cupo mínimo (${training.min_quota} solicitantes).</p>
+            <p>Por favor, ingrese al panel de administración para programar la reunión.</p>
+          `;
+          await sendNotificationEmail(adminEmails, 'Cupo de Capacitación Lleno', msg).catch(console.error);
+        }
+      }
+    }
+
+    return res.status(201).json({ message: 'Solicitud enviada correctamente.' });
+  } catch (err) {
+    console.error('[USERS/APPLY-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+  }
+}
+
 module.exports = {
   getMyProfile, updateProfile, changePassword, uploadAvatar,
   uploadCV, getUserPublicProfile,
   applyToProject, cancelApplication, getMyApplications,
+  applyToTraining
 };

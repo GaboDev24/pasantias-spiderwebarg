@@ -514,6 +514,143 @@ async function deletePortfolioProject(req, res) {
   }
 }
 
+// ──────────────────────────────────────────────
+// REUNIONES DE PROYECTOS
+// ──────────────────────────────────────────────
+async function scheduleProjectMeeting(req, res) {
+  try {
+    const { projectId } = req.params;
+    const { date, time, link } = req.body;
+    if (!date || !time || !link) return res.status(400).json({ error: 'Fecha, hora y link son requeridos.' });
+
+    const datetime = `${date} ${time}:00`;
+    await sql.query(`UPDATE projects SET next_meeting_date = '${datetime}', next_meeting_link = '${link.replace(/'/g, "''")}' WHERE id = ${parseInt(projectId)}`);
+
+    // Obtener postulados aceptados
+    const apps = await sql.query(`
+      SELECT u.email, u.name 
+      FROM project_applications pa
+      JOIN users u ON u.id = pa.user_id
+      WHERE pa.project_id = ${parseInt(projectId)} AND pa.status = 'accepted'
+    `);
+
+    const { sendNotificationEmail } = require('../helpers/email');
+    for (const user of (apps.data || [])) {
+      const msg = `
+        <h3>Reunión Programada</h3>
+        <p>Hola ${user.name}, se ha programado una reunión para un proyecto en el que fuiste aceptado.</p>
+        <p><strong>Fecha y Hora:</strong> ${date} a las ${time}</p>
+        <p><strong>Link:</strong> <a href="${link}">${link}</a></p>
+      `;
+      await sendNotificationEmail(user.email, 'Reunión de Proyecto Programada', msg).catch(console.error);
+    }
+
+    return res.json({ message: 'Reunión programada y notificada a los alumnos.' });
+  } catch (err) {
+    console.error('[ADMIN/SCHEDULE-MEETING]', err.message);
+    return res.status(500).json({ error: 'Error programando reunión.' });
+  }
+}
+
+async function createProjectMeetingRecord(req, res) {
+  try {
+    const { projectId } = req.params;
+    const { record_notes, attendees } = req.body; // attendees es array de IDs o nombres
+    
+    // Obtener info de la reunión actual
+    const proj = await sql.query(`SELECT next_meeting_date, next_meeting_link FROM projects WHERE id = ${parseInt(projectId)}`);
+    if (!proj.data || proj.data.length === 0) return res.status(404).json({ error: 'Proyecto no encontrado.' });
+    
+    const mDate = proj.data[0].next_meeting_date ? `'${proj.data[0].next_meeting_date.toISOString().slice(0,19).replace('T', ' ')}'` : 'NOW()';
+    const mLink = proj.data[0].next_meeting_link ? `'${proj.data[0].next_meeting_link.replace(/'/g, "''")}'` : 'NULL';
+    const attendeesJson = attendees ? `'${JSON.stringify(attendees)}'` : "'[]'";
+
+    await sql.query(`
+      INSERT INTO project_meetings (project_id, meeting_date, meeting_link, record_notes, attendees_json)
+      VALUES (${parseInt(projectId)}, ${mDate}, ${mLink}, '${record_notes.replace(/'/g, "''")}', ${attendeesJson})
+    `);
+
+    await sql.query(`UPDATE projects SET next_meeting_date = NULL, next_meeting_link = NULL WHERE id = ${parseInt(projectId)}`);
+
+    return res.json({ message: 'Registro de reunión guardado con éxito.' });
+  } catch (err) {
+    console.error('[ADMIN/MEETING-RECORD]', err.message);
+    return res.status(500).json({ error: 'Error guardando registro de reunión.' });
+  }
+}
+
+// ──────────────────────────────────────────────
+// CAPACITACIONES
+// ──────────────────────────────────────────────
+async function listTrainings(req, res) {
+  try {
+    const result = await sql.query(`
+      SELECT t.*, 
+        (SELECT COUNT(*) FROM training_applications ta WHERE ta.training_id = t.id) as applied_count 
+      FROM trainings t ORDER BY t.created_at DESC
+    `);
+    return res.json({ trainings: result.data || [] });
+  } catch (err) {
+    console.error('[ADMIN/LIST-TRAININGS]', err.message);
+    return res.status(500).json({ error: 'Error listando capacitaciones.' });
+  }
+}
+
+async function createTraining(req, res) {
+  try {
+    const { title, description, min_quota } = req.body;
+    if (!title) return res.status(400).json({ error: 'El título es requerido.' });
+    
+    const quota = min_quota ? parseInt(min_quota) : 2;
+    await sql.query(`
+      INSERT INTO trainings (title, description, min_quota) 
+      VALUES ('${title.replace(/'/g, "''")}', '${(description||'').replace(/'/g, "''")}', ${quota})
+    `);
+    return res.status(201).json({ message: 'Capacitación creada.' });
+  } catch (err) {
+    console.error('[ADMIN/CREATE-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error creando capacitación.' });
+  }
+}
+
+async function scheduleTraining(req, res) {
+  try {
+    const { trainingId } = req.params;
+    const { date, time, link } = req.body;
+    if (!date || !time || !link) return res.status(400).json({ error: 'Fecha, hora y link requeridos.' });
+
+    const datetime = `${date} ${time}:00`;
+    await sql.query(`
+      UPDATE trainings 
+      SET meeting_date = '${datetime}', meeting_link = '${link.replace(/'/g, "''")}', status = 'scheduled' 
+      WHERE id = ${parseInt(trainingId)}
+    `);
+
+    const apps = await sql.query(`
+      SELECT u.email, u.name 
+      FROM training_applications ta
+      JOIN users u ON u.id = ta.user_id
+      WHERE ta.training_id = ${parseInt(trainingId)}
+    `);
+
+    const { sendNotificationEmail } = require('../helpers/email');
+    for (const user of (apps.data || [])) {
+      const msg = `
+        <h3>Capacitación Programada</h3>
+        <p>Hola ${user.name}, tu capacitación solicitada ha sido programada.</p>
+        <p><strong>Fecha y Hora:</strong> ${date} a las ${time}</p>
+        <p><strong>Link:</strong> <a href="${link}">${link}</a></p>
+      `;
+      await sendNotificationEmail(user.email, 'Capacitación Programada', msg).catch(console.error);
+    }
+
+    return res.json({ message: 'Capacitación programada y usuarios notificados.' });
+  } catch (err) {
+    console.error('[ADMIN/SCHEDULE-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error programando capacitación.' });
+  }
+}
+
 module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
@@ -523,4 +660,6 @@ module.exports = {
   createPortfolioProject, updatePortfolioProject, deletePortfolioProject,
   uploadMedia,
   createProjectProgress, listProjectProgress,
+  scheduleProjectMeeting, createProjectMeetingRecord,
+  listTrainings, createTraining, scheduleTraining
 };
