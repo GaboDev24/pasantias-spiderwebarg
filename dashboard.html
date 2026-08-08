@@ -193,8 +193,45 @@
 
   <footer class="sw-footer">
     <div class="sw-footer__inner">
-      <span class="sw-footer__copy">© 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.</span>
-      <div class="sw-footer__status"><span class="sw-pulse"></span> Sistema en línea</div>
+      <div class="sw-footer__grid">
+        <div class="sw-footer__brand">
+          <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+            <img src="/img/logo blanco.png" alt="Spider-Web ARG Logo" class="sw-footer__logo">
+          </a>
+          <p class="sw-footer__tagline">Comunidad tech de Spider-Web ARG</p>
+        </div>
+
+        <div class="sw-footer__col">
+          <h4>Acceso Rápido</h4>
+          <ul class="sw-footer__links">
+            <li><a href="/#news" class="sw-footer__link"><i class="fa-solid fa-newspaper fa-fw"></i> Noticias</a></li>
+            <li><a href="/#projects" class="sw-footer__link"><i class="fa-solid fa-folder-open fa-fw"></i> Proyectos</a></li>
+            <li class="guest-only"><a href="/login.html" class="sw-footer__link"><i class="fa-solid fa-right-to-bracket fa-fw"></i> Acceso</a></li>
+            <li class="guest-only"><a href="/register.html" class="sw-footer__link"><i class="fa-solid fa-user-plus fa-fw"></i> Registro</a></li>
+            <li class="auth-only" style="display:none;"><a href="/dashboard.html" class="sw-footer__link"><i class="fa-solid fa-gauge-high fa-fw"></i> Dashboard</a></li>
+            <li class="admin-only" style="display:none;"><a href="/admin.html" class="sw-footer__link" style="color: var(--sw-red);"><i class="fa-solid fa-shield-halved fa-fw"></i> Panel Admin</a></li>
+            <li class="auth-only" style="display:none;"><a href="#" onclick="window.app.logout(); return false;" class="sw-footer__link"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Salir</a></li>
+          </ul>
+        </div>
+
+        <div class="sw-footer__col">
+          <h4>Navegación</h4>
+          <ul class="sw-footer__links">
+            <li><a href="/" class="sw-footer__link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
+            <li><a href="/#portfolio" class="sw-footer__link"><i class="fa-solid fa-layer-group fa-fw"></i> Portafolio</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sw-footer__bottom">
+        <div class="sw-footer__copy">
+          <img src="/img/logo blanco.png" alt="" style="height: 14px; opacity: 0.3;">
+          © 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.
+        </div>
+        <div class="sw-footer__status">
+          <span class="sw-pulse"></span> Sistema en línea
+        </div>
+      </div>
     </div>
   </footer>
 
