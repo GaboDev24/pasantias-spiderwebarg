@@ -17,11 +17,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ──────────────────────────────────────────────
 async function register(req, res) {
   try {
-    let { name, email, password } = req.body;
+    let { name, email, password, accepted_terms } = req.body;
     if (email) email = email.trim().toLowerCase();
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Nombre, email y contrasena son requeridos.' });
+    }
+
+    if (!accepted_terms) {
+      return res.status(400).json({ error: 'Debes aceptar los Terminos y Condiciones para registrarte.' });
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -42,8 +46,8 @@ async function register(req, res) {
     const verifyToken = crypto.randomBytes(32).toString('hex');
 
     await sql.query(
-      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token)
-       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}')`
+      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms)
+       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1)`
     );
 
     // Enviar email de verificacion
@@ -128,11 +132,12 @@ async function login(req, res) {
     // ---------------------------------
 
     const result = await sql.query(
-      `SELECT id, name, email, password_hash, role, is_email_verified, is_token_validated, avatar_file_id, tags
+      `SELECT id, name, email, password_hash, role, is_email_verified, is_token_validated, avatar_file_id, tags, accepted_terms
        FROM users WHERE email = '${providedEmail.replace(/'/g, "''")}'`
     );
 
     if (!result.data || result.data.length === 0) {
+      console.warn(`[AUTH/LOGIN] Intento fallido (email no existe): ${providedEmail}`);
       return res.status(401).json({ error: 'Credenciales incorrectas.' });
     }
 
@@ -140,16 +145,20 @@ async function login(req, res) {
 
     // La API puede devolver valores como strings ("0", "1") — forzar comparación numérica
     if (parseInt(user.is_email_verified) !== 1) {
+      console.warn(`[AUTH/LOGIN] Intento fallido (email no verificado): ${providedEmail}`);
       return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesion. Revisa tu bandeja de entrada.' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) {
+      console.warn(`[AUTH/LOGIN] Intento fallido (password incorrecta): ${providedEmail}`);
       return res.status(401).json({ error: 'Credenciales incorrectas.' });
     }
 
+    console.log(`[AUTH/LOGIN] Inicio de sesion exitoso: ${user.email} (Rol: ${user.role})`);
+
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role, is_token_validated: user.is_token_validated },
+      { id: user.id, name: user.name, email: user.email, role: user.role, is_token_validated: user.is_token_validated, accepted_terms: user.accepted_terms },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -163,6 +172,7 @@ async function login(req, res) {
         role: user.role,
         is_email_verified: user.is_email_verified,
         is_token_validated: user.is_token_validated,
+        accepted_terms: user.accepted_terms,
         avatar_file_id: user.avatar_file_id,
         tags: user.tags ? JSON.parse(user.tags) : [],
       },
@@ -225,4 +235,26 @@ async function validateToken(req, res) {
   }
 }
 
-module.exports = { register, login, verifyEmail, validateToken };
+// ──────────────────────────────────────────────
+// ACEPTAR TÉRMINOS Y CONDICIONES (Usuarios logueados)
+// ──────────────────────────────────────────────
+async function acceptTerms(req, res) {
+  try {
+    const userId = req.user.id;
+    await sql.query(`UPDATE users SET accepted_terms = 1 WHERE id = ${userId}`);
+    
+    // Generar nuevo token con accepted_terms = 1
+    const token = jwt.sign(
+      { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role, is_token_validated: req.user.is_token_validated, accepted_terms: 1 },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    return res.json({ message: 'Terminos aceptados correctamente.', token });
+  } catch (err) {
+    console.error('[AUTH/ACCEPT-TERMS]', err.message);
+    return res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+}
+
+module.exports = { register, login, verifyEmail, validateToken, acceptTerms };

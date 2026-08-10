@@ -34,6 +34,12 @@ async function fetchAPI(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    // Si es un 401 pero NO estamos intentando hacer login, forzamos cierre de sesión
+    const isLoginRoute = endpoint.includes('/auth/login');
+    if (!isLoginRoute && response.status === 401 && window.app && typeof window.app.logout === 'function') {
+      window.app.logout(true);
+      throw new Error('Sesión expirada o no autorizada.');
+    }
     const error = new Error(data.error || 'Error en la petición');
     error.status = response.status;
     throw error;

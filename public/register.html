@@ -58,7 +58,13 @@
               </button>
             </div>
           </div>
-          <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" style="margin-top: 1rem;">CREAR CUENTA</button>
+          <div class="sw-input-group" style="display: flex; align-items: center; gap: 10px; margin-top: 1rem;">
+            <input type="checkbox" id="accepted_terms" required style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--sw-red);">
+            <label for="accepted_terms" class="sw-label" style="margin-bottom: 0; font-size: 0.8rem; text-transform: none;">
+              He leido y acepto los <a href="#" onclick="window.app.openTermsTextModal(event)" style="color: var(--sw-red); text-decoration: none; font-weight: bold;">Terminos y Condiciones</a>
+            </label>
+          </div>
+          <button type="submit" class="sw-btn sw-btn--primary sw-btn--full" style="margin-top: 1.5rem;">CREAR CUENTA</button>
         </form>
         <p style="text-align:center; margin-top: 1.5rem; font-family: var(--sw-font-m); font-size: 0.7rem; color: var(--sw-text-muted);">
           ¿Ya tienes cuenta? <a href="/login.html" style="color: var(--sw-red); text-decoration: none;">Inicia sesión</a>
@@ -95,6 +101,7 @@
           <ul class="sw-footer__links">
             <li><a href="/" class="sw-footer__link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
             <li><a href="/#portfolio" class="sw-footer__link"><i class="fa-solid fa-layer-group fa-fw"></i> Portafolio</a></li>
+            <li><a href="#" onclick="window.app.openTermsTextModal(event)" class="sw-footer__link"><i class="fa-solid fa-file-contract fa-fw"></i> Términos y Condiciones</a></li>
           </ul>
         </div>
       </div>
@@ -119,6 +126,7 @@
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const accepted_terms = document.getElementById('accepted_terms').checked;
       const btn = e.target.querySelector('button');
 
       btn.innerText = 'PROCESANDO...';
@@ -127,7 +135,7 @@
       try {
         const res = await window.api.fetch('/auth/register', {
           method: 'POST',
-          body: { name, email, password }
+          body: { name, email, password, accepted_terms }
         });
 
         window.app.showToast(res.message);

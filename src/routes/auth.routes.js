@@ -7,5 +7,6 @@ router.post('/register', authCtrl.register);
 router.post('/login', authCtrl.login);
 router.get('/verify-email', authCtrl.verifyEmail);
 router.post('/validate-token', requireAuth, authCtrl.validateToken);
+router.post('/accept-terms', requireAuth, authCtrl.acceptTerms);
 
 module.exports = router;

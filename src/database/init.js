@@ -19,6 +19,7 @@ const tablas = [
     role ENUM('pasante', 'admin', 'ceo') DEFAULT 'pasante',
     is_email_verified TINYINT(1) DEFAULT 0,
     is_token_validated TINYINT(1) DEFAULT 0,
+    accepted_terms TINYINT(1) DEFAULT 0,
     avatar_file_id VARCHAR(100) DEFAULT NULL,
     avatar_url VARCHAR(500) DEFAULT NULL,
     tags TEXT DEFAULT NULL,
