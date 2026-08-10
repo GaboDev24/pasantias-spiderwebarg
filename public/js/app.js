@@ -295,33 +295,132 @@ function showTermsModal() {
   if (document.getElementById("sw-terms-modal")) return;
 
   const modalHtml = `
-    <div id="sw-terms-modal" class="sw-modal-overlay open" style="z-index: 999;display: flex;position: fixed;height: 100%;width: 100%;justify-content: center;align-items: center;">
-      <div class="sw-modal" style="
-    height: fit-content;
-    width: 80%;
-    padding: 4rem 2rem;
-    background: #8c4343;
-    border-radius: 2rem;
-    border: #eee 2px solid;
-">
-        <div class="sw-modal-header" style="
-    display: flex;
-    justify-content: center;
-">
-          <div class="sw-auth-dot r"></div>
-          <div class="sw-auth-dot y"></div>
-          <div class="sw-auth-dot g"></div>
-          <span style="margin-left: 10px; font-family: var(--sw-font-m); font-size: 0.6rem; color: rgba(163,0,0,0.8); letter-spacing: 0.2em;">ACCIÓN REQUERIDA</span>
-        </div>
-        <div class="sw-modal-body" style="text-align: center;">
-          <h3 style="font-family: var(--sw-font-h); font-size: 1.5rem; color: var(--sw-white); margin-bottom: 1rem; text-transform: uppercase;">Actualización de Términos</h3>
-          <p style="font-family: var(--sw-font-r); font-size: 0.9rem; color: var(--sw-text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
-            Hemos actualizado nuestros <a href="#" onclick="window.app.openTermsTextModal(event)" style="color: var(--sw-red); text-decoration: none; font-weight: bold;">Términos y Condiciones</a>. Debes aceptarlos para continuar utilizando la plataforma Spider-Web ARG.
-          </p>
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="window.app.logout()" class="sw-btn" style="background: transparent; border: 1px solid var(--sw-border);">CANCELAR Y SALIR</button>
-            <button id="btn-accept-terms" onclick="window.app.acceptTerms()" class="sw-btn sw-btn--primary">ACEPTAR TÉRMINOS</button>
+    <style id="sw-terms-modal-style">
+      @keyframes sw-modal-fadein { from { opacity:0; } to { opacity:1; } }
+      @keyframes sw-modal-slidein { from { opacity:0; transform:translateY(16px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+      /* Variables adaptativas por modo */
+      :root {
+        --sw-mt-text:       rgba(245,245,245,0.60);
+        --sw-mt-subtle:     rgba(245,245,245,0.42);
+        --sw-mt-btn-ghost:  rgba(245,245,245,0.55);
+        --sw-mt-btn-ghost-h:rgba(245,245,245,0.85);
+      }
+      :root.light-mode {
+        --sw-mt-text:       rgba(26,26,26,0.70);
+        --sw-mt-subtle:     rgba(26,26,26,0.55);
+        --sw-mt-btn-ghost:  rgba(26,26,26,0.65);
+        --sw-mt-btn-ghost-h:rgba(26,26,26,0.90);
+      }
+      #sw-terms-modal .sw-tm-btn-ghost {
+        color: var(--sw-mt-btn-ghost);
+      }
+      #sw-terms-modal .sw-tm-btn-ghost:hover {
+        color: var(--sw-mt-btn-ghost-h);
+        border-color: rgba(163,0,0,0.7) !important;
+      }
+    </style>
+    <div id="sw-terms-modal" style="
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 1rem;
+      animation: sw-modal-fadein 0.25s ease;
+    ">
+      <div style="
+        background: var(--sw-dark, #121212);
+        border: 1px solid var(--sw-red, #A30000);
+        width: 100%; max-width: 480px;
+        clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+        box-shadow: 0 0 40px rgba(163,0,0,0.25), 0 20px 60px rgba(0,0,0,0.6);
+        animation: sw-modal-slidein 0.3s ease;
+      ">
+        <!-- Header -->
+        <div style="
+          display: flex; align-items: center;
+          padding: 0.85rem 1.25rem;
+          border-bottom: 1px solid rgba(163,0,0,0.25);
+          background: rgba(163,0,0,0.06);
+        ">
+          <div style="display:flex; align-items:center; gap:5px; flex:1;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#A30000;display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.35);display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.15);display:block;"></span>
           </div>
+          <span style="font-family:var(--sw-font-m,'Share Tech Mono',monospace); font-size:0.58rem; color:rgba(163,0,0,0.9); letter-spacing:0.22em; text-transform:uppercase;">
+            ACCIÓN REQUERIDA
+          </span>
+          <div style="flex:1;"></div>
+        </div>
+
+        <!-- Icono / Marca de alerta -->
+        <div style="text-align:center; padding: 2rem 2rem 1rem;">
+          <div style="
+            display:inline-flex; align-items:center; justify-content:center;
+            width:56px; height:56px; margin-bottom:1.25rem;
+            background:rgba(163,0,0,0.12);
+            border:1px solid rgba(163,0,0,0.35);
+            clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+          ">
+            <i class="fa-solid fa-file-contract" style="font-size:1.4rem; color:var(--sw-red,#A30000);"></i>
+          </div>
+          <h3 style="
+            font-family:var(--sw-font-h,'Barlow Condensed',sans-serif);
+            font-size:1.6rem; font-weight:800; letter-spacing:0.05em;
+            text-transform:uppercase; color:var(--sw-white,#F5F5F5);
+            margin:0 0 0.75rem;
+          ">Actualización de Términos</h3>
+          <p style="
+            font-family:var(--sw-font-b,'Inter',sans-serif);
+            font-size:0.88rem; color:var(--sw-mt-text); line-height:1.65;
+            margin:0 0 0.5rem;
+          ">
+            Hemos actualizado nuestros <a href="#" onclick="window.app.openTermsTextModal(event)" style="color:var(--sw-red,#A30000); text-decoration:none; font-weight:600; border-bottom:1px solid rgba(163,0,0,0.4);">Términos y Condiciones</a>.
+          </p>
+          <p style="
+            font-family:var(--sw-font-b,'Inter',sans-serif);
+            font-size:0.83rem; color:var(--sw-mt-subtle); line-height:1.5;
+            margin:0;
+          ">
+            Debes aceptarlos para continuar utilizando la plataforma.
+          </p>
+        </div>
+
+        <!-- Separador -->
+        <div style="height:1px; background:rgba(163,0,0,0.18); margin:0 1.25rem;"></div>
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:0.75rem; padding:1.25rem 1.5rem 1.5rem;">
+          <button
+            class="sw-tm-btn-ghost"
+            onclick="window.app.logout()"
+            style="
+              flex:1; font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+              background:transparent;
+              border:1px solid rgba(163,0,0,0.3); cursor:pointer;
+              padding:0.7rem 1rem;
+              clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+              transition:all 0.2s;
+            "
+          >CANCELAR Y SALIR</button>
+          <button
+            id="btn-accept-terms"
+            onclick="window.app.acceptTerms()"
+            style="
+              flex:1; font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+              background:var(--sw-red,#A30000); color:#F5F5F5;
+              border:none; cursor:pointer;
+              padding:0.7rem 1rem;
+              clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+              transition:all 0.2s;
+              box-shadow:0 0 18px rgba(163,0,0,0.35);
+            "
+            onmouseover="this.style.background='#c40000';this.style.boxShadow='0 0 24px rgba(163,0,0,0.5)';"
+            onmouseout="this.style.background='var(--sw-red,#A30000)';this.style.boxShadow='0 0 18px rgba(163,0,0,0.35)';"
+          >ACEPTAR TÉRMINOS</button>
         </div>
       </div>
     </div>
@@ -365,40 +464,173 @@ async function acceptTerms() {
 ═══════════════════════════════════════ */
 function openTermsTextModal(e) {
   if (e) e.preventDefault();
-  if (document.getElementById("sw-terms-text-modal")) {
-    document.getElementById("sw-terms-text-modal").classList.add("open");
-    return;
-  }
+  if (document.getElementById("sw-terms-text-modal")) return; // ya está visible
 
   const modalHtml = `
-    <div id="sw-terms-text-modal" class="sw-modal-overlay open" style="z-index: 20; display: flex;" onclick="if(event.target===this) this.classList.remove('open')">
-      <div class="sw-modal" style="max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
-        <div class="sw-modal-header" style="justify-content: space-between;">
-          <div style="display:flex; align-items:center;">
-            <div class="sw-auth-dot r"></div>
-            <div class="sw-auth-dot y"></div>
-            <div class="sw-auth-dot g"></div>
-            <span style="margin-left: 10px; font-family: var(--sw-font-m); font-size: 0.6rem; color: rgba(163,0,0,0.8); letter-spacing: 0.2em;">INFORMACIÓN LEGAL</span>
+    <style id="sw-terms-text-modal-style">
+      /* Variables adaptativas: dark por defecto, light-mode override */
+      :root {
+        --sw-mtt-text:        rgba(245,245,245,0.60);
+        --sw-mtt-close:       rgba(245,245,245,0.45);
+        --sw-mtt-btn-ghost:   rgba(245,245,245,0.55);
+        --sw-mtt-btn-ghost-h: rgba(245,245,245,0.90);
+        --sw-mtt-footer-bg:   rgba(163,0,0,0.04);
+      }
+      :root.light-mode {
+        --sw-mtt-text:        rgba(26,26,26,0.72);
+        --sw-mtt-close:       rgba(26,26,26,0.50);
+        --sw-mtt-btn-ghost:   rgba(26,26,26,0.65);
+        --sw-mtt-btn-ghost-h: rgba(26,26,26,0.92);
+        --sw-mtt-footer-bg:   rgba(163,0,0,0.04);
+      }
+      #sw-terms-text-modal .sw-mtt-close-btn {
+        background:none;border:none;
+        color: var(--sw-mtt-close);
+        cursor:pointer;font-size:1rem;padding:0.2rem 0.4rem;transition:color 0.2s;line-height:1;
+      }
+      #sw-terms-text-modal .sw-mtt-close-btn:hover { color:#A30000; }
+      #sw-terms-text-modal .sw-mtt-body-text {
+        font-family:var(--sw-font-b,'Inter',sans-serif);
+        font-size:0.88rem;color:var(--sw-mtt-text);line-height:1.7;margin:0;
+      }
+      #sw-terms-text-modal .sw-mtt-btn-ghost {
+        font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+        font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
+        background:transparent;color:var(--sw-mtt-btn-ghost);
+        border:1px solid rgba(163,0,0,0.3);cursor:pointer;
+        padding:0.6rem 1.4rem;
+        clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+        transition:all 0.2s;
+      }
+      #sw-terms-text-modal .sw-mtt-btn-ghost:hover {
+        border-color:rgba(163,0,0,0.7);
+        color:var(--sw-mtt-btn-ghost-h);
+      }
+    </style>
+    <div id="sw-terms-text-modal" style="
+      position:fixed; inset:0; z-index:100000;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.85);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+      padding:1rem;
+      animation:sw-modal-fadein 0.2s ease;
+    " onclick="if(event.target===this){this.style.opacity='0';setTimeout(()=>this.remove(),180);}">
+      <div style="
+        background:var(--sw-dark,#121212);
+        border:1px solid rgba(163,0,0,0.35);
+        width:100%; max-width:700px;
+        max-height:82vh; overflow-y:auto;
+        clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));
+        box-shadow:0 0 40px rgba(163,0,0,0.18), 0 20px 60px rgba(0,0,0,0.7);
+        animation:sw-modal-slidein 0.3s ease;
+        display:flex; flex-direction:column;
+      " onclick="event.stopPropagation()">
+
+        <!-- Header -->
+        <div style="
+          display:flex; align-items:center; justify-content:space-between;
+          padding:0.85rem 1.25rem;
+          border-bottom:1px solid rgba(163,0,0,0.22);
+          background:rgba(163,0,0,0.06);
+          flex-shrink:0;
+        ">
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#A30000;display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.35);display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.15);display:block;"></span>
+            <span style="margin-left:8px; font-family:var(--sw-font-m,'Share Tech Mono',monospace); font-size:0.58rem; color:rgba(163,0,0,0.9); letter-spacing:0.22em; text-transform:uppercase;">INFORMACIÓN LEGAL</span>
           </div>
-          <button onclick="document.getElementById('sw-terms-text-modal').classList.remove('open')" style="background:none; border:none; color:var(--sw-white); cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+          <button
+            class="sw-mtt-close-btn"
+            onclick="(function(el){el.closest('[id=sw-terms-text-modal]').style.opacity='0';setTimeout(()=>el.closest('[id=sw-terms-text-modal]').remove(),180);})(this)"
+          ><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="sw-modal-body" style="text-align: left; padding: 20px;">
-          <h3 style="font-family: var(--sw-font-h); font-size: 1.5rem; color: var(--sw-white); margin-bottom: 1rem; text-transform: uppercase;">Términos y Condiciones</h3>
-          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
-            Al acceder o utilizar la plataforma de Spider-Web ARG, aceptas estar sujeto a estos términos y condiciones de uso. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al servicio.
-          </p>
-          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">2. Uso de la plataforma</h4>
-          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
-            Como pasante, te comprometes a utilizar la plataforma únicamente para fines legítimos y de manera que no infrinja los derechos de, restrinja o inhiba el uso y disfrute de la plataforma por parte de cualquier tercero.
-          </p>
-          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">3. Privacidad y Datos</h4>
-          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1rem;">
-            Tu privacidad es importante para nosotros. Cualquier información personal que proporciones será tratada de acuerdo con nuestras políticas internas, garantizando la confidencialidad de tus datos.
-          </p>
-          <h4 style="font-family: var(--sw-font-h); font-size: 1.1rem; color: var(--sw-white); margin-bottom: 0.5rem;">4. Modificaciones</h4>
-          <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 0;">
-            Nos reservamos el derecho de modificar o reemplazar estos términos en cualquier momento. Al continuar accediendo o utilizando nuestro servicio después de que esas revisiones se vuelvan efectivas, aceptas estar sujeto a los términos revisados.
-          </p>
+
+        <!-- Contenido -->
+        <div style="padding:1.75rem 1.75rem 2rem; text-align:left;">
+
+          <!-- Título -->
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+            <div style="
+              display:inline-flex;align-items:center;justify-content:center;
+              width:38px;height:38px;flex-shrink:0;
+              background:rgba(163,0,0,0.12);
+              border:1px solid rgba(163,0,0,0.3);
+              clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+            "><i class="fa-solid fa-file-contract" style="font-size:1rem;color:#A30000;"></i></div>
+            <h3 style="
+              font-family:var(--sw-font-h,'Barlow Condensed',sans-serif);
+              font-size:1.55rem;font-weight:800;letter-spacing:0.05em;
+              text-transform:uppercase;color:var(--sw-white,#F5F5F5);margin:0;
+            ">Términos y Condiciones</h3>
+          </div>
+
+          <!-- Sección 1 -->
+          <div style="margin-bottom:1.4rem;">
+            <h4 style="
+              font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;
+              color:#A30000;margin:0 0 0.6rem;padding-bottom:0.4rem;
+              border-bottom:1px solid rgba(163,0,0,0.22);
+            ">1. Aceptación de los Términos</h4>
+            <p class="sw-mtt-body-text">
+              Al acceder o utilizar la plataforma de Spider-Web ARG, aceptas estar sujeto a estos términos y condiciones de uso. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al servicio.
+            </p>
+          </div>
+
+          <!-- Sección 2 -->
+          <div style="margin-bottom:1.4rem;">
+            <h4 style="
+              font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;
+              color:#A30000;margin:0 0 0.6rem;padding-bottom:0.4rem;
+              border-bottom:1px solid rgba(163,0,0,0.22);
+            ">2. Uso de la Plataforma</h4>
+            <p class="sw-mtt-body-text">
+              Como pasante, te comprometes a utilizar la plataforma únicamente para fines legítimos y de manera que no infrinja los derechos de, restrinja o inhiba el uso y disfrute de la plataforma por parte de cualquier tercero.
+            </p>
+          </div>
+
+          <!-- Sección 3 -->
+          <div style="margin-bottom:1.4rem;">
+            <h4 style="
+              font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;
+              color:#A30000;margin:0 0 0.6rem;padding-bottom:0.4rem;
+              border-bottom:1px solid rgba(163,0,0,0.22);
+            ">3. Privacidad y Datos</h4>
+            <p class="sw-mtt-body-text">
+              Tu privacidad es importante para nosotros. Cualquier información personal que proporciones será tratada de acuerdo con nuestras políticas internas, garantizando la confidencialidad de tus datos.
+            </p>
+          </div>
+
+          <!-- Sección 4 -->
+          <div>
+            <h4 style="
+              font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;
+              color:#A30000;margin:0 0 0.6rem;padding-bottom:0.4rem;
+              border-bottom:1px solid rgba(163,0,0,0.22);
+            ">4. Modificaciones</h4>
+            <p class="sw-mtt-body-text">
+              Nos reservamos el derecho de modificar o reemplazar estos términos en cualquier momento. Al continuar accediendo o utilizando nuestro servicio después de que esas revisiones se vuelvan efectivas, aceptas estar sujeto a los términos revisados.
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer del modal -->
+        <div style="
+          border-top:1px solid rgba(163,0,0,0.18);
+          padding:1rem 1.75rem;
+          display:flex;justify-content:flex-end;
+          flex-shrink:0;
+          background:var(--sw-mtt-footer-bg);
+        ">
+          <button
+            class="sw-mtt-btn-ghost"
+            onclick="(function(el){el.closest('[id=sw-terms-text-modal]').style.opacity='0';setTimeout(()=>el.closest('[id=sw-terms-text-modal]').remove(),180);})(this)"
+          >CERRAR</button>
         </div>
       </div>
     </div>
