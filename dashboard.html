@@ -323,6 +323,14 @@
           body: { tags }
         });
         currentUser.tags = tags;
+        const uStr = localStorage.getItem('sw_user');
+        if (uStr) {
+          try {
+            const u = JSON.parse(uStr);
+            u.tags = tags;
+            localStorage.setItem('sw_user', JSON.stringify(u));
+          } catch (_) {}
+        }
         window.app.showToast('Tags actualizados correctamente');
       } catch (err) {
         window.app.showToast(err.message, true);

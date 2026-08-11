@@ -17,7 +17,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ──────────────────────────────────────────────
 async function register(req, res) {
   try {
-    let { name, email, password, accepted_terms } = req.body;
+    let { name, email, password, accepted_terms, tags } = req.body;
     if (email) email = email.trim().toLowerCase();
 
     if (!name || !email || !password) {
@@ -45,9 +45,12 @@ async function register(req, res) {
     const password_hash = await bcrypt.hash(password, 12);
     const verifyToken = crypto.randomBytes(32).toString('hex');
 
+    const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
+    const tagsJson = JSON.stringify(formattedTags);
+
     await sql.query(
-      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms)
-       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1)`
+      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms, tags)
+       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1, '${tagsJson.replace(/'/g, "''")}')`
     );
 
     // Enviar email de verificacion

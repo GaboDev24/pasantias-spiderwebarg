@@ -169,13 +169,23 @@ function checkAuthState() {
     }
 
     // Verificar si el usuario aceptó los TyC (ignorando la página de tyc)
-    if (
+    const isTermsPending =
       (user.accepted_terms === 0 ||
         user.accepted_terms === false ||
         user.accepted_terms === undefined) &&
-      window.location.pathname !== "/terms.html"
-    ) {
+      window.location.pathname !== "/terms.html";
+
+    if (isTermsPending) {
       showTermsModal();
+    } else {
+      // Si el usuario no tiene aptitudes y aún no descartó el modal en esta sesión
+      const hasNoTags = !user.tags || !Array.isArray(user.tags) || user.tags.length === 0;
+      const alreadyDismissed = sessionStorage.getItem("sw_skills_modal_dismissed");
+      const ignoredPages = ["/terms.html", "/register.html", "/login.html"];
+      
+      if (hasNoTags && !alreadyDismissed && !ignoredPages.includes(window.location.pathname)) {
+        showInitialSkillsModal();
+      }
     }
   } else {
     guestLinks.forEach((el) => (el.style.display = "inline-flex"));
@@ -286,6 +296,9 @@ window.app = {
   closeModal,
   acceptTerms,
   openTermsTextModal,
+  showInitialSkillsModal,
+  dismissSkillsModal,
+  saveInitialSkills,
 };
 
 /* ═══════════════════════════════════════
@@ -636,4 +649,227 @@ function openTermsTextModal(e) {
     </div>
   `;
   document.body.insertAdjacentHTML("beforeend", modalHtml);
+}
+
+/* ═══════════════════════════════════════
+   INITIAL SKILLS SELECTION MODAL
+═══════════════════════════════════════ */
+async function showInitialSkillsModal() {
+  if (document.getElementById("sw-skills-modal")) return;
+
+  const modalHtml = `
+    <style id="sw-skills-modal-style">
+      @keyframes sw-modal-fadein { from { opacity:0; } to { opacity:1; } }
+      @keyframes sw-modal-slidein { from { opacity:0; transform:translateY(16px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+      :root {
+        --sw-sk-text:       rgba(245,245,245,0.70);
+        --sw-sk-subtle:     rgba(245,245,245,0.45);
+        --sw-sk-btn-ghost:  rgba(245,245,245,0.55);
+        --sw-sk-btn-ghost-h:rgba(245,245,245,0.85);
+      }
+      :root.light-mode {
+        --sw-sk-text:       rgba(26,26,26,0.75);
+        --sw-sk-subtle:     rgba(26,26,26,0.55);
+        --sw-sk-btn-ghost:  rgba(26,26,26,0.65);
+        --sw-sk-btn-ghost-h:rgba(26,26,26,0.90);
+      }
+      #sw-skills-modal .sw-sk-btn-ghost {
+        color: var(--sw-sk-btn-ghost);
+      }
+      #sw-skills-modal .sw-sk-btn-ghost:hover {
+        color: var(--sw-sk-btn-ghost-h);
+        border-color: rgba(163,0,0,0.7) !important;
+      }
+    </style>
+    <div id="sw-skills-modal" style="
+      position: fixed; inset: 0; z-index: 99998;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 1rem;
+      animation: sw-modal-fadein 0.25s ease;
+    ">
+      <div style="
+        background: var(--sw-dark, #121212);
+        border: 1px solid var(--sw-red, #A30000);
+        width: 100%; max-width: 520px;
+        clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+        box-shadow: 0 0 40px rgba(163,0,0,0.25), 0 20px 60px rgba(0,0,0,0.6);
+        animation: sw-modal-slidein 0.3s ease;
+        display: flex; flex-direction: column; max-height: 90vh;
+      ">
+        <!-- Header -->
+        <div style="
+          display: flex; align-items: center;
+          padding: 0.85rem 1.25rem;
+          border-bottom: 1px solid rgba(163,0,0,0.25);
+          background: rgba(163,0,0,0.06);
+        ">
+          <div style="display:flex; align-items:center; gap:5px; flex:1;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#A30000;display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.35);display:block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:rgba(163,0,0,0.15);display:block;"></span>
+          </div>
+          <span style="font-family:var(--sw-font-m,'Share Tech Mono',monospace); font-size:0.58rem; color:rgba(163,0,0,0.9); letter-spacing:0.22em; text-transform:uppercase;">
+            PERFIL DE USUARIO
+          </span>
+          <div style="flex:1;"></div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 1.5rem 1.75rem; overflow-y: auto;">
+          <div style="text-align:center; margin-bottom: 1.25rem;">
+            <div style="
+              display:inline-flex; align-items:center; justify-content:center;
+              width:52px; height:52px; margin-bottom:0.75rem;
+              background:rgba(163,0,0,0.12);
+              border:1px solid rgba(163,0,0,0.35);
+              clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+            ">
+              <i class="fa-solid fa-tags" style="font-size:1.3rem; color:var(--sw-red,#A30000);"></i>
+            </div>
+            <h3 style="
+              font-family:var(--sw-font-h,'Barlow Condensed',sans-serif);
+              font-size:1.5rem; font-weight:800; letter-spacing:0.05em;
+              text-transform:uppercase; color:var(--sw-white,#F5F5F5);
+              margin:0 0 0.5rem;
+            ">Selecciona tus Aptitudes Iniciales</h3>
+            <p style="
+              font-family:var(--sw-font-b,'Inter',sans-serif);
+              font-size:0.83rem; color:var(--sw-sk-text); line-height:1.5;
+              margin:0;
+            ">
+              Aún no has registrado aptitudes en tu perfil. Selecciona tus áreas de interés para personalizar tu perfil y acceder a los proyectos.
+            </p>
+          </div>
+
+          <!-- Contenedor de aptitudes -->
+          <div id="sw-modal-skills-list" style="
+            display: flex; flex-wrap: wrap; gap: 8px;
+            max-height: 200px; overflow-y: auto;
+            padding: 12px; background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(163,0,0,0.2);
+            border-radius: 4px; margin-bottom: 0.5rem;
+          ">
+            <span style="font-size:0.75rem; color:var(--sw-sk-subtle);">Cargando aptitudes disponibles...</span>
+          </div>
+        </div>
+
+        <!-- Separador -->
+        <div style="height:1px; background:rgba(163,0,0,0.18); margin:0 1.25rem;"></div>
+
+        <!-- Acciones -->
+        <div style="display:flex; gap:0.75rem; padding:1.25rem 1.5rem 1.5rem;">
+          <button
+            class="sw-sk-btn-ghost"
+            onclick="window.app.dismissSkillsModal()"
+            style="
+              flex:1; font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+              background:transparent;
+              border:1px solid rgba(163,0,0,0.3); cursor:pointer;
+              padding:0.7rem 1rem;
+              clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+              transition:all 0.2s;
+            "
+          >MÁS TARDE</button>
+          <button
+            id="btn-save-initial-skills"
+            onclick="window.app.saveInitialSkills()"
+            style="
+              flex:1; font-family:var(--sw-font-m,'Share Tech Mono',monospace);
+              font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+              background:var(--sw-red,#A30000); color:#F5F5F5;
+              border:none; cursor:pointer;
+              padding:0.7rem 1rem;
+              clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+              transition:all 0.2s;
+              box-shadow:0 0 18px rgba(163,0,0,0.35);
+            "
+            onmouseover="this.style.background='#c40000';this.style.boxShadow='0 0 24px rgba(163,0,0,0.5)';"
+            onmouseout="this.style.background='var(--sw-red,#A30000)';this.style.boxShadow='0 0 18px rgba(163,0,0,0.35)';"
+          >GUARDAR APTITUDES</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  // Cargar skills desde la API
+  try {
+    const res = await window.api.fetch("/public/skills");
+    const skills = res.skills || [];
+    const container = document.getElementById("sw-modal-skills-list");
+    if (container) {
+      if (!skills.length) {
+        container.innerHTML = '<span style="font-size:0.75rem; color:var(--sw-sk-subtle);">Sin aptitudes disponibles</span>';
+      } else {
+        container.innerHTML = skills.map(s => `
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;background:rgba(255,255,255,0.04);padding:6px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;user-select:none;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(163,0,0,0.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+            <input type="checkbox" name="modal_skills" value="${s.name}" style="accent-color:var(--sw-red);cursor:pointer;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#A30000'};display:inline-block;"></span>
+            <span style="color:var(--sw-white);">${s.name}</span>
+          </label>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    const container = document.getElementById("sw-modal-skills-list");
+    if (container) {
+      container.innerHTML = '<span style="font-size:0.75rem; color:#f87171;">Error al cargar aptitudes</span>';
+    }
+  }
+}
+
+function dismissSkillsModal() {
+  sessionStorage.setItem("sw_skills_modal_dismissed", "1");
+  const modal = document.getElementById("sw-skills-modal");
+  if (modal) {
+    modal.style.opacity = "0";
+    setTimeout(() => modal.remove(), 200);
+  }
+}
+
+async function saveInitialSkills() {
+  const checkboxes = document.querySelectorAll('input[name="modal_skills"]:checked');
+  const selectedTags = Array.from(checkboxes).map(cb => cb.value);
+
+  if (!selectedTags.length) {
+    showToast("Selecciona al menos una aptitud antes de guardar.", true);
+    return;
+  }
+
+  const btn = document.getElementById("btn-save-initial-skills");
+  if (btn) {
+    btn.innerText = "GUARDANDO...";
+    btn.disabled = true;
+  }
+
+  try {
+    await window.api.fetch("/users/me", {
+      method: "PATCH",
+      body: { tags: selectedTags },
+    });
+
+    const userStr = localStorage.getItem("sw_user");
+    if (userStr) {
+      let user = JSON.parse(userStr);
+      user.tags = selectedTags;
+      localStorage.setItem("sw_user", JSON.stringify(user));
+    }
+
+    showToast("Aptitudes guardadas correctamente.");
+    dismissSkillsModal();
+
+    if (typeof loadUserTagsCheckboxes === "function") {
+      loadUserTagsCheckboxes(selectedTags);
+    }
+  } catch (err) {
+    showToast(err.message || "Error guardando aptitudes.", true);
+    if (btn) {
+      btn.innerText = "GUARDAR APTITUDES";
+      btn.disabled = false;
+    }
+  }
 }
