@@ -6,6 +6,20 @@
 const bcrypt = require('bcryptjs');
 const { sql, storage } = require('../api-client/index');
 
+// ── Funciones auxiliares ───────────────────────────────────────────────────
+function safeJsonParse(val, fallback = []) {
+  if (!val) return fallback;
+  if (typeof val !== 'string') return Array.isArray(val) ? val : fallback;
+  try {
+    const parsed = JSON.parse(val);
+    return parsed ?? fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+
 // ──────────────────────────────────────────────
 // PERFIL
 // ──────────────────────────────────────────────
@@ -37,7 +51,7 @@ async function getMyProfile(req, res) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = user.tags ? JSON.parse(user.tags) : [];
+    user.tags = safeJsonParse(user.tags);
     // Usar avatar_url directo si existe, sino construir desde file_id
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? storage.getFileUrl(user.avatar_file_id) : null);
     user.cv_url = user.cv_url || (user.cv_file_id ? storage.getFileUrl(user.cv_file_id) : null);
@@ -55,7 +69,11 @@ async function updateProfile(req, res) {
     const updates = [];
 
     if (name) updates.push(`name = '${name.replace(/'/g, "''")}'`);
-    if (tags !== undefined) updates.push(`tags = '${JSON.stringify(tags)}'`);
+    if (tags !== undefined) {
+      const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
+      const tagsJson = JSON.stringify(formattedTags);
+      updates.push(`tags = '${tagsJson.replace(/'/g, "''")}'`);
+    }
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
 
@@ -170,11 +188,10 @@ async function applyToProject(req, res) {
       return res.status(400).json({ error: 'Este proyecto no esta abierto para inscripciones.' });
     }
 
-    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
-    const requiredTags = project.required_tags ? JSON.parse(project.required_tags) : [];
+    const requiredTags = safeJsonParse(project.required_tags);
     if (req.user.role === 'pasante' && requiredTags.length > 0) {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const userTags = (uRes.data && uRes.data[0]) ? safeJsonParse(uRes.data[0].tags) : [];
       const userTagSet = new Set(userTags.map(normalizeTag));
       const hasMatch = requiredTags.some(t => userTagSet.has(normalizeTag(t)));
       if (!hasMatch) {
@@ -276,7 +293,7 @@ async function getUserPublicProfile(req, res) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = user.tags ? JSON.parse(user.tags) : [];
+    user.tags = safeJsonParse(user.tags);
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? `/api/media/${user.avatar_file_id}` : null);
     user.cv_url = user.cv_url ? `/api/media/${user.cv_file_id}` : null;
     return res.json({ user });

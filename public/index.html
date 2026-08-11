@@ -218,7 +218,7 @@
                     ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
                   </div>
                   <p class="dossier-desc">${p.summary || p.description.substring(0, 140)}...</p>
-                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
+                  <a href="/project.html?id=${p.id}" class="sw-btn sw-btn--primary sw-btn--sm" style="text-decoration:none;display:inline-block;text-align:center;">VER DETALLES</a>
                 </div>
               </article>
             `}).join('');

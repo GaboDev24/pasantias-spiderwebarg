@@ -862,9 +862,17 @@ async function saveInitialSkills() {
     showToast("Aptitudes guardadas correctamente.");
     dismissSkillsModal();
 
+    if (typeof currentUser !== "undefined" && currentUser) {
+      currentUser.tags = selectedTags;
+    }
+
     if (typeof loadUserTagsCheckboxes === "function") {
       loadUserTagsCheckboxes(selectedTags);
     }
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
   } catch (err) {
     showToast(err.message || "Error guardando aptitudes.", true);
     if (btn) {

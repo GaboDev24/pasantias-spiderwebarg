@@ -12,6 +12,17 @@ const { sendVerificationEmail } = require('../helpers/email');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+function safeJsonParse(val, fallback = []) {
+  if (!val) return fallback;
+  if (typeof val !== 'string') return Array.isArray(val) ? val : fallback;
+  try {
+    const parsed = JSON.parse(val);
+    return parsed ?? fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
 // ──────────────────────────────────────────────
 // REGISTRO
 // ──────────────────────────────────────────────
@@ -177,7 +188,7 @@ async function login(req, res) {
         is_token_validated: user.is_token_validated,
         accepted_terms: user.accepted_terms,
         avatar_file_id: user.avatar_file_id,
-        tags: user.tags ? JSON.parse(user.tags) : [],
+        tags: safeJsonParse(user.tags),
       },
     });
   } catch (err) {

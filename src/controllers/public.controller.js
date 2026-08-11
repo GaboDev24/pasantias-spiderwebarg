@@ -4,7 +4,20 @@
 
 const { sql, storage } = require('../api-client/index');
 
-// ── Función auxiliar para calcular estado dinámico ──────────────────────────
+// ── Funciones auxiliares ───────────────────────────────────────────────────
+function safeJsonParse(val, fallback = []) {
+  if (!val) return fallback;
+  if (typeof val !== 'string') return Array.isArray(val) ? val : fallback;
+  try {
+    const parsed = JSON.parse(val);
+    return parsed ?? fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+
 function computeStatus(project) {
   const now = new Date();
   const start = project.start_date ? new Date(project.start_date) : null;
@@ -86,23 +99,21 @@ async function getLatestProjects(req, res) {
 
     let projects = (result.data || []).map(p => ({
       ...p,
-      required_tags: p.required_tags ? JSON.parse(p.required_tags) : [],
-      media_file_ids: p.media_file_ids ? JSON.parse(p.media_file_ids) : [],
+      required_tags: safeJsonParse(p.required_tags),
+      media_file_ids: safeJsonParse(p.media_file_ids),
       dynamic_status: computeStatus(p),
       can_apply: canApply(computeStatus(p)),
       summary: p.summary || (p.description ? p.description.substring(0, 140) : ''),
       cover_url: (() => {
-        const ids = p.media_file_ids ? JSON.parse(p.media_file_ids) : [];
+        const ids = safeJsonParse(p.media_file_ids);
         return ids.length > 0 ? storage.getFileUrl(ids[0]) : null;
       })(),
     }));
 
-    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
-
     // Filtrar por tags si es pasante
     if (req.user && req.user.role === 'pasante') {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const userTags = (uRes.data && uRes.data[0]) ? safeJsonParse(uRes.data[0].tags) : [];
       const userTagSet = new Set(userTags.map(normalizeTag));
       projects = projects.filter(p => {
         if (!p.required_tags || p.required_tags.length === 0) return true;
@@ -131,8 +142,8 @@ async function getProject(req, res) {
       return res.status(404).json({ error: 'Proyecto no encontrado.' });
     }
     const project = result.data[0];
-    project.required_tags = project.required_tags ? JSON.parse(project.required_tags) : [];
-    project.media_file_ids = project.media_file_ids ? JSON.parse(project.media_file_ids) : [];
+    project.required_tags = safeJsonParse(project.required_tags);
+    project.media_file_ids = safeJsonParse(project.media_file_ids);
     project.media_urls = project.media_file_ids.map(fid => storage.getFileUrl(fid));
     project.cover_url = project.media_file_ids.length > 0 ? storage.getFileUrl(project.media_file_ids[0]) : null;
     project.dynamic_status = computeStatus(project);
@@ -142,7 +153,7 @@ async function getProject(req, res) {
     // Filtrar acceso por tags si es pasante
     if (req.user && req.user.role === 'pasante' && project.required_tags.length > 0) {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const userTags = (uRes.data && uRes.data[0]) ? safeJsonParse(uRes.data[0].tags) : [];
       const userTagSet = new Set(userTags.map(normalizeTag));
       const hasMatch = project.required_tags.some(t => userTagSet.has(normalizeTag(t)));
       if (!hasMatch) {
