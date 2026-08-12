@@ -234,4 +234,15 @@ async function getPortfolioProjects(req, res) {
   }
 }
 
-module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills, getPortfolioProjects };
+async function getInstitutions(req, res) {
+  try {
+    const result = await sql.query(`SELECT id, name, website FROM institutions ORDER BY name ASC`);
+    return res.json({ institutions: result.data || [] });
+  } catch (err) {
+    console.error('[PUBLIC/INSTITUTIONS]', err.message);
+    return res.status(500).json({ error: 'Error obteniendo instituciones.' });
+  }
+}
+
+module.exports = { getLatestNews, getNews, getLatestProjects, getProject, getSkills, getPortfolioProjects, getInstitutions };
+

@@ -35,6 +35,9 @@ async function getMyProfile(req, res) {
           role: 'ceo',
           is_email_verified: 1,
           is_token_validated: 1,
+          institution_id: null,
+          institution_name: null,
+          email_notifications: 1,
           avatar_file_id: null,
           avatar_url: null,
           tags: [],
@@ -44,8 +47,11 @@ async function getMyProfile(req, res) {
     }
 
     const result = await sql.query(
-      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
-       FROM users WHERE id = ${req.user.id}`
+      `SELECT u.id, u.name, u.email, u.role, u.is_email_verified, u.is_token_validated, u.avatar_file_id, u.avatar_url, u.cv_file_id, u.cv_url, u.tags, u.institution_id, u.email_notifications, u.created_at,
+              i.name AS institution_name
+       FROM users u
+       LEFT JOIN institutions i ON i.id = u.institution_id
+       WHERE u.id = ${req.user.id}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
@@ -65,7 +71,7 @@ async function getMyProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const { name, tags } = req.body;
+    const { name, tags, institution_id, email_notifications } = req.body;
     const updates = [];
 
     if (name) updates.push(`name = '${name.replace(/'/g, "''")}'`);
@@ -73,6 +79,14 @@ async function updateProfile(req, res) {
       const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
       const tagsJson = JSON.stringify(formattedTags);
       updates.push(`tags = '${tagsJson.replace(/'/g, "''")}'`);
+    }
+    if (institution_id !== undefined) {
+      const instVal = institution_id ? parseInt(institution_id) : 'NULL';
+      updates.push(`institution_id = ${instVal}`);
+    }
+    if (email_notifications !== undefined) {
+      const emailNotifVal = email_notifications ? 1 : 0;
+      updates.push(`email_notifications = ${emailNotifVal}`);
     }
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
@@ -286,8 +300,11 @@ async function getUserPublicProfile(req, res) {
   try {
     const { userId } = req.params;
     const result = await sql.query(
-      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
-       FROM users WHERE id = ${parseInt(userId)}`
+      `SELECT u.id, u.name, u.email, u.role, u.is_email_verified, u.is_token_validated, u.avatar_file_id, u.avatar_url, u.cv_file_id, u.cv_url, u.tags, u.institution_id, u.email_notifications, u.created_at,
+              i.name AS institution_name
+       FROM users u
+       LEFT JOIN institutions i ON i.id = u.institution_id
+       WHERE u.id = ${parseInt(userId)}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });

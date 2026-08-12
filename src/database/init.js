@@ -20,6 +20,8 @@ const tablas = [
     is_email_verified TINYINT(1) DEFAULT 0,
     is_token_validated TINYINT(1) DEFAULT 0,
     accepted_terms TINYINT(1) DEFAULT 0,
+    institution_id INT DEFAULT NULL,
+    email_notifications TINYINT(1) DEFAULT 1,
     avatar_file_id VARCHAR(100) DEFAULT NULL,
     avatar_url VARCHAR(500) DEFAULT NULL,
     tags TEXT DEFAULT NULL,
@@ -40,6 +42,31 @@ const tablas = [
     is_used TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     used_at TIMESTAMP DEFAULT NULL
+  )`,
+
+  // ──────────────────────────────────────────────
+  // INSTITUCIONES (definidas por admin)
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS institutions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE,
+    website VARCHAR(255) DEFAULT NULL,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  // ──────────────────────────────────────────────
+  // NOTIFICACIONES
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) DEFAULT 0,
+    payload_json TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
 
   // ──────────────────────────────────────────────

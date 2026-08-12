@@ -444,6 +444,23 @@
           >
         </div>
         <div class="sw-nav__controls">
+          <!-- CAMPANITA NOTIFICACIONES ADMIN -->
+          <div style="position: relative;">
+            <button id="notif-bell-btn" class="sw-theme-btn" onclick="toggleNotifDropdown()" title="Notificaciones" aria-label="Notificaciones" style="position: relative;">
+              <i class="fa-solid fa-bell"></i>
+              <span id="notif-badge" style="display: none; position: absolute; top: -3px; right: -3px; background: var(--sw-red); color: #fff; font-size: 0.55rem; font-weight: bold; border-radius: 50%; padding: 2px 5px; min-width: 15px; text-align: center;">0</span>
+            </button>
+            <div id="notif-dropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 320px; max-height: 400px; background: var(--sw-dark); border: 1px solid var(--sw-border); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 4px; overflow-y: auto; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sw-border); padding-bottom: 8px; margin-bottom: 10px;">
+                <span style="font-family: var(--sw-font-m); font-size: 0.72rem; color: var(--sw-red); font-weight: bold;">NOTIFICACIONES</span>
+                <button onclick="markAllNotifsRead()" style="background: none; border: none; color: var(--sw-text-muted); font-size: 0.65rem; cursor: pointer; text-decoration: underline;">Marcar leídas</button>
+              </div>
+              <div id="notif-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 0.7rem; color: var(--sw-text-muted); text-align: center; padding: 10px;">Sin notificaciones</span>
+              </div>
+            </div>
+          </div>
+
           <button
             id="theme-toggle"
             class="sw-theme-btn"
@@ -517,6 +534,18 @@
             ><i class="fa-solid fa-briefcase"></i
           ></span>
           <span>Portfolio Realizado</span>
+        </button>
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('institutions', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-institutions"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-building-columns"></i
+          ></span>
+          <span>Instituciones Convenio</span>
         </button>
         <button
           class="sw-sidebar__link"
@@ -692,6 +721,7 @@
                   <tr>
                     <th>Nombre</th>
                     <th>Email</th>
+                    <th>Institución</th>
                     <th>Registrado</th>
                     <th>Email Verificado</th>
                     <th>Acción Rápida</th>
@@ -700,7 +730,7 @@
                 <tbody id="pending-users-table">
                   <tr>
                     <td
-                      colspan="5"
+                      colspan="6"
                       style="
                         text-align: center;
                         color: var(--sw-text-muted);
@@ -742,6 +772,7 @@
                   <tr>
                     <th>Nombre</th>
                     <th>Email</th>
+                    <th>Institución</th>
                     <th>Rol Asignado</th>
                     <th>Validado</th>
                     <th>Acciones</th>
@@ -750,7 +781,7 @@
                 <tbody id="all-users-table">
                   <tr>
                     <td
-                      colspan="5"
+                      colspan="6"
                       style="
                         text-align: center;
                         color: var(--sw-text-muted);
@@ -1138,6 +1169,93 @@
                       "
                     >
                       Cargando tags y aptitudes...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ TAB: INSTITUCIONES CONVENIO ════════ -->
+        <div id="tab-institutions" class="tab-content" role="tabpanel">
+          <div class="sw-section-bar">
+            <div class="sw-section-title">
+              <i class="fa-solid fa-building-columns" style="color: var(--sw-red)"></i>
+              Gestión de Instituciones Convenio
+            </div>
+          </div>
+
+          <!-- Card crear Institución -->
+          <div class="tac-card">
+            <div class="tac-card-title">
+              <i class="fa-solid fa-plus"></i> Registrar Nueva Institución
+            </div>
+            <form
+              id="create-institution-form"
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+              "
+            >
+              <div style="flex: 2; min-width: 200px">
+                <label class="tac-label" for="inst-name"
+                  >Nombre de la Institución *</label
+                >
+                <input
+                  type="text"
+                  id="inst-name"
+                  class="tac-input"
+                  style="margin: 0"
+                  placeholder="Ej: Universidad Nacional, Instituto..."
+                  required
+                />
+              </div>
+              <div style="flex: 1; min-width: 200px">
+                <label class="tac-label" for="inst-website">Sitio Web (Opcional)</label>
+                <input
+                  type="url"
+                  id="inst-website"
+                  class="tac-input"
+                  style="margin: 0"
+                  placeholder="Ej: https://..."
+                />
+              </div>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-check"></i> AGREGAR INSTITUCIÓN
+              </button>
+            </form>
+          </div>
+
+          <!-- Lista de Instituciones -->
+          <div class="tac-card">
+            <div class="tac-card-title">
+              <i class="fa-solid fa-building"></i> Instituciones Registradas
+            </div>
+            <div style="overflow-x: auto">
+              <table class="tac-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre de la Institución</th>
+                    <th>Sitio Web</th>
+                    <th>Pasantes Registrados</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="institutions-table-body">
+                  <tr>
+                    <td
+                      colspan="5"
+                      style="
+                        text-align: center;
+                        color: var(--sw-text-muted);
+                        padding: 1.5rem;
+                      "
+                    >
+                      Cargando instituciones...
                     </td>
                   </tr>
                 </tbody>
@@ -1984,8 +2102,11 @@
           loadPortfolioList(),
           loadNewsList(),
           loadSkillsList(),
+          loadAdminInstitutions(),
         ]);
         updateKpiCards();
+        loadUnreadCount();
+        setInterval(loadUnreadCount, 30000);
       });
 
       // Cierre accesible de modales con tecla Escape
@@ -2079,7 +2200,7 @@
           const tbody = document.getElementById("pending-users-table");
           if (!res.users || res.users.length === 0) {
             tbody.innerHTML =
-              '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios pendientes</td></tr>';
+              '<tr><td colspan="6" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios pendientes</td></tr>';
             return;
           }
           tbody.innerHTML = res.users
@@ -2088,6 +2209,7 @@
           <tr>
             <td>${u.name}</td>
             <td style="color:var(--sw-text-muted);">${u.email}</td>
+            <td style="color:#60a5fa;">${u.institution_name || '<span style="color:var(--sw-text-muted);">-</span>'}</td>
             <td>${new Date(u.created_at).toLocaleDateString("es-AR")}</td>
             <td><span class="tac-badge ${parseInt(u.is_email_verified) ? "ok" : "warn"}">${parseInt(u.is_email_verified) ? "SÍ" : "NO"}</span></td>
             <td>
@@ -2115,7 +2237,7 @@
         const tbody = document.getElementById("all-users-table");
         if (!users || users.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios encontrados</td></tr>';
+            '<tr><td colspan="6" style="text-align:center;color:var(--sw-text-muted);padding:1rem;">Sin usuarios encontrados</td></tr>';
           return;
         }
         tbody.innerHTML = users
@@ -2124,6 +2246,7 @@
         <tr>
           <td>${u.name}</td>
           <td style="color:var(--sw-text-muted);font-size:0.75rem;">${u.email}</td>
+          <td style="font-size:0.75rem;color:#60a5fa;">${u.institution_name || '<span style="color:var(--sw-text-muted);">-</span>'}</td>
           <td>
             <select class="tac-input" style="margin:0;padding:0.28rem 0.5rem;font-size:0.75rem;" onchange="changeRole(${u.id}, this.value)" aria-label="Cambiar rol para ${u.name}">
               <option ${u.role === "pasante" ? "selected" : ""}>pasante</option>
@@ -3273,6 +3396,174 @@
         } catch (err) {
           window.app.showToast(err.message, true);
         }
+      };
+
+      // ══════════════════════════════════════════
+      // GESTIÓN DE INSTITUCIONES CONVENIO
+      // ══════════════════════════════════════════
+      window.adminInstitutionsCache = [];
+
+      async function loadAdminInstitutions() {
+        try {
+          const res = await window.api.fetch("/admin/institutions");
+          window.adminInstitutionsCache = res.institutions || [];
+          renderInstitutionsTable(window.adminInstitutionsCache);
+        } catch (err) {
+          console.error("Error cargando instituciones:", err);
+        }
+      }
+
+      function renderInstitutionsTable(insts) {
+        const tbody = document.getElementById("institutions-table-body");
+        if (!tbody) return;
+        if (!insts || insts.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;color:var(--sw-text-muted);padding:1.5rem;">Sin instituciones registradas</td></tr>';
+          return;
+        }
+        tbody.innerHTML = insts
+          .map(
+            (i) => `
+          <tr>
+            <td>${i.id}</td>
+            <td style="font-weight:bold;">${i.name}</td>
+            <td>${i.website ? `<a href="${i.website}" target="_blank" style="color:var(--sw-red);text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${i.website}</a>` : '<span style="color:var(--sw-text-muted);">-</span>'}</td>
+            <td><span class="tac-badge ok">${i.user_count || 0} pasantes</span></td>
+            <td>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="editInstitutionPrompt(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${(i.website || '').replace(/'/g, "\\'")}')" style="margin-right:4px;">EDITAR</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteInstitution(${i.id})" style="border-color:rgba(239,68,68,0.4);color:#f87171;">ELIMINAR</button>
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      const createInstForm = document.getElementById("create-institution-form");
+      if (createInstForm) {
+        createInstForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("inst-name").value.trim();
+          const website = document.getElementById("inst-website").value.trim();
+          if (!name) return;
+          try {
+            await window.api.fetch("/admin/institutions", {
+              method: "POST",
+              body: { name, website },
+            });
+            window.app.showToast("Institución agregada correctamente");
+            createInstForm.reset();
+            await loadAdminInstitutions();
+          } catch (err) {
+            window.app.showToast(err.message, true);
+          }
+        });
+      }
+
+      window.editInstitutionPrompt = async function (id, currentName, currentWebsite) {
+        const name = prompt("Nombre de la Institución:", currentName);
+        if (name === null) return;
+        const website = prompt("Sitio Web (dejar vacío si no aplica):", currentWebsite);
+        if (website === null) return;
+        try {
+          await window.api.fetch(`/admin/institutions/${id}`, {
+            method: "PUT",
+            body: { name: name.trim(), website: website.trim() },
+          });
+          window.app.showToast("Institución actualizada");
+          await loadAdminInstitutions();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
+
+      window.deleteInstitution = async function (id) {
+        if (!confirm("¿Eliminar esta institución? Se desvinculará de los pasantes asociados.")) return;
+        try {
+          await window.api.fetch(`/admin/institutions/${id}`, { method: "DELETE" });
+          window.app.showToast("Institución eliminada");
+          await loadAdminInstitutions();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+      };
+
+      // ──────────────────────────────────────────────
+      // NOTIFICACIONES ADMIN (CAMPANITA)
+      // ──────────────────────────────────────────────
+      let notifDropdownOpen = false;
+
+      window.toggleNotifDropdown = function() {
+        const dd = document.getElementById('notif-dropdown');
+        notifDropdownOpen = !notifDropdownOpen;
+        dd.style.display = notifDropdownOpen ? 'block' : 'none';
+        if (notifDropdownOpen) {
+          loadNotifications();
+        }
+      };
+
+      document.addEventListener('click', (e) => {
+        const btn = document.getElementById('notif-bell-btn');
+        const dd = document.getElementById('notif-dropdown');
+        if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
+          dd.style.display = 'none';
+          notifDropdownOpen = false;
+        }
+      });
+
+      async function loadUnreadCount() {
+        try {
+          const res = await window.api.fetch('/notifications/unread-count');
+          const badge = document.getElementById('notif-badge');
+          if (badge) {
+            if (res.unreadCount > 0) {
+              badge.innerText = res.unreadCount > 99 ? '99+' : res.unreadCount;
+              badge.style.display = 'inline-block';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        } catch (err) {}
+      }
+
+      async function loadNotifications() {
+        const container = document.getElementById('notif-list');
+        if (!container) return;
+        try {
+          const res = await window.api.fetch('/notifications');
+          const list = res.notifications || [];
+          if (!list.length) {
+            container.innerHTML = '<span style="font-size:0.7rem;color:var(--sw-text-muted);text-align:center;padding:10px;">Sin notificaciones</span>';
+            return;
+          }
+          container.innerHTML = list.map(n => `
+            <div style="background:${parseInt(n.is_read) === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(163,0,0,0.1)'}; border:1px solid ${parseInt(n.is_read) === 1 ? 'rgba(255,255,255,0.05)' : 'var(--sw-border)'}; padding:8px 10px; border-radius:4px; font-family:var(--sw-font-m); transition:all 0.2s;" onclick="markNotifRead(${n.id})">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.68rem; font-weight:bold; color:${parseInt(n.is_read) === 1 ? 'var(--sw-white)' : 'var(--sw-red)'};">${n.title}</span>
+                <span style="font-size:0.55rem; color:var(--sw-text-muted);">${new Date(n.created_at).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              <p style="font-size:0.65rem; color:var(--sw-text-muted); margin:0; line-height:1.4;">${n.message}</p>
+            </div>
+          `).join('');
+        } catch (err) {
+          container.innerHTML = '<span style="font-size:0.7rem;color:#f87171;text-align:center;">Error al cargar notificaciones</span>';
+        }
+      }
+
+      window.markNotifRead = async function(id) {
+        try {
+          await window.api.fetch(`/notifications/${id}/read`, { method: 'PATCH' });
+          loadNotifications();
+          loadUnreadCount();
+        } catch (err) {}
+      };
+
+      window.markAllNotifsRead = async function() {
+        try {
+          await window.api.fetch('/notifications/read-all', { method: 'PATCH' });
+          loadNotifications();
+          loadUnreadCount();
+        } catch (err) {}
       };
     </script>
   </body>

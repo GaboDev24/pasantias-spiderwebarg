@@ -58,6 +58,12 @@
               </button>
             </div>
           </div>
+          <div class="sw-input-group">
+            <label class="sw-label">Institución de Origen / Convenio</label>
+            <select id="institution_id" class="sw-input" style="cursor: pointer; background: var(--sw-black); color: var(--sw-white);">
+              <option value="">-- Seleccionar Institución --</option>
+            </select>
+          </div>
           <div class="sw-input-group" style="margin-top: 1rem;">
             <label class="sw-label" style="display: flex; align-items: center; justify-content: space-between;">
               <span>Seleccionar Aptitudes Iniciales</span>
@@ -68,6 +74,12 @@
             </div>
           </div>
           <div class="sw-input-group" style="display: flex; align-items: center; gap: 10px; margin-top: 1rem;">
+            <input type="checkbox" id="email_notifications" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--sw-red);">
+            <label for="email_notifications" class="sw-label" style="margin-bottom: 0; font-size: 0.8rem; text-transform: none;">
+              Deseo recibir notificaciones importantes (avances, conferencias) por correo electrónico
+            </label>
+          </div>
+          <div class="sw-input-group" style="display: flex; align-items: center; gap: 10px; margin-top: 0.75rem;">
             <input type="checkbox" id="accepted_terms" required style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--sw-red);">
             <label for="accepted_terms" class="sw-label" style="margin-bottom: 0; font-size: 0.8rem; text-transform: none;">
               He leido y acepto los <a href="#" onclick="window.app.openTermsTextModal(event)" style="color: var(--sw-red); text-decoration: none; font-weight: bold;">Terminos y Condiciones</a>
@@ -130,6 +142,19 @@
   <script src="/js/api.js"></script>
   <script src="/js/app.js"></script>
   <script>
+    async function loadRegisterInstitutions() {
+      const select = document.getElementById('institution_id');
+      if (!select) return;
+      try {
+        const res = await window.api.fetch('/public/institutions');
+        const insts = res.institutions || [];
+        select.innerHTML = '<option value="">-- Seleccionar Institución --</option>' +
+          insts.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+      } catch (err) {
+        console.error('Error cargando instituciones:', err);
+      }
+    }
+
     async function loadRegisterSkills() {
       const container = document.getElementById('register-skills-container');
       if (!container) return;
@@ -151,6 +176,8 @@
         container.innerHTML = '<span style="font-size:0.75rem;color:#f87171;">Error al cargar aptitudes</span>';
       }
     }
+
+    loadRegisterInstitutions();
     loadRegisterSkills();
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {
@@ -158,6 +185,8 @@
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const institution_id = document.getElementById('institution_id').value;
+      const email_notifications = document.getElementById('email_notifications').checked;
       const accepted_terms = document.getElementById('accepted_terms').checked;
       const initial_skills = Array.from(document.querySelectorAll('input[name="initial_skills"]:checked')).map(cb => cb.value);
       const btn = e.target.querySelector('button[type="submit"]');
@@ -168,7 +197,7 @@
       try {
         const res = await window.api.fetch('/auth/register', {
           method: 'POST',
-          body: { name, email, password, accepted_terms, tags: initial_skills }
+          body: { name, email, password, accepted_terms, tags: initial_skills, institution_id, email_notifications }
         });
 
         window.app.showToast(res.message);

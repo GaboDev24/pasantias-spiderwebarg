@@ -28,7 +28,7 @@ function safeJsonParse(val, fallback = []) {
 // ──────────────────────────────────────────────
 async function register(req, res) {
   try {
-    let { name, email, password, accepted_terms, tags } = req.body;
+    let { name, email, password, accepted_terms, tags, institution_id, email_notifications } = req.body;
     if (email) email = email.trim().toLowerCase();
 
     if (!name || !email || !password) {
@@ -59,9 +59,12 @@ async function register(req, res) {
     const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
     const tagsJson = JSON.stringify(formattedTags);
 
+    const instVal = institution_id ? parseInt(institution_id) : 'NULL';
+    const emailNotifVal = (email_notifications === false || email_notifications === 0 || email_notifications === '0') ? 0 : 1;
+
     await sql.query(
-      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms, tags)
-       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1, '${tagsJson.replace(/'/g, "''")}')`
+      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms, tags, institution_id, email_notifications)
+       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1, '${tagsJson.replace(/'/g, "''")}', ${instVal}, ${emailNotifVal})`
     );
 
     // Enviar email de verificacion
