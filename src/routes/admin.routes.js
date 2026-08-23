@@ -25,12 +25,6 @@ router.post('/skills', requireAdmin, adminCtrl.createSkill);
 router.put('/skills/:skillId', requireAdmin, adminCtrl.updateSkill);
 router.delete('/skills/:skillId', requireAdmin, adminCtrl.deleteSkill);
 
-// Instituciones
-router.get('/institutions', requireAdmin, adminCtrl.listAdminInstitutions);
-router.post('/institutions', requireAdmin, adminCtrl.createInstitution);
-router.put('/institutions/:instId', requireAdmin, adminCtrl.updateInstitution);
-router.delete('/institutions/:instId', requireAdmin, adminCtrl.deleteInstitution);
-
 // Proyectos
 router.get('/projects', requireAdmin, adminCtrl.listProjects);
 router.post('/projects', requireAdmin, adminCtrl.createProject);

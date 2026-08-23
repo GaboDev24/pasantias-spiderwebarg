@@ -12,23 +12,12 @@ const { sendVerificationEmail } = require('../helpers/email');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-function safeJsonParse(val, fallback = []) {
-  if (!val) return fallback;
-  if (typeof val !== 'string') return Array.isArray(val) ? val : fallback;
-  try {
-    const parsed = JSON.parse(val);
-    return parsed ?? fallback;
-  } catch (_) {
-    return fallback;
-  }
-}
-
 // ──────────────────────────────────────────────
 // REGISTRO
 // ──────────────────────────────────────────────
 async function register(req, res) {
   try {
-    let { name, email, password, accepted_terms, tags, institution_id, email_notifications } = req.body;
+    let { name, email, password, accepted_terms } = req.body;
     if (email) email = email.trim().toLowerCase();
 
     if (!name || !email || !password) {
@@ -56,15 +45,9 @@ async function register(req, res) {
     const password_hash = await bcrypt.hash(password, 12);
     const verifyToken = crypto.randomBytes(32).toString('hex');
 
-    const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
-    const tagsJson = JSON.stringify(formattedTags);
-
-    const instVal = institution_id ? parseInt(institution_id) : 'NULL';
-    const emailNotifVal = (email_notifications === false || email_notifications === 0 || email_notifications === '0') ? 0 : 1;
-
     await sql.query(
-      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms, tags, institution_id, email_notifications)
-       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1, '${tagsJson.replace(/'/g, "''")}', ${instVal}, ${emailNotifVal})`
+      `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms)
+       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1)`
     );
 
     // Enviar email de verificacion
@@ -191,7 +174,7 @@ async function login(req, res) {
         is_token_validated: user.is_token_validated,
         accepted_terms: user.accepted_terms,
         avatar_file_id: user.avatar_file_id,
-        tags: safeJsonParse(user.tags),
+        tags: user.tags ? JSON.parse(user.tags) : [],
       },
     });
   } catch (err) {

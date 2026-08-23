@@ -6,20 +6,6 @@
 const bcrypt = require('bcryptjs');
 const { sql, storage } = require('../api-client/index');
 
-// ── Funciones auxiliares ───────────────────────────────────────────────────
-function safeJsonParse(val, fallback = []) {
-  if (!val) return fallback;
-  if (typeof val !== 'string') return Array.isArray(val) ? val : fallback;
-  try {
-    const parsed = JSON.parse(val);
-    return parsed ?? fallback;
-  } catch (_) {
-    return fallback;
-  }
-}
-
-const normalizeTag = t => (t || '').toString().trim().toLowerCase();
-
 // ──────────────────────────────────────────────
 // PERFIL
 // ──────────────────────────────────────────────
@@ -35,9 +21,6 @@ async function getMyProfile(req, res) {
           role: 'ceo',
           is_email_verified: 1,
           is_token_validated: 1,
-          institution_id: null,
-          institution_name: null,
-          email_notifications: 1,
           avatar_file_id: null,
           avatar_url: null,
           tags: [],
@@ -47,17 +30,14 @@ async function getMyProfile(req, res) {
     }
 
     const result = await sql.query(
-      `SELECT u.id, u.name, u.email, u.role, u.is_email_verified, u.is_token_validated, u.avatar_file_id, u.avatar_url, u.cv_file_id, u.cv_url, u.tags, u.institution_id, u.email_notifications, u.created_at,
-              i.name AS institution_name
-       FROM users u
-       LEFT JOIN institutions i ON i.id = u.institution_id
-       WHERE u.id = ${req.user.id}`
+      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
+       FROM users WHERE id = ${req.user.id}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = safeJsonParse(user.tags);
+    user.tags = user.tags ? JSON.parse(user.tags) : [];
     // Usar avatar_url directo si existe, sino construir desde file_id
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? storage.getFileUrl(user.avatar_file_id) : null);
     user.cv_url = user.cv_url || (user.cv_file_id ? storage.getFileUrl(user.cv_file_id) : null);
@@ -71,23 +51,11 @@ async function getMyProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const { name, tags, institution_id, email_notifications } = req.body;
+    const { name, tags } = req.body;
     const updates = [];
 
     if (name) updates.push(`name = '${name.replace(/'/g, "''")}'`);
-    if (tags !== undefined) {
-      const formattedTags = Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [];
-      const tagsJson = JSON.stringify(formattedTags);
-      updates.push(`tags = '${tagsJson.replace(/'/g, "''")}'`);
-    }
-    if (institution_id !== undefined) {
-      const instVal = institution_id ? parseInt(institution_id) : 'NULL';
-      updates.push(`institution_id = ${instVal}`);
-    }
-    if (email_notifications !== undefined) {
-      const emailNotifVal = email_notifications ? 1 : 0;
-      updates.push(`email_notifications = ${emailNotifVal}`);
-    }
+    if (tags !== undefined) updates.push(`tags = '${JSON.stringify(tags)}'`);
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
 
@@ -202,10 +170,11 @@ async function applyToProject(req, res) {
       return res.status(400).json({ error: 'Este proyecto no esta abierto para inscripciones.' });
     }
 
-    const requiredTags = safeJsonParse(project.required_tags);
+    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+    const requiredTags = project.required_tags ? JSON.parse(project.required_tags) : [];
     if (req.user.role === 'pasante' && requiredTags.length > 0) {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0]) ? safeJsonParse(uRes.data[0].tags) : [];
+      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
       const userTagSet = new Set(userTags.map(normalizeTag));
       const hasMatch = requiredTags.some(t => userTagSet.has(normalizeTag(t)));
       if (!hasMatch) {
@@ -300,17 +269,14 @@ async function getUserPublicProfile(req, res) {
   try {
     const { userId } = req.params;
     const result = await sql.query(
-      `SELECT u.id, u.name, u.email, u.role, u.is_email_verified, u.is_token_validated, u.avatar_file_id, u.avatar_url, u.cv_file_id, u.cv_url, u.tags, u.institution_id, u.email_notifications, u.created_at,
-              i.name AS institution_name
-       FROM users u
-       LEFT JOIN institutions i ON i.id = u.institution_id
-       WHERE u.id = ${parseInt(userId)}`
+      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
+       FROM users WHERE id = ${parseInt(userId)}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = safeJsonParse(user.tags);
+    user.tags = user.tags ? JSON.parse(user.tags) : [];
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? `/api/media/${user.avatar_file_id}` : null);
     user.cv_url = user.cv_url ? `/api/media/${user.cv_file_id}` : null;
     return res.json({ user });

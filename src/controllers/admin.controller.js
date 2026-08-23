@@ -5,7 +5,6 @@
 
 const crypto = require('crypto');
 const { sql, storage } = require('../api-client/index');
-const { notifyUser, notifyUsers } = require('../helpers/notify.helper');
 
 // ──────────────────────────────────────────────
 // USUARIOS
@@ -13,11 +12,7 @@ const { notifyUser, notifyUsers } = require('../helpers/notify.helper');
 async function listAllUsers(req, res) {
   try {
     const result = await sql.query(
-      `SELECT u.id, u.name, u.email, u.role, u.is_email_verified, u.is_token_validated, u.avatar_file_id, u.tags, u.institution_id, u.email_notifications, u.created_at,
-              i.name AS institution_name
-       FROM users u
-       LEFT JOIN institutions i ON i.id = u.institution_id
-       ORDER BY u.created_at DESC`
+      `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, tags, created_at FROM users ORDER BY created_at DESC`
     );
     return res.json({ users: result.data || [] });
   } catch (err) {
@@ -29,12 +24,7 @@ async function listAllUsers(req, res) {
 async function listPendingUsers(req, res) {
   try {
     const result = await sql.query(
-      `SELECT u.id, u.name, u.email, u.is_email_verified, u.is_token_validated, u.institution_id, u.created_at,
-              i.name AS institution_name
-       FROM users u
-       LEFT JOIN institutions i ON i.id = u.institution_id
-       WHERE u.is_token_validated = 0 AND u.role = 'pasante'
-       ORDER BY u.created_at DESC`
+      `SELECT id, name, email, is_email_verified, is_token_validated, created_at FROM users WHERE is_token_validated = 0 AND role = 'pasante' ORDER BY created_at DESC`
     );
     return res.json({ users: result.data || [] });
   } catch (err) {
@@ -209,78 +199,6 @@ async function updateSkill(req, res) {
 }
 
 // ──────────────────────────────────────────────
-// INSTITUCIONES
-// ──────────────────────────────────────────────
-async function listAdminInstitutions(req, res) {
-  try {
-    const result = await sql.query(
-      `SELECT i.*, (SELECT COUNT(*) FROM users u WHERE u.institution_id = i.id) AS user_count
-       FROM institutions i ORDER BY i.name ASC`
-    );
-    return res.json({ institutions: result.data || [] });
-  } catch (err) {
-    console.error('[ADMIN/LIST-INSTITUTIONS]', err.message);
-    return res.status(500).json({ error: 'Error obteniendo instituciones.' });
-  }
-}
-
-async function createInstitution(req, res) {
-  try {
-    const { name, website } = req.body;
-    if (!name || !name.trim()) return res.status(400).json({ error: 'Nombre de la institución es requerido.' });
-
-    const websiteValue = website ? `'${website.trim().replace(/'/g, "''")}'` : 'NULL';
-    await sql.query(
-      `INSERT INTO institutions (name, website, created_by) VALUES ('${name.trim().replace(/'/g, "''")}', ${websiteValue}, ${req.user.id})`
-    );
-    return res.status(201).json({ message: 'Institución agregada correctamente.' });
-  } catch (err) {
-    if (err.message && err.message.includes('Duplicate')) {
-      return res.status(409).json({ error: 'Ya existe una institución con ese nombre.' });
-    }
-    console.error('[ADMIN/CREATE-INSTITUTION]', err.message);
-    return res.status(500).json({ error: 'Error creando institución.' });
-  }
-}
-
-async function updateInstitution(req, res) {
-  try {
-    const { instId } = req.params;
-    const { name, website } = req.body;
-
-    const updates = [];
-    if (name) updates.push(`name = '${name.trim().replace(/'/g, "''")}'`);
-    if (website !== undefined) updates.push(`website = ${website ? `'${website.trim().replace(/'/g, "''")}'` : 'NULL'}`);
-
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No se enviaron campos para actualizar.' });
-    }
-
-    await sql.query(`UPDATE institutions SET ${updates.join(', ')} WHERE id = ${parseInt(instId)}`);
-    return res.json({ message: 'Institución actualizada correctamente.' });
-  } catch (err) {
-    if (err.message && err.message.includes('Duplicate')) {
-      return res.status(409).json({ error: 'Ya existe una institución con ese nombre.' });
-    }
-    console.error('[ADMIN/UPDATE-INSTITUTION]', err.message);
-    return res.status(500).json({ error: 'Error actualizando institución.' });
-  }
-}
-
-async function deleteInstitution(req, res) {
-  try {
-    const { instId } = req.params;
-    await sql.query(`DELETE FROM institutions WHERE id = ${parseInt(instId)}`);
-    // Desvincular de usuarios que la tenían asignada
-    await sql.query(`UPDATE users SET institution_id = NULL WHERE institution_id = ${parseInt(instId)}`);
-    return res.json({ message: 'Institución eliminada.' });
-  } catch (err) {
-    console.error('[ADMIN/DELETE-INSTITUTION]', err.message);
-    return res.status(500).json({ error: 'Error eliminando institución.' });
-  }
-}
-
-// ──────────────────────────────────────────────
 // PROYECTOS
 // ──────────────────────────────────────────────
 async function listProjects(req, res) {
@@ -364,31 +282,6 @@ async function updateProject(req, res) {
     }
 
     await sql.query(`UPDATE projects SET ${updates.join(', ')} WHERE id = ${parseInt(projectId)}`);
-
-    // Notificar si cambió enlace de conferencia o fechas
-    if (conf_link !== undefined || start_date !== undefined || end_date !== undefined) {
-      try {
-        const projRes = await sql.query(`SELECT title, conf_link, start_date FROM projects WHERE id = ${parseInt(projectId)}`);
-        const proj = projRes.data && projRes.data[0] ? projRes.data[0] : null;
-        if (proj) {
-          const appsRes = await sql.query(`SELECT user_id FROM project_applications WHERE project_id = ${parseInt(projectId)} AND status = 'accepted'`);
-          const userIds = (appsRes.data || []).map(a => a.user_id);
-          if (userIds.length > 0) {
-            const confMsg = proj.conf_link ? `Link de conferencia: ${proj.conf_link}` : 'Se actualizaron los horarios o fecha de inicio.';
-            await notifyUsers(
-              userIds,
-              'conference_update',
-              `Actualización de Conferencia: ${proj.title}`,
-              `Se han modificado los horarios o datos de reunión del proyecto "${proj.title}". ${confMsg}`,
-              { projectId: parseInt(projectId) }
-            );
-          }
-        }
-      } catch (notifErr) {
-        console.error('[ADMIN/UPDATE-PROJECT-NOTIF]', notifErr.message);
-      }
-    }
-
     return res.json({ message: 'Proyecto actualizado.' });
   } catch (err) {
     console.error('[ADMIN/UPDATE-PROJECT]', err.message);
@@ -432,31 +325,7 @@ async function updateApplicationStatus(req, res) {
     if (!['pending', 'accepted', 'rejected'].includes(status)) {
       return res.status(400).json({ error: 'Estado invalido.' });
     }
-
-    // Obtener información de la postulación para la notificación
-    const appInfoRes = await sql.query(
-      `SELECT pa.user_id, pa.project_id, p.title AS project_title
-       FROM project_applications pa
-       JOIN projects p ON p.id = pa.project_id
-       WHERE pa.id = ${parseInt(appId)}`
-    );
-
     await sql.query(`UPDATE project_applications SET status = '${status}' WHERE id = ${parseInt(appId)}`);
-
-    if (appInfoRes.data && appInfoRes.data.length > 0) {
-      const appRow = appInfoRes.data[0];
-      const statusMap = { accepted: 'ACEPTADA', rejected: 'RECHAZADA', pending: 'EN REVISIÓN' };
-      const statusText = statusMap[status] || status.toUpperCase();
-      const notifTitle = `Postulación ${statusText}: ${appRow.project_title}`;
-      const notifMsg = `Tu postulación para el proyecto "${appRow.project_title}" ha sido actualizada a estado: ${statusText}.`;
-      
-      try {
-        await notifyUser(appRow.user_id, 'application_status', notifTitle, notifMsg, { projectId: appRow.project_id, appId: parseInt(appId) });
-      } catch (nErr) {
-        console.error('[ADMIN/APP-STATUS-NOTIF]', nErr.message);
-      }
-    }
-
     return res.json({ message: 'Estado de inscripcion actualizado.' });
   } catch (err) {
     console.error('[ADMIN/UPDATE-APP]', err.message);
@@ -523,26 +392,6 @@ async function createProjectProgress(req, res) {
     await sql.query(
       `INSERT INTO project_progress (project_id, user_id, content) VALUES (${parseInt(projectId)}, ${req.user.id}, '${content.trim().replace(/'/g, "''")}') `
     );
-
-    // Notificar a todos los pasantes aceptados en el proyecto
-    try {
-      const projRes = await sql.query(`SELECT title FROM projects WHERE id = ${parseInt(projectId)}`);
-      const projTitle = projRes.data && projRes.data[0] ? projRes.data[0].title : 'el proyecto';
-      const appsRes = await sql.query(`SELECT user_id FROM project_applications WHERE project_id = ${parseInt(projectId)} AND status = 'accepted'`);
-      const userIds = (appsRes.data || []).map(a => a.user_id);
-      if (userIds.length > 0) {
-        await notifyUsers(
-          userIds,
-          'project_progress',
-          `Nuevo Avance en ${projTitle}`,
-          `Se ha registrado una nueva actualización de progreso en "${projTitle}": "${content.trim()}"`,
-          { projectId: parseInt(projectId) }
-        );
-      }
-    } catch (nErr) {
-      console.error('[PROGRESS/NOTIF-ERR]', nErr.message);
-    }
-
     return res.status(201).json({ message: 'Progreso registrado.' });
   } catch (err) {
     console.error('[PROGRESS/CREATE]', err.message);
@@ -663,7 +512,6 @@ module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
   listSkills, createSkill, updateSkill, deleteSkill,
-  listAdminInstitutions, createInstitution, updateInstitution, deleteInstitution,
   listProjects, createProject, updateProject, deleteProject, listProjectApplications, updateApplicationStatus,
   createNews, updateNews, deleteNews,
   createPortfolioProject, updatePortfolioProject, deletePortfolioProject,

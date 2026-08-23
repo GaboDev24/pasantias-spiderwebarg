@@ -88,23 +88,6 @@
         <a href="#" onclick="window.app.logout(); return false;" class="sw-nav__link">Cerrar Sesión</a>
       </div>
       <div class="sw-nav__controls">
-        <!-- CAMPANITA NOTIFICACIONES -->
-        <div style="position: relative;">
-          <button id="notif-bell-btn" class="sw-theme-btn" onclick="toggleNotifDropdown()" title="Notificaciones" aria-label="Notificaciones" style="position: relative;">
-            <i class="fa-solid fa-bell"></i>
-            <span id="notif-badge" style="display: none; position: absolute; top: -3px; right: -3px; background: var(--sw-red); color: #fff; font-size: 0.55rem; font-weight: bold; border-radius: 50%; padding: 2px 5px; min-width: 15px; text-align: center;">0</span>
-          </button>
-          <div id="notif-dropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 320px; max-height: 400px; background: var(--sw-dark); border: 1px solid var(--sw-border); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 4px; overflow-y: auto; padding: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sw-border); padding-bottom: 8px; margin-bottom: 10px;">
-              <span style="font-family: var(--sw-font-m); font-size: 0.72rem; color: var(--sw-red); font-weight: bold;">NOTIFICACIONES</span>
-              <button onclick="markAllNotifsRead()" style="background: none; border: none; color: var(--sw-text-muted); font-size: 0.65rem; cursor: pointer; text-decoration: underline;">Marcar leídas</button>
-            </div>
-            <div id="notif-list" style="display: flex; flex-direction: column; gap: 8px;">
-              <span style="font-size: 0.7rem; color: var(--sw-text-muted); text-align: center; padding: 10px;">Sin notificaciones</span>
-            </div>
-          </div>
-        </div>
-
         <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
         <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -120,7 +103,6 @@
         <img id="avatar-img" src="https://via.placeholder.com/100" class="tac-avatar">
         <div style="font-family:var(--sw-font-h); font-size:1.4rem; text-transform:uppercase; margin-bottom:4px;" id="user-name">---</div>
         <div style="font-family:var(--sw-font-m); font-size:0.62rem; color:var(--sw-red); letter-spacing:0.15em;" id="user-role">---</div>
-        <div style="font-family:var(--sw-font-m); font-size:0.68rem; color:var(--sw-text-muted); margin-top:4px;" id="user-institution">---</div>
         <div id="validation-status" style="margin:1rem 0;"></div>
         <form id="avatar-form">
           <label class="tac-label" style="margin-top:0.5rem;">Cambiar foto</label>
@@ -143,21 +125,6 @@
             <!-- Checkboxes generados dinamicamente -->
           </div>
           <button type="submit" class="sw-btn sw-btn--ghost sw-btn--sm sw-btn--full">ACTUALIZAR TAGS</button>
-        </form>
-      </div>
-
-      <div class="tac-card">
-        <div class="tac-card-title">Configuración</div>
-        <form id="settings-form">
-          <label class="tac-label">Institución de Origen</label>
-          <select id="user-institution-select" class="tac-input" style="cursor: pointer;">
-            <option value="">-- Sin Institución --</option>
-          </select>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; margin-top: 0.5rem;">
-            <input type="checkbox" id="user-email-notif-check" style="cursor: pointer; accent-color: var(--sw-red);">
-            <label for="user-email-notif-check" style="font-family: var(--sw-font-m); font-size: 0.7rem; color: var(--sw-white); cursor: pointer; user-select: none;">Recibir avisos por Email</label>
-          </div>
-          <button type="submit" class="sw-btn sw-btn--ghost sw-btn--sm sw-btn--full">GUARDAR CONFIGURACIÓN</button>
         </form>
       </div>
     </aside>
@@ -286,9 +253,6 @@
         renderProfile();
         loadApps();
         loadChatUsers();
-        loadDashboardInstitutions();
-        loadUnreadCount();
-        setInterval(loadUnreadCount, 30000); // Polling notificaciones cada 30s
       } catch (err) {
         if (err.status === 401 || err.status === 403) {
           window.app.logout();
@@ -301,16 +265,6 @@
     function renderProfile() {
       document.getElementById('user-name').innerText = currentUser.name;
       document.getElementById('user-role').innerText = currentUser.role.toUpperCase();
-      const instEl = document.getElementById('user-institution');
-      if (instEl) {
-        instEl.innerText = currentUser.institution_name ? `Institución: ${currentUser.institution_name}` : 'Sin institución registrada';
-      }
-
-      const emailCheck = document.getElementById('user-email-notif-check');
-      if (emailCheck) {
-        emailCheck.checked = parseInt(currentUser.email_notifications) === 1;
-      }
-
       const avatarImg = document.getElementById('avatar-img');
       if (currentUser.avatar_url) {
         // Agregar cache-buster para forzar recarga
@@ -370,14 +324,6 @@
           body: { tags }
         });
         currentUser.tags = tags;
-        const uStr = localStorage.getItem('sw_user');
-        if (uStr) {
-          try {
-            const u = JSON.parse(uStr);
-            u.tags = tags;
-            localStorage.setItem('sw_user', JSON.stringify(u));
-          } catch (_) {}
-        }
         window.app.showToast('Tags actualizados correctamente');
       } catch (err) {
         window.app.showToast(err.message, true);
@@ -563,125 +509,6 @@
         window.openChat(currentChatUser, document.getElementById('chat-active-name').innerText, 0, null);
       } catch (err) { window.app.showToast(err.message, true); }
     });
-
-    // ──────────────────────────────────────────────
-    // INSTITUCIONES Y CONFIGURACIÓN
-    // ──────────────────────────────────────────────
-    async function loadDashboardInstitutions() {
-      const select = document.getElementById('user-institution-select');
-      if (!select) return;
-      try {
-        const res = await window.api.fetch('/public/institutions');
-        const insts = res.institutions || [];
-        select.innerHTML = '<option value="">-- Sin Institución --</option>' +
-          insts.map(i => `<option value="${i.id}" ${currentUser && currentUser.institution_id == i.id ? 'selected' : ''}>${i.name}</option>`).join('');
-      } catch (err) {
-        console.error('Error cargando instituciones:', err);
-      }
-    }
-
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const institution_id = document.getElementById('user-institution-select').value;
-      const email_notifications = document.getElementById('user-email-notif-check').checked;
-      try {
-        await window.api.fetch('/users/me', {
-          method: 'PATCH',
-          body: { institution_id, email_notifications }
-        });
-        currentUser.institution_id = institution_id ? parseInt(institution_id) : null;
-        currentUser.email_notifications = email_notifications ? 1 : 0;
-        
-        // Actualizar nombre de institucion local
-        const select = document.getElementById('user-institution-select');
-        const selectedText = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
-        currentUser.institution_name = institution_id ? selectedText : null;
-
-        renderProfile();
-        window.app.showToast('Configuración guardada correctamente');
-      } catch (err) {
-        window.app.showToast(err.message, true);
-      }
-    });
-
-    // ──────────────────────────────────────────────
-    // NOTIFICACIONES (CAMPANITA)
-    // ──────────────────────────────────────────────
-    let notifDropdownOpen = false;
-
-    window.toggleNotifDropdown = function() {
-      const dd = document.getElementById('notif-dropdown');
-      notifDropdownOpen = !notifDropdownOpen;
-      dd.style.display = notifDropdownOpen ? 'block' : 'none';
-      if (notifDropdownOpen) {
-        loadNotifications();
-      }
-    };
-
-    // Cerrar dropdown si hace click afuera
-    document.addEventListener('click', (e) => {
-      const btn = document.getElementById('notif-bell-btn');
-      const dd = document.getElementById('notif-dropdown');
-      if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
-        dd.style.display = 'none';
-        notifDropdownOpen = false;
-      }
-    });
-
-    async function loadUnreadCount() {
-      try {
-        const res = await window.api.fetch('/notifications/unread-count');
-        const badge = document.getElementById('notif-badge');
-        if (badge) {
-          if (res.unreadCount > 0) {
-            badge.innerText = res.unreadCount > 99 ? '99+' : res.unreadCount;
-            badge.style.display = 'inline-block';
-          } else {
-            badge.style.display = 'none';
-          }
-        }
-      } catch (err) {}
-    }
-
-    async function loadNotifications() {
-      const container = document.getElementById('notif-list');
-      if (!container) return;
-      try {
-        const res = await window.api.fetch('/notifications');
-        const list = res.notifications || [];
-        if (!list.length) {
-          container.innerHTML = '<span style="font-size:0.7rem;color:var(--sw-text-muted);text-align:center;padding:10px;">Sin notificaciones</span>';
-          return;
-        }
-        container.innerHTML = list.map(n => `
-          <div style="background:${parseInt(n.is_read) === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(163,0,0,0.1)'}; border:1px solid ${parseInt(n.is_read) === 1 ? 'rgba(255,255,255,0.05)' : 'var(--sw-border)'}; padding:8px 10px; border-radius:4px; font-family:var(--sw-font-m); transition:all 0.2s;" onclick="markNotifRead(${n.id})">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:0.68rem; font-weight:bold; color:${parseInt(n.is_read) === 1 ? 'var(--sw-white)' : 'var(--sw-red)'};">${n.title}</span>
-              <span style="font-size:0.55rem; color:var(--sw-text-muted);">${new Date(n.created_at).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-            <p style="font-size:0.65rem; color:var(--sw-text-muted); margin:0; line-height:1.4;">${n.message}</p>
-          </div>
-        `).join('');
-      } catch (err) {
-        container.innerHTML = '<span style="font-size:0.7rem;color:#f87171;text-align:center;">Error al cargar notificaciones</span>';
-      }
-    }
-
-    window.markNotifRead = async function(id) {
-      try {
-        await window.api.fetch(`/notifications/${id}/read`, { method: 'PATCH' });
-        loadNotifications();
-        loadUnreadCount();
-      } catch (err) {}
-    };
-
-    window.markAllNotifsRead = async function() {
-      try {
-        await window.api.fetch('/notifications/read-all', { method: 'PATCH' });
-        loadNotifications();
-        loadUnreadCount();
-      } catch (err) {}
-    };
   </script>
 </body>
 </html>

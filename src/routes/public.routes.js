@@ -8,7 +8,6 @@ router.get('/news/:id', publicCtrl.getNews);
 router.get('/projects', optionalAuth, publicCtrl.getLatestProjects);
 router.get('/projects/:id', optionalAuth, publicCtrl.getProject);
 router.get('/skills', publicCtrl.getSkills);
-router.get('/institutions', publicCtrl.getInstitutions);
 router.get('/portfolio', publicCtrl.getPortfolioProjects);
 
 module.exports = router;
