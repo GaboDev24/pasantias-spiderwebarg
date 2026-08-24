@@ -29,6 +29,9 @@ function canApply(dynamicStatus) {
   return dynamicStatus === 'Por comenzar';
 }
 
+// ── Función auxiliar para normalizar tags ─────────────────────────────────────
+const normalizeTag = t => (t || '').toString().trim().toLowerCase();
+
 async function getLatestNews(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 6;
@@ -96,8 +99,6 @@ async function getLatestProjects(req, res) {
         return ids.length > 0 ? storage.getFileUrl(ids[0]) : null;
       })(),
     }));
-
-    const normalizeTag = t => (t || '').toString().trim().toLowerCase();
 
     // Filtrar por tags si es pasante
     if (req.user && req.user.role === 'pasante') {
