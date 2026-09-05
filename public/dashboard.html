@@ -394,7 +394,7 @@
             <tr>
               <td><strong>${a.title}</strong></td>
               <td><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'')}">${a.status.toUpperCase()}</span></td>
-              <td>${new Date(a.applied_at).toLocaleDateString('es-AR')}</td>
+              <td>${window.app.parseDate(a.applied_at).toLocaleDateString('es-AR')}</td>
               <td>${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${a.project_id})">Cancelar</button>`:'-'}</td>
             </tr>
           `).join('');

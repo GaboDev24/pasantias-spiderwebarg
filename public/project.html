@@ -237,17 +237,17 @@
         document.getElementById('proj-status').innerText = ds;
 
         document.getElementById('proj-meta').innerText =
-          `PUBLICADO: ${new Date(project.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — POR: ${project.author}`;
+          `PUBLICADO: ${window.app.parseDate(project.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — POR: ${project.author}`;
         document.getElementById('proj-title').innerText = project.title;
         document.getElementById('proj-desc').innerText = project.description;
         document.getElementById('proj-count').innerText = `${project.applicant_count} pasante(s)`;
 
         if (project.start_date) {
-          document.getElementById('proj-start').innerText = new Date(project.start_date).toLocaleString('es-AR');
+          document.getElementById('proj-start').innerText = window.app.parseDate(project.start_date).toLocaleString('es-AR');
         } else { document.getElementById('start-wrap').style.display = 'none'; }
 
         if (project.end_date) {
-          document.getElementById('proj-end').innerText = new Date(project.end_date).toLocaleString('es-AR');
+          document.getElementById('proj-end').innerText = window.app.parseDate(project.end_date).toLocaleString('es-AR');
         } else { document.getElementById('end-wrap').style.display = 'none'; }
 
         // Tags
@@ -297,7 +297,7 @@
               <div style="flex:1;">
                 <div class="progress-meta">
                   <span class="progress-author">${entry.author_name}</span>
-                  <span>${new Date(entry.created_at).toLocaleString('es-AR')}</span>
+                  <span>${window.app.parseDate(entry.created_at).toLocaleString('es-AR')}</span>
                 </div>
                 <p class="progress-content">${entry.content}</p>
               </div>

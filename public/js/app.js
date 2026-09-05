@@ -21,6 +21,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ═══════════════════════════════════════
+   PARSEO DE FECHAS CROSS-BROWSER
+═══════════════════════════════════════ */
+/**
+ * Convierte una fecha SQL ("YYYY-MM-DD HH:MM:SS") al formato ISO
+ * ("YYYY-MM-DDTHH:MM:SS") antes de crear el objeto Date, evitando
+ * el error "Invalid Date" en Safari y versiones antiguas de Edge.
+ * @param {string} dateStr - Fecha en cualquier formato string.
+ * @returns {Date}
+ */
+function parseDate(dateStr) {
+  if (!dateStr) return new Date(NaN);
+  // Reemplaza el espacio separador de SQL por 'T' para formato ISO 8601
+  return new Date(String(dateStr).replace(' ', 'T'));
+}
+
+/* ═══════════════════════════════════════
    TEMA CLARO / OSCURO
 ═══════════════════════════════════════ */
 function initTheme() {
@@ -219,6 +235,8 @@ function showToast(message, isError = false) {
     background: `var(--sw-dark)`,
     color: isError ? "#f87171" : "#4ade80",
     boxShadow: `0 4px 24px ${isError ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)"}`,
+    WebkitClipPath:
+      "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
     clipPath:
       "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
     transition: "opacity 0.3s",
@@ -286,6 +304,7 @@ window.app = {
   closeModal,
   acceptTerms,
   openTermsTextModal,
+  parseDate,
 };
 
 /* ═══════════════════════════════════════

@@ -119,7 +119,7 @@
 
         document.title = `${news.title} | Spider-Web ARG`;
         document.getElementById('meta').innerText =
-          `${new Date(news.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — REDACCIÓN: ${news.author}`;
+          `${window.app.parseDate(news.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })} — REDACCIÓN: ${news.author}`;
         document.getElementById('title').innerText = news.title;
         document.getElementById('body').innerText = news.content;
 

@@ -2088,7 +2088,7 @@
           <tr>
             <td>${u.name}</td>
             <td style="color:var(--sw-text-muted);">${u.email}</td>
-            <td>${new Date(u.created_at).toLocaleDateString("es-AR")}</td>
+            <td>${window.app.parseDate(u.created_at).toLocaleDateString("es-AR")}</td>
             <td><span class="tac-badge ${parseInt(u.is_email_verified) ? "ok" : "warn"}">${parseInt(u.is_email_verified) ? "SÍ" : "NO"}</span></td>
             <td>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="goToChat(${u.id},'${u.name}')" style="margin-right:4px;">CHAT</button>
@@ -2558,7 +2558,7 @@
             <div class="pub-item-title">${p.title}</div>
             <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
               ${statusBadge}
-              <span>${new Date(p.created_at).toLocaleDateString("es-AR")}</span>
+              <span>${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}</span>
               <span>${p.applicant_count || 0} postulado(s)</span>
             </div>
           </div>
@@ -2601,10 +2601,10 @@
         document.getElementById("edit-p-summary").value = p.summary || "";
         document.getElementById("edit-p-link").value = p.conf_link || "";
         document.getElementById("edit-p-start").value = p.start_date
-          ? new Date(p.start_date).toISOString().slice(0, 16)
+          ? window.app.parseDate(p.start_date).toISOString().slice(0, 16)
           : "";
         document.getElementById("edit-p-end").value = p.end_date
-          ? new Date(p.end_date).toISOString().slice(0, 16)
+          ? window.app.parseDate(p.end_date).toISOString().slice(0, 16)
           : "";
 
         let reqTags = [];
@@ -2826,7 +2826,7 @@
             }
           </div>
           <div>
-            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);letter-spacing:0.1em;">Miembro desde ${new Date(u.created_at).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}</div>
+            <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);letter-spacing:0.1em;">Miembro desde ${window.app.parseDate(u.created_at).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}</div>
           </div>
         `;
         } catch (err) {
@@ -2864,7 +2864,7 @@
             <div style="flex:1;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                 <span style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-white);">${entry.author_name}</span>
-                <span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);">${new Date(entry.created_at).toLocaleString("es-AR")}</span>
+                <span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);">${window.app.parseDate(entry.created_at).toLocaleString("es-AR")}</span>
               </div>
               <p style="font-family:var(--sw-font-b);font-size:0.82rem;color:var(--sw-text-muted);line-height:1.6;margin:0;white-space:pre-wrap;">${entry.content}</p>
             </div>
@@ -2903,7 +2903,7 @@
             ${n.cover_url ? `<img src="${n.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Cover">` : ""}
             <div class="pub-item-info">
               <div class="pub-item-title">${n.title}</div>
-              <div class="pub-item-meta">${new Date(n.created_at).toLocaleDateString("es-AR")} &nbsp;·&nbsp; Por ${n.author}</div>
+              <div class="pub-item-meta">${window.app.parseDate(n.created_at).toLocaleDateString("es-AR")} &nbsp;·&nbsp; Por ${n.author}</div>
               ${n.summary ? `<div style="font-family:var(--sw-font-b);font-size:0.72rem;color:var(--sw-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.summary}</div>` : ""}
             </div>
             <div class="pub-item-actions">
@@ -3034,7 +3034,7 @@
             <div class="pub-item-info">
               <div class="pub-item-title">${p.title}</div>
               <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-text-muted);margin-top:2px;">
-                Publicado: ${new Date(p.created_at).toLocaleDateString("es-AR")}
+                Publicado: ${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}
               </div>
             </div>
             <div style="display:flex;gap:6px;">
@@ -3172,7 +3172,7 @@
                 ${s.name}
               </span>
             </td>
-            <td style="color:var(--sw-text-muted);">${s.created_at ? new Date(s.created_at).toLocaleDateString("es-AR") : '-'}</td>
+            <td style="color:var(--sw-text-muted);">${s.created_at ? window.app.parseDate(s.created_at).toLocaleDateString("es-AR") : '-'}</td>
             <td>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditSkill(${s.id})" style="margin-right:4px;">EDITAR</button>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteSkill(${s.id})" style="border-color:rgba(239,68,68,0.4);color:#f87171;">ELIMINAR</button>

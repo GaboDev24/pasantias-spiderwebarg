@@ -167,7 +167,7 @@
           portGrid.innerHTML = portfolio.map(p => `
             <article class="feature-dossier">
               ${p.cover_url ? `<img src="${p.cover_url}" class="dossier-image" alt="Cover">` : ''}
-              <div class="dossier-meta">FECHA: ${new Date(p.created_at).toLocaleDateString('es-AR')} — REALIZADO</div>
+              <div class="dossier-meta">FECHA: ${window.app.parseDate(p.created_at).toLocaleDateString('es-AR')} — REALIZADO</div>
               <h3 class="dossier-title">${p.title}</h3>
               <p class="dossier-desc">${p.description}</p>
             </article>
@@ -183,7 +183,7 @@
             <article class="feature-dossier">
               ${n.cover_url ? `<div class="dossier-banner"><img src="${n.cover_url}" class="dossier-banner-img" alt="Portada"></div>` : ''}
               <div class="dossier-body">
-                <div class="dossier-meta">${new Date(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
+                <div class="dossier-meta">${window.app.parseDate(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
                 <h3 class="dossier-title">${n.title}</h3>
                 <p class="dossier-desc">${n.summary || n.content.substring(0, 140)}...</p>
                 <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.open('/news.html?id=${n.id}', '_blank')">LEER INFORME</button>
