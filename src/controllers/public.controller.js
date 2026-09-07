@@ -81,7 +81,7 @@ async function getLatestProjects(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 6;
     const result = await sql.query(
-      `SELECT p.id, p.title, p.description, p.summary, p.media_file_ids, p.required_tags, p.conf_link, p.start_date, p.end_date, p.status, p.created_at, COALESCE(u.name, 'Admin') AS author
+      `SELECT p.id, p.title, p.description, p.summary, p.media_file_ids, p.required_tags, p.conf_link, p.github_repo, p.conf_start, p.conf_end, p.start_date, p.end_date, p.status, p.created_at, COALESCE(u.name, 'Admin') AS author
        FROM projects p
        LEFT JOIN users u ON u.id = p.created_by
        ORDER BY p.created_at DESC`

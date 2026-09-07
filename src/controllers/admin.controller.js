@@ -204,7 +204,7 @@ async function updateSkill(req, res) {
 async function listProjects(req, res) {
   try {
     const result = await sql.query(
-      `SELECT p.id, p.title, p.description, p.summary, p.status, p.start_date, p.end_date, p.conf_link, p.media_file_ids, p.required_tags, p.created_at,
+      `SELECT p.id, p.title, p.description, p.summary, p.status, p.start_date, p.end_date, p.conf_link, p.github_repo, p.conf_start, p.conf_end, p.media_file_ids, p.required_tags, p.created_at,
               (SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id) AS applicant_count
        FROM projects p
        ORDER BY p.created_at DESC`
@@ -237,7 +237,7 @@ async function listProjects(req, res) {
 
 async function createProject(req, res) {
   try {
-    const { title, description, summary, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
+    const { title, description, summary, required_tags, conf_link, github_repo, conf_start, conf_end, start_date, end_date, media_file_ids } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ error: 'Titulo y descripcion son requeridos.' });
@@ -246,13 +246,16 @@ async function createProject(req, res) {
     const tagsValue = required_tags && required_tags.length ? `'${JSON.stringify(required_tags)}'` : "'[]'";
     const mediaValue = media_file_ids && media_file_ids.length ? `'${JSON.stringify(media_file_ids)}'` : "'[]'";
     const confValue = conf_link ? `'${conf_link.replace(/'/g, "''")}'` : 'NULL';
+    const githubValue = github_repo ? `'${github_repo.replace(/'/g, "''")}'` : 'NULL';
     const startValue = start_date ? `'${start_date}'` : 'NULL';
     const endValue = end_date ? `'${end_date}'` : 'NULL';
+    const confStartValue = conf_start ? `'${conf_start}'` : 'NULL';
+    const confEndValue = conf_end ? `'${conf_end}'` : 'NULL';
     const summaryValue = summary ? `'${summary.replace(/'/g, "''")}'` : 'NULL';
 
     const result = await sql.query(
-      `INSERT INTO projects (title, description, summary, media_file_ids, required_tags, conf_link, start_date, end_date, created_by)
-       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${summaryValue}, ${mediaValue}, ${tagsValue}, ${confValue}, ${startValue}, ${endValue}, ${req.user.id})`
+      `INSERT INTO projects (title, description, summary, media_file_ids, required_tags, conf_link, github_repo, conf_start, conf_end, start_date, end_date, created_by)
+       VALUES ('${title.replace(/'/g, "''")}', '${description.replace(/'/g, "''")}', ${summaryValue}, ${mediaValue}, ${tagsValue}, ${confValue}, ${githubValue}, ${confStartValue}, ${confEndValue}, ${startValue}, ${endValue}, ${req.user.id})`
     );
 
     return res.status(201).json({ message: 'Proyecto publicado correctamente.', id: result.insertId });
@@ -265,7 +268,7 @@ async function createProject(req, res) {
 async function updateProject(req, res) {
   try {
     const { projectId } = req.params;
-    const { title, description, summary, required_tags, conf_link, start_date, end_date, media_file_ids } = req.body;
+    const { title, description, summary, required_tags, conf_link, github_repo, conf_start, conf_end, start_date, end_date, media_file_ids } = req.body;
 
     const updates = [];
     if (title) updates.push(`title = '${title.replace(/'/g, "''")}'`);
@@ -273,6 +276,9 @@ async function updateProject(req, res) {
     if (summary !== undefined) updates.push(`summary = ${summary ? `'${summary.replace(/'/g, "''")}' ` : 'NULL'}`);
     if (required_tags !== undefined) updates.push(`required_tags = '${JSON.stringify(required_tags)}'`);
     if (conf_link !== undefined) updates.push(`conf_link = ${conf_link ? `'${conf_link.replace(/'/g, "''")}'` : 'NULL'}`);
+    if (github_repo !== undefined) updates.push(`github_repo = ${github_repo ? `'${github_repo.replace(/'/g, "''")}'` : 'NULL'}`);
+    if (conf_start !== undefined) updates.push(`conf_start = ${conf_start ? `'${conf_start}'` : 'NULL'}`);
+    if (conf_end !== undefined) updates.push(`conf_end = ${conf_end ? `'${conf_end}'` : 'NULL'}`);
     if (start_date !== undefined) updates.push(`start_date = ${start_date ? `'${start_date}'` : 'NULL'}`);
     if (end_date !== undefined) updates.push(`end_date = ${end_date ? `'${end_date}'` : 'NULL'}`);
     if (media_file_ids !== undefined) updates.push(`media_file_ids = '${JSON.stringify(media_file_ids)}'`);

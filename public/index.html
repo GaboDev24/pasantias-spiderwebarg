@@ -186,7 +186,7 @@
                 <div class="dossier-meta">${window.app.parseDate(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
                 <h3 class="dossier-title">${n.title}</h3>
                 <p class="dossier-desc">${n.summary || n.content.substring(0, 140)}...</p>
-                <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.open('/news.html?id=${n.id}', '_blank')">LEER INFORME</button>
+                <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.location.href='/news.html?id=${n.id}'">LEER INFORME</button>
               </div>
             </article>
           `).join('');
@@ -218,7 +218,7 @@
                     ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
                   </div>
                   <p class="dossier-desc">${p.summary || p.description.substring(0, 140)}...</p>
-                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.open('/project.html?id=${p.id}', '_blank')">VER DETALLES</button>
+                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.location.href='/project.html?id=${p.id}'">VER DETALLES</button>
                 </div>
               </article>
             `}).join('');

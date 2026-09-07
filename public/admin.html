@@ -35,6 +35,7 @@
       .tac-card-title {
         font-family: var(--sw-font-m);
         font-size: 0.65rem;
+        font-weight: 700;
         letter-spacing: 0.2em;
         color: var(--sw-red);
         text-transform: uppercase;
@@ -1244,6 +1245,25 @@
               placeholder="https://meet.google.com/..."
             />
 
+            <div class="form-row">
+              <div>
+                <label class="tac-label" for="p-conf-start">Inicio de Conferencia (opcional)</label>
+                <input type="datetime-local" id="p-conf-start" class="tac-input" />
+              </div>
+              <div>
+                <label class="tac-label" for="p-conf-end">Fin de Conferencia (opcional)</label>
+                <input type="datetime-local" id="p-conf-end" class="tac-input" />
+              </div>
+            </div>
+
+            <label class="tac-label" for="p-github">Repositorio GitHub (opcional)</label>
+            <input
+              type="url"
+              id="p-github"
+              class="tac-input"
+              placeholder="https://github.com/usuario/repositorio"
+            />
+
             <label class="tac-label" for="p-image"
               >Imagen de Portada (opcional)</label
             >
@@ -1587,6 +1607,18 @@
           ></div>
           <label class="tac-label" for="edit-p-link">Link Conferencia</label>
           <input type="url" id="edit-p-link" class="tac-input" />
+          <div class="form-row">
+            <div>
+              <label class="tac-label" for="edit-p-conf-start">Inicio de Conferencia (opcional)</label>
+              <input type="datetime-local" id="edit-p-conf-start" class="tac-input" />
+            </div>
+            <div>
+              <label class="tac-label" for="edit-p-conf-end">Fin de Conferencia (opcional)</label>
+              <input type="datetime-local" id="edit-p-conf-end" class="tac-input" />
+            </div>
+          </div>
+          <label class="tac-label" for="edit-p-github">Repositorio GitHub (opcional)</label>
+          <input type="url" id="edit-p-github" class="tac-input" placeholder="https://github.com/usuario/repositorio" />
           <label class="tac-label" for="edit-p-image"
             >Imagen del Proyecto (dejar vacío para mantener la actual)</label
           >
@@ -2242,6 +2274,9 @@
                 start_date: document.getElementById("p-start").value || null,
                 end_date: document.getElementById("p-end").value || null,
                 conf_link: document.getElementById("p-link").value || null,
+                conf_start: document.getElementById("p-conf-start").value || null,
+                conf_end: document.getElementById("p-conf-end").value || null,
+                github_repo: document.getElementById("p-github").value || null,
                 media_file_ids: mediaFileIds,
               },
             });
@@ -2600,11 +2635,18 @@
         document.getElementById("edit-p-desc").value = p.description || "";
         document.getElementById("edit-p-summary").value = p.summary || "";
         document.getElementById("edit-p-link").value = p.conf_link || "";
+        document.getElementById("edit-p-github").value = p.github_repo || "";
         document.getElementById("edit-p-start").value = p.start_date
           ? window.app.parseDate(p.start_date).toISOString().slice(0, 16)
           : "";
         document.getElementById("edit-p-end").value = p.end_date
           ? window.app.parseDate(p.end_date).toISOString().slice(0, 16)
+          : "";
+        document.getElementById("edit-p-conf-start").value = p.conf_start
+          ? window.app.parseDate(p.conf_start).toISOString().slice(0, 16)
+          : "";
+        document.getElementById("edit-p-conf-end").value = p.conf_end
+          ? window.app.parseDate(p.conf_end).toISOString().slice(0, 16)
           : "";
 
         let reqTags = [];
@@ -2684,6 +2726,9 @@
               description: document.getElementById("edit-p-desc").value,
               summary: document.getElementById("edit-p-summary").value || null,
               conf_link: document.getElementById("edit-p-link").value || null,
+              github_repo: document.getElementById("edit-p-github").value || null,
+              conf_start: document.getElementById("edit-p-conf-start").value || null,
+              conf_end: document.getElementById("edit-p-conf-end").value || null,
               start_date: document.getElementById("edit-p-start").value || null,
               end_date: document.getElementById("edit-p-end").value || null,
               required_tags: requiredTags,
