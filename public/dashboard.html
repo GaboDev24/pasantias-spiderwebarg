@@ -107,6 +107,12 @@
     }
     .apps-badge:hover { border-color: var(--sw-red); color: var(--sw-red); }
     @media (max-width: 768px) { .dash-layout { grid-template-columns: 1fr; } .float-chat-panel { width: calc(100vw - 48px); right: 24px; } }
+    @media (min-width: 1536px) {
+      .float-chat-panel { width: 500px !important; max-height: 700px !important; }
+      .float-chat-body { grid-template-columns: 200px 1fr !important; }
+      #chat-users { max-height: 350px !important; }
+      #chat-messages { height: 320px !important; }
+    }
   </style>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>

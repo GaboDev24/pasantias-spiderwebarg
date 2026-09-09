@@ -68,6 +68,11 @@
     .chat-user-item:hover, .chat-user-item.active { border-color: var(--sw-border); background: rgba(163,0,0,0.06); color: var(--sw-red); }
     .section-header { font-family: var(--sw-font-m); font-size: 0.65rem; letter-spacing: 0.2em; color: var(--sw-text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
     @media (max-width: 768px) { .dash-layout { grid-template-columns: 1fr; } }
+    @media (min-width: 1536px) {
+      .chat-grid.chat-mobile-content { grid-template-columns: 280px 1fr !important; }
+      #chat-users { max-height: 420px !important; }
+      #chat-messages { height: 380px !important; }
+    }
   </style>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
