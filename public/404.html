@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider-Web ARG | 404</title>
+  <link rel="stylesheet" href="/css/styles.css?v=2">
+  <link rel="stylesheet" href="/css/tactical.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body class="tac-page">
+  <div class="sw-scanlines"></div>
+  <div class="noise-overlay"></div>
+
+  <nav class="sw-nav scrolled">
+    <div class="sw-nav__inner">
+      <a href="/" style="display: flex; align-items: center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px;"></a>
+      <div class="sw-nav__links">
+        <a href="/" class="sw-nav__link">← Inicio</a>
+        <a href="/login.html" class="sw-nav__link guest-only">Acceso</a>
+        <a href="/register.html" class="sw-nav__link guest-only">Registro</a>
+        <a href="/dashboard.html" class="sw-nav__link auth-only" style="display:none;">Dashboard</a>
+      </div>
+      <div class="sw-nav__controls">
+        <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+        <button id="sw-hamburger" class="sw-hamburger" aria-label="Menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sw-auth-wrap">
+    <div class="sw-auth-panel" style="max-width: 600px; text-align: center; border-color: rgba(163,0,0,0.5);">
+      <div class="sw-auth-header">
+        <div class="sw-auth-dot r"></div>
+        <div class="sw-auth-dot y"></div>
+        <div class="sw-auth-dot g"></div>
+        <span style="margin-left: 10px; font-family: var(--sw-font-m); font-size: 0.6rem; color: rgba(163,0,0,0.8); letter-spacing: 0.2em;">ERROR 404</span>
+      </div>
+      <div class="sw-auth-body">
+        <h1 style="font-family: var(--sw-font-h); font-size: 5rem; color: var(--sw-red); margin: 0; line-height: 1; text-shadow: 0 0 10px var(--sw-red-glow);">404</h1>
+        <h2 style="font-family: var(--sw-font-h); font-size: 1.8rem; color: var(--sw-white); text-transform: uppercase; margin-top: 1rem; margin-bottom: 1.5rem;">Página No Encontrada</h2>
+        <p style="font-family: var(--sw-font-m); font-size: 0.9rem; color: var(--sw-text-muted); margin-bottom: 2rem;">
+          La ruta solicitada no existe o no tienes acceso.
+        </p>
+        <a href="/" class="sw-btn sw-btn--primary" style="display: inline-flex;"><i class="fa-solid fa-house"></i> VOLVER AL INICIO</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="sw-footer">
+    <div class="sw-footer__inner">
+      <div class="sw-footer__grid">
+        <div class="sw-footer__brand">
+          <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+            <img src="/img/logo blanco.png" alt="Spider-Web ARG Logo" class="sw-footer__logo">
+          </a>
+          <p class="sw-footer__tagline">Comunidad tech de Spider-Web ARG</p>
+        </div>
+
+        <div class="sw-footer__col">
+          <h4>Acceso Rápido</h4>
+          <ul class="sw-footer__links">
+            <li><a href="/#news" class="sw-footer__link"><i class="fa-solid fa-newspaper fa-fw"></i> Noticias</a></li>
+            <li><a href="/#projects" class="sw-footer__link"><i class="fa-solid fa-folder-open fa-fw"></i> Proyectos</a></li>
+            <li class="guest-only"><a href="/login.html" class="sw-footer__link"><i class="fa-solid fa-right-to-bracket fa-fw"></i> Acceso</a></li>
+            <li class="guest-only"><a href="/register.html" class="sw-footer__link"><i class="fa-solid fa-user-plus fa-fw"></i> Registro</a></li>
+            <li class="auth-only" style="display:none;"><a href="/dashboard.html" class="sw-footer__link"><i class="fa-solid fa-gauge-high fa-fw"></i> Dashboard</a></li>
+            <li class="admin-only" style="display:none;"><a href="/admin.html" class="sw-footer__link" style="color: var(--sw-red);"><i class="fa-solid fa-shield-halved fa-fw"></i> Panel Admin</a></li>
+            <li class="auth-only" style="display:none;"><a href="#" onclick="window.app.logout(); return false;" class="sw-footer__link"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Salir</a></li>
+          </ul>
+        </div>
+
+        <div class="sw-footer__col">
+          <h4>Navegación</h4>
+          <ul class="sw-footer__links">
+            <li><a href="/" class="sw-footer__link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
+            <li><a href="/#portfolio" class="sw-footer__link"><i class="fa-solid fa-layer-group fa-fw"></i> Portafolio</a></li>
+            <li><a href="#" onclick="window.app.openTermsTextModal(event)" class="sw-footer__link"><i class="fa-solid fa-file-contract fa-fw"></i> Términos y Condiciones</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sw-footer__bottom">
+        <div class="sw-footer__copy">
+          <img src="/img/logo blanco.png" alt="" style="height: 14px; opacity: 0.3;">
+          © 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.
+        </div>
+        <div class="sw-footer__status">
+          <span class="sw-pulse"></span> Sistema en línea
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
