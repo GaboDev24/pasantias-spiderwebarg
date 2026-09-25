@@ -3,11 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spider-Web ARG | Terminos y Condiciones</title>
+  <title>Spider-Web ARG | Términos y Condiciones</title>
+  <meta name="description" content="Términos y condiciones de uso de la plataforma Spider-Web ARG, conforme a la legislación argentina vigente (Ley 25.326, Ley 24.240, Ley 26.388).">
   <link rel="stylesheet" href="/css/styles.css?v=2">
   <link rel="stylesheet" href="/css/tactical.css?v=2">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    .terms-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: clamp(100px, 14vw, 130px) clamp(1rem, 4vw, 2.5rem) 80px;
+      position: relative;
+      z-index: 2;
+    }
+    .terms-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(163,0,0,0.18);
+    }
+    .terms-eyebrow {
+      font-family: var(--sw-font-m);
+      font-size: 0.6rem;
+      letter-spacing: 0.28em;
+      color: rgba(163,0,0,0.8);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .terms-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: rgba(163,0,0,0.6);
+    }
+    .terms-h1 {
+      font-family: var(--sw-font-h);
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--sw-white);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      letter-spacing: 0.03em;
+    }
+    .terms-meta {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      font-family: var(--sw-font-m);
+      font-size: 0.62rem;
+      color: var(--sw-text-muted);
+      letter-spacing: 0.12em;
+    }
+    .terms-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .terms-meta i { color: rgba(163,0,0,0.6); }
+
+    /* Bloque principal */
+    .terms-block {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(163,0,0,0.15);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      padding: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .terms-intro-text {
+      font-family: var(--sw-font-r);
+      font-size: 0.95rem;
+      color: var(--sw-text-muted);
+      line-height: 1.8;
+      border-left: 3px solid rgba(163,0,0,0.5);
+      padding-left: 1rem;
+      margin-bottom: 0;
+    }
+
+    /* Secciones */
+    .terms-section {
+      margin-bottom: 2.5rem;
+    }
+    .terms-section:last-child { margin-bottom: 0; }
+    .terms-section-title {
+      font-family: var(--sw-font-h);
+      font-size: 1rem;
+      color: var(--sw-white);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .terms-section-num {
+      font-family: var(--sw-font-m);
+      font-size: 0.58rem;
+      color: rgba(163,0,0,0.8);
+      letter-spacing: 0.15em;
+      background: rgba(163,0,0,0.08);
+      border: 1px solid rgba(163,0,0,0.2);
+      padding: 2px 8px;
+      flex-shrink: 0;
+    }
+    .terms-p {
+      font-family: var(--sw-font-r);
+      font-size: 0.9rem;
+      color: var(--sw-text-muted);
+      line-height: 1.8;
+      margin-bottom: 0.8rem;
+    }
+    .terms-p:last-child { margin-bottom: 0; }
+    .terms-p strong { color: rgba(255,255,255,0.65); font-weight: 600; }
+    .terms-law-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--sw-font-m);
+      font-size: 0.57rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(163,0,0,0.65);
+      background: rgba(163,0,0,0.05);
+      border: 1px solid rgba(163,0,0,0.15);
+      padding: 3px 10px;
+      margin-top: 0.5rem;
+      margin-right: 4px;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Tabla de leyes */
+    .terms-laws-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+    .terms-law-card {
+      background: rgba(163,0,0,0.04);
+      border: 1px solid rgba(163,0,0,0.15);
+      padding: 1rem 1.25rem;
+    }
+    .terms-law-card-num {
+      font-family: var(--sw-font-m);
+      font-size: 0.65rem;
+      color: rgba(163,0,0,0.8);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.35rem;
+    }
+    .terms-law-card-name {
+      font-family: var(--sw-font-r);
+      font-size: 0.78rem;
+      color: var(--sw-text-muted);
+      line-height: 1.4;
+    }
+  </style>
 </head>
 <body class="tac-page">
   <div class="sw-scanlines"></div>
@@ -18,6 +170,7 @@
       <a href="/" style="display: flex; align-items: center;"><img src="/img/logo blanco.png" alt="Spider-Web Logo" style="height: 35px;"></a>
       <div class="sw-nav__links">
         <a href="/" class="sw-nav__link">← Volver al Inicio</a>
+        <a href="/dashboard.html" class="sw-nav__link auth-only" style="display:none;">Dashboard</a>
       </div>
       <div class="sw-nav__controls">
         <button id="theme-toggle" class="sw-theme-btn" onclick="window.app.toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
@@ -28,41 +181,272 @@
     </div>
   </nav>
 
-  <div class="sw-container" style="max-width: 800px; padding: 120px 20px 60px 20px; position: relative; z-index: 2;">
-    <div style="margin-bottom: 2rem;">
-      <h1 style="font-family: var(--sw-font-h); font-size: 2.5rem; color: var(--sw-white); text-transform: uppercase;">Terminos y Condiciones</h1>
-      <div style="width: 50px; height: 3px; background: var(--sw-red); margin-top: 10px;"></div>
+  <div class="terms-wrap">
+
+    <div class="terms-header">
+      <div class="terms-eyebrow">Información Legal</div>
+      <h1 class="terms-h1">Términos y Condiciones</h1>
+      <div class="terms-meta">
+        <span><i class="fa-solid fa-calendar-days"></i> Última actualización: Septiembre 2026</span>
+        <span><i class="fa-solid fa-code-branch"></i> Versión 2.0</span>
+        <span><i class="fa-solid fa-flag"></i> República Argentina</span>
+      </div>
     </div>
 
-    <div class="sw-content-block" style="background: rgba(0,0,0,0.5); padding: 2rem; border: 1px solid var(--sw-border); border-radius: 4px;">
-      <h2 style="font-family: var(--sw-font-h); font-size: 1.2rem; color: var(--sw-white); margin-bottom: 1rem;">1. Aceptacion de los terminos</h2>
-      <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
-        Al acceder o utilizar la plataforma de Spider-Web ARG, aceptas estar sujeto a estos terminos y condiciones de uso. Si no estas de acuerdo con alguna parte de los terminos, no podras acceder al servicio.
-      </p>
-
-      <h2 style="font-family: var(--sw-font-h); font-size: 1.2rem; color: var(--sw-white); margin-bottom: 1rem;">2. Uso de la plataforma</h2>
-      <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
-        Como pasante, te comprometes a utilizar la plataforma unicamente para fines legitimos y de manera que no infrinja los derechos de, restrinja o inhiba el uso y disfrute de la plataforma por parte de cualquier tercero.
-      </p>
-
-      <h2 style="font-family: var(--sw-font-h); font-size: 1.2rem; color: var(--sw-white); margin-bottom: 1rem;">3. Privacidad y Datos</h2>
-      <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
-        Tu privacidad es importante para nosotros. Cualquier informacion personal que proporciones sera tratada de acuerdo con nuestras politicas internas, garantizando la confidencialidad de tus datos.
-      </p>
-
-      <h2 style="font-family: var(--sw-font-h); font-size: 1.2rem; color: var(--sw-white); margin-bottom: 1rem;">4. Modificaciones</h2>
-      <p style="font-family: var(--sw-font-r); font-size: 0.95rem; color: var(--sw-text-muted); line-height: 1.6; margin-bottom: 0;">
-        Nos reservamos el derecho de modificar o reemplazar estos terminos en cualquier momento. Al continuar accediendo o utilizando nuestro servicio despues de que esas revisiones se vuelvan efectivas, aceptas estar sujeto a los terminos revisados.
+    <!-- Intro -->
+    <div class="terms-block" style="margin-bottom: 2rem;">
+      <p class="terms-intro-text">
+        Al registrarte, acceder o utilizar la plataforma <strong>Spider-Web ARG</strong>, declarás haber leído,
+        comprendido y aceptado en su totalidad los presentes Términos y Condiciones. Si no estás de acuerdo con
+        alguna de las disposiciones aquí establecidas, debés abstenerte de utilizar el servicio.
       </p>
     </div>
-  </div>
+
+    <!-- Secciones legales -->
+    <div class="terms-block">
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">01</span>
+          Identificación del Responsable
+        </h2>
+        <p class="terms-p">
+          El servicio es operado por <strong>Spider-Web ARG</strong>, con domicilio en la República Argentina.
+          Para consultas legales podés contactarnos a través de los canales oficiales disponibles en la plataforma.
+        </p>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">02</span>
+          Objeto y Alcance del Servicio
+        </h2>
+        <p class="terms-p">
+          Spider-Web ARG es una plataforma de gestión de pasantías tecnológicas que permite a usuarios registrados
+          postularse a proyectos, comunicarse internamente y gestionar su perfil profesional. El acceso a determinadas
+          funcionalidades está sujeto a validación previa por parte del equipo administrativo.
+        </p>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">03</span>
+          Requisitos para el Registro
+        </h2>
+        <p class="terms-p">
+          Para registrarse en la plataforma el usuario debe:
+        </p>
+        <p class="terms-p">
+          (a) ser mayor de 16 años o contar con autorización expresa de su representante legal;<br>
+          (b) proporcionar información veraz, precisa y actualizada;<br>
+          (c) aceptar expresamente los presentes Términos y Condiciones antes de completar el registro.
+        </p>
+        <p class="terms-p">
+          El suministro de datos falsos o la creación de cuentas en nombre de terceros sin autorización podrá
+          dar lugar a la suspensión o baja definitiva de la cuenta, sin perjuicio de las responsabilidades legales aplicables.
+        </p>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">04</span>
+          Protección de Datos Personales
+        </h2>
+        <p class="terms-p">
+          El tratamiento de datos personales se rige por la <strong>Ley N.° 25.326 de Protección de Datos Personales</strong>
+          y su Decreto Reglamentario N.° 1558/2001, así como por las disposiciones de la Dirección Nacional de
+          Protección de Datos Personales (DNPDP).
+        </p>
+        <p class="terms-p">
+          Los datos recopilados (nombre completo, correo electrónico, curriculum vitae, fotografía de perfil y demás
+          información profesional) serán utilizados exclusivamente para los fines propios de la plataforma —gestión de
+          pasantías y comunicación interna— y no serán cedidos, vendidos ni compartidos con terceros sin el
+          consentimiento previo y expreso del titular.
+        </p>
+        <p class="terms-p">
+          <strong>Derechos ARCO:</strong> El usuario tiene derecho, en todo momento, a acceder, rectificar, cancelar
+          u oponerse al tratamiento de sus datos personales, conforme a los Arts. 14, 16 y 34 de la Ley 25.326.
+          Para ejercer estos derechos contactá a los administradores a través de los canales oficiales de la plataforma.
+          La DNPDP tiene atribución para atender denuncias y reclamos sobre incumplimientos a la ley vigente.
+        </p>
+        <div>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Ley 25.326 — LPDP</span>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Decreto 1558/2001</span>
+        </div>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">05</span>
+          Uso Aceptable de la Plataforma
+        </h2>
+        <p class="terms-p">
+          El usuario se compromete a utilizar la plataforma de buena fe y conforme a las normas vigentes. Queda
+          expresamente prohibido:
+        </p>
+        <p class="terms-p">
+          (a) publicar contenido ofensivo, discriminatorio, ilegal o que viole derechos de terceros;<br>
+          (b) intentar acceder sin autorización a sistemas, cuentas o datos ajenos;<br>
+          (c) utilizar la plataforma para fines comerciales no autorizados por Spider-Web ARG;<br>
+          (d) distribuir malware, ransomware, spam u cualquier tipo de código malicioso;<br>
+          (e) suplantar la identidad de otros usuarios o miembros del equipo de Spider-Web ARG;<br>
+          (f) recopilar datos de otros usuarios mediante medios automatizados (scraping).
+        </p>
+        <p class="terms-p">
+          El incumplimiento de estas normas podrá dar lugar a la suspensión o eliminación definitiva de la cuenta,
+          sin perjuicio de las acciones civiles y/o penales que pudieran corresponder conforme al
+          <strong>Código Penal Argentino</strong> (Arts. 153 bis, 173 inc. 16) y la <strong>Ley 26.388</strong>
+          de Delitos Informáticos.
+        </p>
+        <div>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Ley 26.388 — Delitos Informáticos</span>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Código Penal Argentino</span>
+        </div>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">06</span>
+          Propiedad Intelectual
+        </h2>
+        <p class="terms-p">
+          Todos los contenidos, marcas registradas, logotipos, código fuente, diseño gráfico e interfaces de la
+          plataforma son propiedad exclusiva de Spider-Web ARG y están protegidos por la
+          <strong>Ley N.° 11.723 de Propiedad Intelectual</strong> y los tratados internacionales aplicables.
+        </p>
+        <p class="terms-p">
+          Queda prohibida su reproducción total o parcial, distribución, modificación o uso con fines comerciales
+          sin la autorización expresa y por escrito de Spider-Web ARG.
+          El usuario conserva la titularidad de los contenidos que suba a la plataforma (CV, fotografías), pero
+          otorga a Spider-Web ARG una licencia limitada para utilizarlos con los fines del servicio.
+        </p>
+        <div>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Ley 11.723 — Propiedad Intelectual</span>
+        </div>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">07</span>
+          Responsabilidad y Limitaciones
+        </h2>
+        <p class="terms-p">
+          Spider-Web ARG no garantiza la disponibilidad ininterrumpida del servicio y no será responsable por daños
+          directos, indirectos, incidentales o consecuentes derivados de interrupciones técnicas, errores del sistema
+          o accesos no autorizados que estén fuera de su control razonable.
+        </p>
+        <p class="terms-p">
+          El usuario asume la responsabilidad exclusiva por el uso que realice de la plataforma y por el contenido
+          que publique en ella.
+        </p>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">08</span>
+          Menores de Edad
+        </h2>
+        <p class="terms-p">
+          Conforme a la <strong>Ley N.° 26.061 de Protección Integral de los Derechos de las Niñas, Niños y
+          Adolescentes</strong>, los menores de 16 años requerirán la autorización expresa de su padre, madre o
+          tutor legal para registrarse y utilizar la plataforma. El responsable legal asumirá las obligaciones
+          derivadas del uso del servicio por parte del menor.
+        </p>
+        <div>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Ley 26.061 — Protección NNA</span>
+        </div>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">09</span>
+          Modificación de los Términos
+        </h2>
+        <p class="terms-p">
+          Spider-Web ARG se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento.
+          Los cambios serán notificados a los usuarios a través de la plataforma mediante el modal de aceptación.
+          Al continuar utilizando el servicio luego de la notificación, el usuario acepta los nuevos términos.
+        </p>
+      </div>
+
+      <div class="terms-section">
+        <h2 class="terms-section-title">
+          <span class="terms-section-num">10</span>
+          Jurisdicción y Ley Aplicable
+        </h2>
+        <p class="terms-p">
+          Los presentes Términos y Condiciones se rigen íntegramente por las leyes de la <strong>República Argentina</strong>,
+          en particular el <strong>Código Civil y Comercial de la Nación</strong> (Ley 26.994) y la legislación
+          de defensa del consumidor (<strong>Ley N.° 24.240</strong>).
+        </p>
+        <p class="terms-p">
+          Para cualquier controversia derivada de la interpretación, ejecución o incumplimiento del presente acuerdo,
+          las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad Autónoma de Buenos Aires,
+          con renuncia expresa a cualquier otro fuero o jurisdicción que pudiera corresponder.
+        </p>
+        <div>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> Ley 24.240 — Defensa del Consumidor</span>
+          <span class="terms-law-tag"><i class="fa-solid fa-scale-balanced"></i> CCyC — Ley 26.994</span>
+        </div>
+      </div>
+
+    </div><!-- /terms-block -->
+
+    <!-- Grilla de leyes de referencia -->
+    <div class="terms-laws-grid">
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 25.326</div>
+        <div class="terms-law-card-name">Protección de Datos Personales (LPDP)</div>
+      </div>
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 24.240</div>
+        <div class="terms-law-card-name">Defensa del Consumidor</div>
+      </div>
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 26.388</div>
+        <div class="terms-law-card-name">Delitos Informáticos</div>
+      </div>
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 11.723</div>
+        <div class="terms-law-card-name">Régimen Legal de la Propiedad Intelectual</div>
+      </div>
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 26.061</div>
+        <div class="terms-law-card-name">Protección Integral de NNA</div>
+      </div>
+      <div class="terms-law-card">
+        <div class="terms-law-card-num">LEY 26.994</div>
+        <div class="terms-law-card-name">Código Civil y Comercial de la Nación</div>
+      </div>
+    </div>
+
+  </div><!-- /terms-wrap -->
 
   <footer class="sw-footer">
     <div class="sw-footer__inner">
+      <div class="sw-footer__grid">
+        <div class="sw-footer__brand">
+          <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+            <img src="/img/logo blanco.png" alt="Spider-Web ARG Logo" class="sw-footer__logo">
+          </a>
+          <p class="sw-footer__tagline">Comunidad tech de Spider-Web ARG</p>
+        </div>
+        <div class="sw-footer__col">
+          <h4>Navegación</h4>
+          <ul class="sw-footer__links">
+            <li><a href="/" class="sw-footer__link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
+            <li><a href="/#portfolio" class="sw-footer__link"><i class="fa-solid fa-layer-group fa-fw"></i> Portafolio</a></li>
+            <li><a href="#" onclick="window.app.openTermsTextModal(event)" class="sw-footer__link"><i class="fa-solid fa-file-contract fa-fw"></i> Términos y Condiciones</a></li>
+          </ul>
+        </div>
+      </div>
       <div class="sw-footer__bottom">
         <div class="sw-footer__copy">
           <img src="/img/logo blanco.png" alt="" style="height: 14px; opacity: 0.3;">
           © 2026 SPIDER-WEB ARG. TODOS LOS DERECHOS RESERVADOS.
+        </div>
+        <div class="sw-footer__status">
+          <span class="sw-pulse"></span> Sistema en línea
         </div>
       </div>
     </div>
