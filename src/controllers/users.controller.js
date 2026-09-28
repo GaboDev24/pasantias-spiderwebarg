@@ -152,6 +152,7 @@ async function uploadAvatar(req, res) {
 async function applyToProject(req, res) {
   try {
     const { projectId } = req.params;
+    const userId = req.user.id;
 
     if (!req.user.is_token_validated) {
       return res.status(403).json({ error: 'Debes validar tu cuenta con el token CEO para inscribirte en proyectos.' });
@@ -182,19 +183,9 @@ async function applyToProject(req, res) {
       }
     }
 
-    await sql.query(
-      `INSERT IGNORE INTO project_applications (project_id, user_id) VALUES (${parseInt(projectId)}, ${req.user.id})`
-    );
-
-    return res.json({ message: 'Inscripcion realizada correctamente.' });
-async function applyToProject(req, res) {
-  try {
-    const projectId = req.params.projectId;
-    const userId = req.user.id;
-
     // 1. VALIDACIÓN: Verificar si el usuario ya se postuló a este proyecto
     const existingApplication = await sql.query(
-      `SELECT id, status, applied_at FROM project_applications WHERE user_id = ${userId} AND project_id = ${projectId}`
+      `SELECT id, status, applied_at FROM project_applications WHERE user_id = ${userId} AND project_id = ${parseInt(projectId)}`
     );
 
     if (existingApplication.data && existingApplication.data.length > 0) {
@@ -221,7 +212,7 @@ async function applyToProject(req, res) {
 
     // 2. POSTULACIÓN NUEVA (No existe registro previo)
     await sql.query(
-      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${projectId}, 'APPLIED', NOW())`
+      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${parseInt(projectId)}, 'APPLIED', NOW())`
     );
 
     return res.status(201).json({ message: 'Postulación exitosa. Estaremos revisando tu candidatura.', application_status: 'APPLIED' });
