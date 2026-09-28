@@ -187,12 +187,50 @@ async function applyToProject(req, res) {
     );
 
     return res.json({ message: 'Inscripcion realizada correctamente.' });
+async function applyToProject(req, res) {
+  try {
+    const projectId = req.params.projectId;
+    const userId = req.user.id;
+
+    // 1. VALIDACIÓN: Verificar si el usuario ya se postuló a este proyecto
+    const existingApplication = await sql.query(
+      `SELECT id, status, applied_at FROM project_applications WHERE user_id = ${userId} AND project_id = ${projectId}`
+    );
+
+    if (existingApplication.data && existingApplication.data.length > 0) {
+      const application = existingApplication.data[0];
+      let message = '';
+
+      // Lógica de respuesta basada en el estado actual
+      switch (application.status) {
+        case 'APPLIED':
+          message = 'Ya te has postulado a este proyecto. Tu postulación está pendiente de revisión.';
+          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
+        case 'ACCEPTED':
+          message = 'Tu postulación fue aceptada. ¡Felicitaciones! Has sido seleccionado.';
+          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
+        case 'REJECTED':
+          message = 'Tu postulación fue rechazada. Por favor, revisa los requisitos o postúlate a otro proyecto.';
+          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
+        default:
+          // Manejo para cualquier estado futuro o desconocido
+          message = 'Ya tienes una postulación registrada para este proyecto. Estado actual: ' + application.status;
+          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
+      }
+    }
+
+    // 2. POSTULACIÓN NUEVA (No existe registro previo)
+    await sql.query(
+      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${projectId}, 'APPLIED', NOW())`
+    );
+
+    return res.status(201).json({ message: 'Postulación exitosa. Estaremos revisando tu candidatura.', application_status: 'APPLIED' });
+
   } catch (err) {
-    console.error('[USERS/APPLY-PROJECT]', err.message);
-    return res.status(500).json({ error: 'Error al inscribirse.' });
+    console.error('[USERS/APPLY-TO-PROJECT]', err.message, err.stack);
+    return res.status(500).json({ error: 'Error al postularse. Por favor, inténtalo más tarde o contacta al soporte.' });
   }
 }
-
 async function cancelApplication(req, res) {
   try {
     const { projectId } = req.params;
