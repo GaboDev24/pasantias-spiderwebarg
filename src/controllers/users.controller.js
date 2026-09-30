@@ -198,13 +198,13 @@ async function applyToProject(req, res) {
 
       // Lógica de respuesta basada en el estado actual
       switch (application.status) {
-        case 'APPLIED':
+        case 'pending':
           message = 'Ya te has postulado a este proyecto. Tu postulación está pendiente de revisión.';
           return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-        case 'ACCEPTED':
+        case 'accepted':
           message = 'Tu postulación fue aceptada. ¡Felicitaciones! Has sido seleccionado.';
           return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-        case 'REJECTED':
+        case 'rejected':
           message = 'Tu postulación fue rechazada. Por favor, revisa los requisitos o postúlate a otro proyecto.';
           return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
         default:
@@ -216,10 +216,10 @@ async function applyToProject(req, res) {
 
     // 2. POSTULACIÓN NUEVA (No existe registro previo)
     await sql.query(
-      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${parseInt(projectId)}, 'APPLIED', NOW())`
+      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${parseInt(projectId)}, 'pending', NOW())`
     );
 
-    return res.status(201).json({ message: 'Postulación exitosa. Estaremos revisando tu candidatura.', application_status: 'APPLIED' });
+    return res.status(201).json({ message: 'Postulación exitosa. Estaremos revisando tu candidatura.', application_status: 'pending' });
 
   } catch (err) {
     console.error('[USERS/APPLY-TO-PROJECT]', err.message, err.stack);
