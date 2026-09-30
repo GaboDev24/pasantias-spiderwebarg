@@ -158,8 +158,8 @@ async function applyToProject(req, res) {
     const dbUserRes = await sql.query(`SELECT is_token_validated FROM users WHERE id = ${userId}`);
     const dbUser = dbUserRes.data && dbUserRes.data[0];
 
-    if (!dbUser || !dbUser.is_token_validated) {
-      return res.status(403).json({ error: 'Debes validar tu cuenta con el token CEO para inscribirte en proyectos.' });
+    if (!dbUser || parseInt(dbUser.is_token_validated) !== 1) {
+      return res.status(403).json({ error: 'Debes validar tu cuenta con el administrador para inscribirte en proyectos (Error actualizado).' });
     }
 
     // Verificar que el proyecto exista y este abierto
