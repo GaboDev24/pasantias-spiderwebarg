@@ -154,7 +154,11 @@ async function applyToProject(req, res) {
     const { projectId } = req.params;
     const userId = req.user.id;
 
-    if (!req.user.is_token_validated) {
+    // Verificar is_token_validated directo en BD (no en el JWT, que puede estar desactualizado)
+    const dbUserRes = await sql.query(`SELECT is_token_validated FROM users WHERE id = ${userId}`);
+    const dbUser = dbUserRes.data && dbUserRes.data[0];
+
+    if (!dbUser || !dbUser.is_token_validated) {
       return res.status(403).json({ error: 'Debes validar tu cuenta con el token CEO para inscribirte en proyectos.' });
     }
 
