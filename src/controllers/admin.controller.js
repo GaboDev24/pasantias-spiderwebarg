@@ -314,7 +314,7 @@ async function listProjectApplications(req, res) {
       `SELECT pa.id, pa.status, pa.applied_at, u.id AS user_id, u.name, u.email, u.tags, u.avatar_file_id
        FROM project_applications pa
        JOIN users u ON u.id = pa.user_id
-       WHERE pa.project_id = ${parseInt(projectId)}
+       WHERE pa.project_id = ${parseInt(projectId)} AND pa.status != 'rejected'
        ORDER BY pa.applied_at DESC`
     );
     return res.json({ applications: result.data || [] });
