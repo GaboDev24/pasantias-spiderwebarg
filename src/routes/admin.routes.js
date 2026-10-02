@@ -41,6 +41,8 @@ router.post('/projects/:projectId/meeting-record', requireAdmin, adminCtrl.creat
 router.get('/trainings', requireAdmin, adminCtrl.listTrainings);
 router.post('/trainings', requireAdmin, adminCtrl.createTraining);
 router.post('/trainings/:trainingId/schedule', requireAdmin, adminCtrl.scheduleTraining);
+router.put('/trainings/:trainingId', requireAdmin, adminCtrl.updateTraining);
+router.delete('/trainings/:trainingId', requireAdmin, adminCtrl.deleteTraining);
 
 // Noticias
 router.post('/news', requireAdmin, adminCtrl.createNews);

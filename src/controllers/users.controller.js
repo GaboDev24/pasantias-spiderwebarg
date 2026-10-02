@@ -327,6 +327,16 @@ async function applyToTraining(req, res) {
     const { trainingId } = req.params;
     const userId = req.user.id;
 
+    // Validar estado de la capacitación
+    const statusCheck = await sql.query(`SELECT status FROM trainings WHERE id = ${parseInt(trainingId)}`);
+    if (!statusCheck.data || statusCheck.data.length === 0) {
+      return res.status(404).json({ error: 'Capacitación no encontrada.' });
+    }
+    const currentStatus = statusCheck.data[0].status;
+    if (currentStatus !== 'open' && currentStatus !== 'quota_filled') {
+      return res.status(400).json({ error: 'Ya no es posible unirse a esta capacitación.' });
+    }
+
     // Verificar si ya se postuló
     const existing = await sql.query(`SELECT id FROM training_applications WHERE user_id = ${userId} AND training_id = ${parseInt(trainingId)}`);
     if (existing.data && existing.data.length > 0) {
@@ -345,8 +355,10 @@ async function applyToTraining(req, res) {
     
     if (tr.data && tr.data.length > 0) {
       const training = tr.data[0];
-      if (training.status === 'open' && training.applied_count >= training.min_quota) {
-        // Cupo alcanzado
+      
+      // Si justo en esta postulación se alcanza el mínimo
+      if (training.status === 'open' && training.applied_count === training.min_quota) {
+        // Marcamos como lista para programar, pero los usuarios aún pueden seguir uniéndose
         await sql.query(`UPDATE trainings SET status = 'quota_filled' WHERE id = ${parseInt(trainingId)}`);
         
         // Avisar a admins y CEOs
@@ -356,11 +368,11 @@ async function applyToTraining(req, res) {
         
         if (adminEmails) {
           const msg = `
-            <h3>Cupo de Capacitación Lleno</h3>
-            <p>La capacitación "<strong>${training.title}</strong>" ha alcanzado su cupo mínimo (${training.min_quota} solicitantes).</p>
-            <p>Por favor, ingrese al panel de administración para programar la reunión.</p>
+            <h3>Capacitación Lista para Programar</h3>
+            <p>La capacitación "<strong>${training.title}</strong>" ha alcanzado su mínimo (${training.min_quota} solicitantes).</p>
+            <p>Los pasantes pueden seguir uniéndose, pero ya puede ingresar al panel de administración para programar la reunión.</p>
           `;
-          await sendNotificationEmail(adminEmails, 'Cupo de Capacitación Lleno', msg).catch(console.error);
+          await sendNotificationEmail(adminEmails, 'Capacitación Lista para Programar', msg).catch(console.error);
         }
       }
     }
@@ -379,17 +391,22 @@ async function requestTraining(req, res) {
       return res.status(400).json({ error: 'Faltan datos de la capacitacion (título o descripción).' });
     }
     
+    const safeTitle = title.replace(/'/g, "''");
+    const safeDesc = description.replace(/'/g, "''");
+
     // Crear la capacitacion
     const insertRes = await sql.query(
-      `INSERT INTO trainings (title, description, min_quota, status, created_at) VALUES (?, ?, 2, 'open', NOW())`,
-      [title, description]
+      `INSERT INTO trainings (title, description, min_quota, status, created_at) VALUES ('${safeTitle}', '${safeDesc}', 2, 'open', NOW())`
     );
-    const trainingId = insertRes.insertId;
+    const trainingId = insertRes.insertId || (insertRes.data && insertRes.data.insertId);
+
+    if (!trainingId) {
+      throw new Error('No se pudo obtener el ID de la capacitación creada.');
+    }
 
     // Auto-postular al creador
     await sql.query(
-      `INSERT INTO training_applications (training_id, user_id, applied_at) VALUES (?, ?, NOW())`,
-      [trainingId, req.user.id]
+      `INSERT INTO training_applications (training_id, user_id, applied_at) VALUES (${trainingId}, ${req.user.id}, NOW())`
     );
 
     return res.status(201).json({ message: 'Capacitación solicitada correctamente.', id: trainingId });

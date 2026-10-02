@@ -651,6 +651,41 @@ async function scheduleTraining(req, res) {
   }
 }
 
+async function updateTraining(req, res) {
+  try {
+    const { trainingId } = req.params;
+    const { title, description, min_quota, status } = req.body;
+    
+    const updates = [];
+    if (title) updates.push(`title = '${title.replace(/'/g, "''")}'`);
+    if (description !== undefined) updates.push(`description = '${description.replace(/'/g, "''")}'`);
+    if (min_quota !== undefined) updates.push(`min_quota = ${parseInt(min_quota)}`);
+    if (status) updates.push(`status = '${status}'`);
+
+    if (updates.length > 0) {
+      await sql.query(`UPDATE trainings SET ${updates.join(', ')} WHERE id = ${parseInt(trainingId)}`);
+    }
+    
+    return res.json({ message: 'Capacitación actualizada correctamente.' });
+  } catch (err) {
+    console.error('[ADMIN/UPDATE-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error actualizando capacitación.' });
+  }
+}
+
+async function deleteTraining(req, res) {
+  try {
+    const { trainingId } = req.params;
+    // Eliminar postulaciones primero por FK constraint
+    await sql.query(`DELETE FROM training_applications WHERE training_id = ${parseInt(trainingId)}`);
+    await sql.query(`DELETE FROM trainings WHERE id = ${parseInt(trainingId)}`);
+    return res.json({ message: 'Capacitación eliminada.' });
+  } catch (err) {
+    console.error('[ADMIN/DELETE-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error eliminando capacitación.' });
+  }
+}
+
 module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
@@ -661,5 +696,5 @@ module.exports = {
   uploadMedia,
   createProjectProgress, listProjectProgress,
   scheduleProjectMeeting, createProjectMeetingRecord,
-  listTrainings, createTraining, scheduleTraining
+  listTrainings, createTraining, scheduleTraining, updateTraining, deleteTraining
 };

@@ -1244,6 +1244,38 @@
       </div>
     </div>
 
+    <!-- ════════ MODAL EDITAR CAPACITACIÓN ════════ -->
+    <div id="modal-edit-training" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
+      <div class="sw-modal">
+        <div class="sw-modal-header">
+          <span class="sw-modal-title">EDITAR CAPACITACIÓN</span>
+          <button class="sw-modal-close" onclick="closeModalById('modal-edit-training')">&#x2715;</button>
+        </div>
+        <div class="sw-modal-body">
+          <form id="form-edit-training">
+            <input type="hidden" id="edit-train-id">
+            <label class="tac-label">Título *</label>
+            <input type="text" id="edit-train-title" class="tac-input" required>
+            <label class="tac-label">Descripción</label>
+            <textarea id="edit-train-desc" class="tac-input" rows="3"></textarea>
+            <label class="tac-label">Cupo Mínimo *</label>
+            <input type="number" id="edit-train-quota" class="tac-input" required min="1">
+            <label class="tac-label">Estado *</label>
+            <select id="edit-train-status" class="tac-input" required>
+              <option value="open">Abierta (Recibiendo)</option>
+              <option value="quota_filled">Cupo Lleno</option>
+              <option value="scheduled">Programada</option>
+              <option value="completed">Finalizada</option>
+            </select>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1rem;">
+              <button type="button" class="sw-btn sw-btn--ghost" onclick="closeModalById('modal-edit-training')">Cancelar</button>
+              <button type="submit" class="sw-btn sw-btn--primary">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- ════════ MODAL PROGRAMAR REUNIÓN PROYECTO ════════ -->
     <div id="modal-schedule-project-meeting" class="sw-modal-overlay" onclick="closeModal(event)" aria-modal="true">
       <div class="sw-modal">
@@ -2695,11 +2727,17 @@
                 <td>${t.applied_count || 0} / ${t.min_quota || 2}</td>
                 <td>${md} ${ml}</td>
                 <td>
-                  ${t.status !== 'scheduled' ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleTraining(${t.id})">PROGRAMAR</button>` : ''}
+                  <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                    ${t.status !== 'scheduled' ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleTraining(${t.id})" title="Programar">PROG.</button>` : ''}
+                    <button class="tac-btn-icon" onclick="openEditTraining(${t.id})" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button class="tac-btn-icon delete" onclick="deleteTraining(${t.id})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                  </div>
                 </td>
               </tr>
             `;
           }).join("");
+          window._trainingsList = trainings; // Guardar en memoria para edición
+
         } catch (err) {
           list.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #f87171; padding: 1.5rem;">Error cargando capacitaciones.</td></tr>';
         }
@@ -2710,6 +2748,28 @@
         document.getElementById('sch-train-date').value = '';
         document.getElementById('sch-train-link').value = '';
         openModalById('modal-schedule-training');
+      }
+
+      function openEditTraining(id) {
+        const t = (window._trainingsList || []).find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('edit-train-id').value = t.id;
+        document.getElementById('edit-train-title').value = t.title;
+        document.getElementById('edit-train-desc').value = t.description;
+        document.getElementById('edit-train-quota').value = t.min_quota;
+        document.getElementById('edit-train-status').value = t.status;
+        openModalById('modal-edit-training');
+      }
+
+      async function deleteTraining(id) {
+        if (!confirm('¿Eliminar esta capacitación?')) return;
+        try {
+          await window.api.fetch('/admin/trainings/' + id, { method: 'DELETE' });
+          window.app.showToast('Capacitación eliminada.');
+          loadTrainingsList();
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
       }
 
       document.getElementById('form-create-training').addEventListener('submit', async (e) => {
@@ -2750,6 +2810,26 @@
         }
       });
 
+      document.getElementById('form-edit-training').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const id = document.getElementById('edit-train-id').value;
+          await window.api.fetch('/admin/trainings/' + id, {
+            method: 'PUT',
+            body: {
+              title: document.getElementById('edit-train-title').value,
+              description: document.getElementById('edit-train-desc').value,
+              min_quota: parseInt(document.getElementById('edit-train-quota').value),
+              status: document.getElementById('edit-train-status').value
+            }
+          });
+          window.app.showToast('Capacitación actualizada.');
+          closeModalById('modal-edit-training');
+          loadTrainingsList();
+        } catch(err) {
+          window.app.showToast(err.message, true);
+        }
+      });
       function openScheduleProjectMeeting(id) {
         document.getElementById('sch-proj-id').value = id;
         document.getElementById('sch-proj-date').value = '';

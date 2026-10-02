@@ -271,18 +271,19 @@
               let statusText = '';
               let statusColor = '#fff';
               
-              if (t.status === 'open') {
-                statusText = `ABIERTA (${applied}/${quota} cupos)`;
-                statusColor = '#60a5fa'; // blue
+              if (t.status === 'open' || t.status === 'quota_filled') {
+                if (applied >= quota) {
+                  statusText = `ESPERANDO FECHA (${applied} anotados - Mínimo alcanzado)`;
+                  statusColor = '#fbbf24'; // yellow
+                } else {
+                  statusText = `ABIERTA (${applied}/${quota} mínimo)`;
+                  statusColor = '#60a5fa'; // blue
+                }
                 if (t.user_applied) {
                   btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>YA SOLICITASTE</button>`;
                 } else {
-                  btnHtml = `<button class="sw-btn sw-btn--primary sw-btn--sm" onclick="applyToTraining(${t.id})">SOLICITAR CAPACITACIÓN</button>`;
+                  btnHtml = `<button class="sw-btn sw-btn--primary sw-btn--sm" onclick="applyToTraining(event, ${t.id})">SOLICITAR CAPACITACIÓN</button>`;
                 }
-              } else if (t.status === 'quota_filled') {
-                statusText = `CUPO LLENO (A programar)`;
-                statusColor = '#fbbf24'; // yellow
-                btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>CUPO LLENO</button>`;
               } else if (t.status === 'scheduled') {
                 const md = t.meeting_date ? new Date(t.meeting_date).toLocaleString('es-AR') : '';
                 statusText = `PROGRAMADA: ${md}`;
@@ -315,14 +316,20 @@
       }
     });
 
-    window.applyToTraining = async function(id) {
-      if (!confirm('¿Seguro que deseas solicitar unirte a esta capacitación?')) return;
+    window.applyToTraining = async function(e, id) {
+      const btn = e.target;
+      const originalText = btn.innerText;
+      btn.innerText = 'ENVIANDO...';
+      btn.disabled = true;
+
       try {
         await window.api.fetch('/users/trainings/' + id + '/apply', { method: 'POST' });
         window.app.showToast('Solicitud a capacitación enviada exitosamente.');
         setTimeout(() => window.location.reload(), 1500);
       } catch(err) {
         window.app.showToast(err.message || 'Error al solicitar', true);
+        btn.innerText = originalText;
+        btn.disabled = false;
       }
     };
 
