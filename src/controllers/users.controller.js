@@ -372,9 +372,36 @@ async function applyToTraining(req, res) {
   }
 }
 
+async function requestTraining(req, res) {
+  try {
+    const { title, description } = req.body;
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Faltan datos de la capacitacion (título o descripción).' });
+    }
+    
+    // Crear la capacitacion
+    const insertRes = await sql.query(
+      `INSERT INTO trainings (title, description, min_quota, status, created_at) VALUES (?, ?, 2, 'open', NOW())`,
+      [title, description]
+    );
+    const trainingId = insertRes.insertId;
+
+    // Auto-postular al creador
+    await sql.query(
+      `INSERT INTO training_applications (training_id, user_id, applied_at) VALUES (?, ?, NOW())`,
+      [trainingId, req.user.id]
+    );
+
+    return res.status(201).json({ message: 'Capacitación solicitada correctamente.', id: trainingId });
+  } catch (err) {
+    console.error('[USERS/REQUEST-TRAINING]', err);
+    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+  }
+}
+
 module.exports = {
   getMyProfile, updateProfile, changePassword, uploadAvatar,
   uploadCV, getUserPublicProfile,
   applyToProject, cancelApplication, getMyApplications,
-  applyToTraining
+  applyToTraining, requestTraining
 };

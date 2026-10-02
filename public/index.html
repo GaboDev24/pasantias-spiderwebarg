@@ -245,9 +245,26 @@
           const trainingsGrid = document.getElementById('trainings-grid');
           const trainings = trainingsRes.trainings || [];
           if (trainings.length === 0) {
-            trainingsGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4); padding: 2rem; font-family: var(--sw-font-m); font-size: 0.75rem;">No hay capacitaciones disponibles.</p>';
+            trainingsGrid.innerHTML = `
+              <article class="feature-dossier" style="border: 1px dashed rgba(255,255,255,0.3); background: transparent; cursor: pointer;" onclick="window.app.openModalById('modal-request-training')">
+                <div class="dossier-body" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%;">
+                  <i class="fa-solid fa-plus" style="font-size:2rem; color:var(--sw-text-muted); margin-bottom:1rem;"></i>
+                  <h3 class="dossier-title" style="color:var(--sw-text-muted);">¿Necesitas ayuda con algo específico?</h3>
+                  <p class="dossier-desc">Solicita una nueva capacitación y cuando más personas se unan, la agendaremos.</p>
+                </div>
+              </article>
+            `;
           } else {
-            trainingsGrid.innerHTML = trainings.map(t => {
+            const createCard = `
+              <article class="feature-dossier" style="border: 1px dashed rgba(255,255,255,0.3); background: transparent; cursor: pointer;" onclick="window.app.openModalById('modal-request-training')">
+                <div class="dossier-body" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%;">
+                  <i class="fa-solid fa-plus" style="font-size:2rem; color:var(--sw-text-muted); margin-bottom:1rem;"></i>
+                  <h3 class="dossier-title" style="color:var(--sw-text-muted);">¿Necesitas ayuda con algo específico?</h3>
+                  <p class="dossier-desc">Solicita una nueva capacitación y cuando se llene el cupo, la agendaremos.</p>
+                </div>
+              </article>
+            `;
+            trainingsGrid.innerHTML = createCard + trainings.map(t => {
               const applied = t.applied_count || 0;
               const quota = t.min_quota || 2;
               let btnHtml = '';
@@ -299,15 +316,64 @@
     });
 
     window.applyToTraining = async function(id) {
-      if (!confirm('¿Seguro que deseas solicitar esta capacitación?')) return;
+      if (!confirm('¿Seguro que deseas solicitar unirte a esta capacitación?')) return;
       try {
         await window.api.fetch('/users/trainings/' + id + '/apply', { method: 'POST' });
-        window.app.showToast('Solicitud de capacitación enviada exitosamente.');
+        window.app.showToast('Solicitud a capacitación enviada exitosamente.');
         setTimeout(() => window.location.reload(), 1500);
       } catch(err) {
         window.app.showToast(err.message || 'Error al solicitar', true);
       }
     };
+
+    window.submitTrainingRequest = async function(e) {
+      e.preventDefault();
+      const title = document.getElementById('req-train-title').value;
+      const desc = document.getElementById('req-train-desc').value;
+      const btn = document.getElementById('btn-submit-req-train');
+      btn.innerText = 'ENVIANDO...';
+      btn.disabled = true;
+
+      try {
+        await window.api.fetch('/users/trainings', {
+          method: 'POST',
+          body: { title, description: desc }
+        });
+        window.app.showToast('Capacitación propuesta exitosamente.');
+        window.app.closeModalById('modal-request-training');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch(err) {
+        window.app.showToast(err.message || 'Error al proponer capacitación', true);
+        btn.innerText = 'SOLICITAR';
+        btn.disabled = false;
+      }
+    };
   </script>
+
+  <!-- ════════ MODAL SOLICITAR CAPACITACIÓN ════════ -->
+  <div id="modal-request-training" class="sw-modal-overlay" onclick="window.app.closeModal(event)" aria-modal="true">
+    <div class="sw-modal">
+      <div class="sw-modal-header">
+        <span class="sw-modal-title">SOLICITAR NUEVA CAPACITACIÓN</span>
+        <button class="sw-modal-close" onclick="window.app.closeModalById('modal-request-training')">&#x2715;</button>
+      </div>
+      <div class="sw-modal-body">
+        <form onsubmit="window.submitTrainingRequest(event)">
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-family:var(--sw-font-m); font-size:0.7rem; color:var(--sw-text-muted); margin-bottom:0.5rem; letter-spacing:0.1em; text-transform:uppercase;">¿Con qué necesitas ayuda? (Tema / Título)</label>
+            <input type="text" id="req-train-title" style="width:100%; padding:0.75rem; background:var(--sw-dark); border:1px solid rgba(255,255,255,0.1); color:#fff; font-family:var(--sw-font-r);" placeholder="Ej: Git avanzado, React Hooks..." required />
+          </div>
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block; font-family:var(--sw-font-m); font-size:0.7rem; color:var(--sw-text-muted); margin-bottom:0.5rem; letter-spacing:0.1em; text-transform:uppercase;">Breve descripción</label>
+            <textarea id="req-train-desc" rows="4" style="width:100%; padding:0.75rem; background:var(--sw-dark); border:1px solid rgba(255,255,255,0.1); color:#fff; font-family:var(--sw-font-r); resize:vertical;" placeholder="Describe qué te gustaría aprender o repasar..." required></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" class="sw-btn sw-btn--ghost" onclick="window.app.closeModalById('modal-request-training')">CANCELAR</button>
+            <button type="submit" id="btn-submit-req-train" class="sw-btn sw-btn--primary">SOLICITAR</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
