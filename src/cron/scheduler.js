@@ -18,7 +18,7 @@ function initScheduler() {
       `);
       
       for (const proj of (pastMeetings.data || [])) {
-        const mDate = proj.next_meeting_date ? `'${proj.next_meeting_date.toISOString().slice(0,19).replace('T', ' ')}'` : 'NOW()';
+        const mDate = proj.next_meeting_date ? `'${String(proj.next_meeting_date).replace('T', ' ').slice(0,19)}'` : 'NOW()';
         const mLink = proj.next_meeting_link ? `'${proj.next_meeting_link.replace(/'/g, "''")}'` : 'NULL';
         
         // Creamos el registro vacío indicando que está pendiente de cargar el acta

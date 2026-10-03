@@ -628,7 +628,7 @@ async function createProjectMeetingRecord(req, res) {
     const proj = await sql.query(`SELECT next_meeting_date, next_meeting_link FROM projects WHERE id = ${parseInt(projectId)}`);
     if (!proj.data || proj.data.length === 0) return res.status(404).json({ error: 'Proyecto no encontrado.' });
     
-    const mDate = proj.data[0].next_meeting_date ? `'${proj.data[0].next_meeting_date.toISOString().slice(0,19).replace('T', ' ')}'` : 'NOW()';
+    const mDate = proj.data[0].next_meeting_date ? `'${String(proj.data[0].next_meeting_date).replace('T', ' ').slice(0,19)}'` : 'NOW()';
     const mLink = proj.data[0].next_meeting_link ? `'${proj.data[0].next_meeting_link.replace(/'/g, "''")}'` : 'NULL';
     const attendeesJson = attendees ? `'${JSON.stringify(attendees)}'` : "'[]'";
 
