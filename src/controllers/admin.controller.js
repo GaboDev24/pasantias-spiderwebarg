@@ -520,7 +520,17 @@ async function deletePortfolioProject(req, res) {
 async function scheduleProjectMeeting(req, res) {
   try {
     const { projectId } = req.params;
-    const { date, time, link } = req.body;
+    let { meeting_date, meeting_link, date, time, link } = req.body;
+
+    if (meeting_date) {
+      const parts = meeting_date.split('T');
+      date = parts[0];
+      time = parts[1];
+    }
+    if (meeting_link) {
+      link = meeting_link;
+    }
+
     if (!date || !time || !link) return res.status(400).json({ error: 'Fecha, hora y link son requeridos.' });
 
     const datetime = `${date} ${time}:00`;
@@ -534,18 +544,31 @@ async function scheduleProjectMeeting(req, res) {
       WHERE pa.project_id = ${parseInt(projectId)} AND pa.status = 'accepted'
     `);
 
+    // Obtener administradores y CEOs (encargados)
+    const admins = await sql.query(`
+      SELECT email, name 
+      FROM users 
+      WHERE role IN ('admin', 'ceo')
+    `);
+
     const { sendNotificationEmail } = require('../helpers/email');
-    for (const user of (apps.data || [])) {
+    
+    // Unir ambas listas de notificaciones sin duplicados
+    const recipientsMap = new Map();
+    for (const u of (apps.data || [])) recipientsMap.set(u.email, u.name);
+    for (const u of (admins.data || [])) recipientsMap.set(u.email, u.name);
+
+    for (const [email, name] of recipientsMap) {
       const msg = `
         <h3>Reunión Programada</h3>
-        <p>Hola ${user.name}, se ha programado una reunión para un proyecto en el que fuiste aceptado.</p>
+        <p>Hola ${name}, se ha programado una reunión para un proyecto en Spider-Web ARG Pasantías.</p>
         <p><strong>Fecha y Hora:</strong> ${date} a las ${time}</p>
         <p><strong>Link:</strong> <a href="${link}">${link}</a></p>
       `;
-      await sendNotificationEmail(user.email, 'Reunión de Proyecto Programada', msg).catch(console.error);
+      await sendNotificationEmail(email, 'Reunión de Proyecto Programada', msg).catch(console.error);
     }
 
-    return res.json({ message: 'Reunión programada y notificada a los alumnos.' });
+    return res.json({ message: 'Reunión programada y notificada a los alumnos y administradores.' });
   } catch (err) {
     console.error('[ADMIN/SCHEDULE-MEETING]', err.message);
     return res.status(500).json({ error: 'Error programando reunión.' });
