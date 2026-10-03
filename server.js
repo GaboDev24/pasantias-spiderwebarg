@@ -34,6 +34,7 @@ app.use('/api/admin',  require('./src/routes/admin.routes'));
 app.use('/api/users',  require('./src/routes/users.routes'));
 app.use('/api/public', require('./src/routes/public.routes'));
 app.use('/api/chat',   require('./src/routes/chat.routes'));
+app.use('/api/cursos', require('./src/routes/cursos.routes'));
 
 // ──────────────────────────────────────────────
 // PROXY DE MEDIA (sirve archivos con MIME correcto)

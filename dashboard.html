@@ -73,6 +73,81 @@
       #chat-users { max-height: 420px !important; }
       #chat-messages { height: 380px !important; }
     }
+    /* ── Course Cards ─────────────────────────────────── */
+    .course-skeleton {
+      background: linear-gradient(90deg, var(--sw-dark) 25%, rgba(163,0,0,0.05) 50%, var(--sw-dark) 75%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.6s infinite;
+      height: 240px;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    @keyframes skeletonShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .course-card {
+      background: var(--sw-dark);
+      border: 1px solid var(--sw-border);
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .course-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--sw-red);
+      box-shadow: 0 8px 32px rgba(163,0,0,0.18);
+    }
+    .course-card__thumb {
+      width: 100%; height: 130px;
+      object-fit: cover; display: block;
+      background: var(--sw-black);
+      border-bottom: 1px solid var(--sw-border);
+      transition: opacity 0.2s;
+    }
+    .course-card:hover .course-card__thumb { opacity: 0.9; }
+    .course-card__thumb-placeholder {
+      width: 100%; height: 130px;
+      background: var(--sw-black);
+      border-bottom: 1px solid var(--sw-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; opacity: 0.25;
+    }
+    .course-card__body {
+      padding: 0.85rem 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.45rem;
+    }
+    .course-card__cat {
+      font-family: var(--sw-font-m); font-size: 0.55rem; letter-spacing: 0.15em;
+      text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem;
+    }
+    .course-card__title {
+      font-family: var(--sw-font-h); font-size: 0.9rem; color: var(--sw-white);
+      letter-spacing: 0.03em; line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .course-card__desc {
+      font-family: var(--sw-font-m); font-size: 0.68rem; color: var(--sw-text-muted); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      flex: 1;
+    }
+    .course-card__footer {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--sw-border); padding-top: 0.6rem; margin-top: 0.2rem;
+    }
+    .course-card__price {
+      font-family: var(--sw-font-m); font-size: 0.7rem; color: var(--sw-red); letter-spacing: 0.05em;
+    }
+    .course-card__cta {
+      font-family: var(--sw-font-m); font-size: 0.55rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--sw-red);
+      border: 1px solid rgba(163,0,0,0.4); padding: 0.25rem 0.6rem;
+      transition: background 0.18s, color 0.18s;
+    }
+    .course-card:hover .course-card__cta {
+      background: var(--sw-red); color: var(--sw-white);
+    }
   </style>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
@@ -193,6 +268,29 @@
           </table>
         </div>
       </div>
+
+      <!-- ══════════════════════════════════════════════
+           ÚLTIMOS CURSOS — Cursos-SpiderWebARG
+      ══════════════════════════════════════════════ -->
+      <div class="tac-card" id="cursos-section" style="margin-top:0.5rem;">
+        <div class="tac-card-title">
+          <i class="fa-solid fa-graduation-cap" style="color:var(--sw-red);"></i>
+          Últimos Cursos
+          <a href="https://cursos.spiderwebarg.com.ar" target="_blank" rel="noopener"
+             style="margin-left:auto; font-family:var(--sw-font-m); font-size:0.55rem; color:var(--sw-text-muted); letter-spacing:0.15em; text-decoration:none; border:1px solid var(--sw-border); padding:0.2rem 0.6rem; transition:color .2s,border-color .2s;"
+             onmouseover="this.style.color='var(--sw-red)';this.style.borderColor='var(--sw-red)';"
+             onmouseout="this.style.color='var(--sw-text-muted)';this.style.borderColor='var(--sw-border)';">
+            VER TODOS →
+          </a>
+        </div>
+        <div id="courses-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem;">
+          <div class="course-skeleton"></div>
+          <div class="course-skeleton"></div>
+          <div class="course-skeleton"></div>
+        </div>
+        <p id="courses-error" style="display:none; font-family:var(--sw-font-m); font-size:0.7rem; color:var(--sw-text-muted); text-align:center; padding:1rem 0;"></p>
+      </div>
+
     </main>
   </div>
 
@@ -513,6 +611,87 @@
         window.openChat(currentChatUser, document.getElementById('chat-active-name').innerText, 0, null);
       } catch (err) { window.app.showToast(err.message, true); }
     });
+  </script>
+
+  <!-- ── Script: Últimos Cursos ──────────────────────────────── -->
+  <script>
+    (async function loadLatestCourses() {
+      const grid  = document.getElementById('courses-grid');
+      const errEl = document.getElementById('courses-error');
+
+      function renderSkeleton() {
+        grid.innerHTML = '<div class="course-skeleton"></div>'.repeat(3);
+      }
+
+      function renderError(msg) {
+        grid.innerHTML = '';
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+      }
+
+      function buildCard(course) {
+        const thumb = course.thumbnailUrl
+          ? `<img class="course-card__thumb" src="${course.thumbnailUrl}" alt="${course.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+             <div class="course-card__thumb-placeholder" style="display:none;"><i class="${course.category.icon || 'fas fa-book'}"></i></div>`
+          : `<div class="course-card__thumb-placeholder"><i class="${course.category.icon || 'fas fa-book'}"></i></div>`;
+
+        const catColor = course.category.color || '#a30000';
+        const cat = course.category.name
+          ? `<span class="course-card__cat" style="color:${catColor};">
+               <i class="${course.category.icon}"></i> ${course.category.name}
+             </span>`
+          : '';
+
+        const price = parseFloat(course.price) === 0
+          ? `<span class="course-card__price">GRATUITO</span>`
+          : `<span class="course-card__price">${course.currency} ${parseFloat(course.price).toLocaleString('es-AR')}</span>`;
+
+        const hours = course.hours > 0
+          ? `<span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>${course.hours}h</span>`
+          : '';
+
+        return `<a class="course-card" href="${course.link}" target="_blank" rel="noopener" title="${course.title}">
+          ${thumb}
+          <div class="course-card__body">
+            ${cat}
+            <div class="course-card__title">${course.title}</div>
+            ${course.description ? `<div class="course-card__desc">${course.description}</div>` : ''}
+            <div class="course-card__footer">
+              <div style="display:flex;align-items:center;gap:0.6rem;">${price}${hours}</div>
+              <span class="course-card__cta">VER CURSO →</span>
+            </div>
+          </div>
+        </a>`;
+      }
+
+      try {
+        renderSkeleton();
+        const res = await fetch('/api/cursos/latest?limit=3');
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const { courses } = await res.json();
+
+        if (!courses || courses.length === 0) {
+          renderError('No hay cursos publicados en este momento.');
+          return;
+        }
+
+        grid.innerHTML = courses.map(buildCard).join('');
+
+        // Fade-in animation
+        grid.querySelectorAll('.course-card').forEach((card, i) => {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(12px)';
+          setTimeout(() => {
+            card.style.transition = 'opacity 0.4s ease, transform 0.4s ease, border-color 0.22s ease, box-shadow 0.22s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, i * 100);
+        });
+      } catch (err) {
+        console.error('[CURSOS]', err.message);
+        renderError('No se pudieron cargar los cursos. Intentá más tarde.');
+      }
+    })();
   </script>
 </body>
 </html>
