@@ -57,4 +57,7 @@ router.delete('/portfolio/:portfolioId', requireAdmin, adminCtrl.deletePortfolio
 // Upload de medios
 router.post('/upload', requireAdmin, upload.single('file'), adminCtrl.uploadMedia);
 
+// Test
+router.post('/test-email', requireAdmin, adminCtrl.testEmail);
+
 module.exports = router;

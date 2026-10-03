@@ -568,6 +568,19 @@
           <span>Capacitaciones</span>
         </button>
 
+        <button
+          class="sw-sidebar__link"
+          onclick="switchAdminTab('tests', this)"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-tests"
+        >
+          <span class="sw-sidebar__icon"
+            ><i class="fa-solid fa-vial"></i
+          ></span>
+          <span>Pruebas del Sistema</span>
+        </button>
+
         <div class="sw-sidebar__footer">
           <a
             href="/dashboard.html"
@@ -1190,6 +1203,36 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- TAB TESTS DEL SISTEMA -->
+        <div id="tab-tests" class="tab-content" role="tabpanel">
+          <div class="sw-admin-header">
+            <h2><i class="fa-solid fa-vial"></i> Pruebas del Sistema</h2>
+            <p>Envío de correos de prueba para verificar plantillas y configuración.</p>
+          </div>
+
+          <div class="tac-card">
+            <div class="tac-card-title">Enviar Correo de Prueba</div>
+            <form id="form-test-email" style="margin-top: 1rem;">
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <div style="flex: 1; min-width: 250px;">
+                  <label class="tac-label">Plantilla</label>
+                  <select id="test-email-template" class="tac-input" required>
+                    <option value="basic">Prueba de Sistema (Básico)</option>
+                    <option value="meeting">Reunión Programada</option>
+                  </select>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                  <label class="tac-label">Destinatario (Send to)</label>
+                  <input type="email" id="test-email-to" class="tac-input" placeholder="ejemplo@correo.com" required />
+                </div>
+              </div>
+              <button type="submit" class="sw-btn sw-btn--primary">
+                <i class="fa-solid fa-paper-plane"></i> ENVIAR CORREO
+              </button>
+            </form>
           </div>
         </div>
 
@@ -3731,6 +3774,26 @@
           window.app.showToast(err.message, true);
         }
       };
+
+      document.getElementById('form-test-email').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        if (btn) { btn.innerText = "ENVIANDO..."; btn.disabled = true; }
+        try {
+          await window.api.fetch('/admin/test-email', {
+            method: 'POST',
+            body: {
+              to: document.getElementById('test-email-to').value,
+              template: document.getElementById('test-email-template').value
+            }
+          });
+          window.app.showToast('Correo de prueba enviado.');
+          e.target.reset();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
+        if (btn) { btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ENVIAR CORREO'; btn.disabled = false; }
+      });
     </script>
   </body>
 </html>

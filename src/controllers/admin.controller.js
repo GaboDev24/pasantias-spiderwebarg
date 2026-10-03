@@ -533,6 +533,13 @@ async function scheduleProjectMeeting(req, res) {
 
     if (!date || !time || !link) return res.status(400).json({ error: 'Fecha, hora y link son requeridos.' });
 
+    // Obtener información del proyecto para el correo
+    const projectRes = await sql.query(`SELECT title, summary FROM projects WHERE id = ${parseInt(projectId)}`);
+    const projectTitle = projectRes.data && projectRes.data.length > 0 ? projectRes.data[0].title : 'Proyecto';
+    const projectSummary = projectRes.data && projectRes.data.length > 0 && projectRes.data[0].summary 
+      ? projectRes.data[0].summary 
+      : 'Reunión de seguimiento y coordinación del proyecto.';
+
     const datetime = `${date} ${time}:00`;
     await sql.query(`UPDATE projects SET next_meeting_date = '${datetime}', next_meeting_link = '${link.replace(/'/g, "''")}' WHERE id = ${parseInt(projectId)}`);
 
@@ -558,14 +565,51 @@ async function scheduleProjectMeeting(req, res) {
     for (const u of (apps.data || [])) recipientsMap.set(u.email, u.name);
     for (const u of (admins.data || [])) recipientsMap.set(u.email, u.name);
 
+    const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
+
     for (const [email, name] of recipientsMap) {
       const msg = `
-        <h3>Reunión Programada</h3>
-        <p>Hola ${name}, se ha programado una reunión para un proyecto en Spider-Web ARG Pasantías.</p>
-        <p><strong>Fecha y Hora:</strong> ${date} a las ${time}</p>
-        <p><strong>Link:</strong> <a href="${link}">${link}</a></p>
+        <div style="font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0c10; color: #c5c6c7; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #1f2833; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden;">
+            <div style="background-color: #111; padding: 25px; text-align: center; border-bottom: 4px solid #66fcf1;">
+              <img src="https://spiderwebarg.com/wp-content/uploads/2023/10/spider-web-logo.png" alt="Spider-Web ARG" style="height: 40px; margin-bottom: 10px;" />
+              <h2 style="color: #66fcf1; margin: 0; font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Reunión Programada</h2>
+            </div>
+            
+            <div style="padding: 35px 30px;">
+              <p style="font-size: 16px; line-height: 1.6; margin-top: 0; color: #e0e2e4;">
+                Hola <strong style="color: #fff;">${name}</strong>,<br><br>
+                Se ha agendado una nueva reunión obligatoria para el proyecto <strong style="color: #66fcf1;">${projectTitle}</strong>.
+              </p>
+
+              <div style="background-color: rgba(102, 252, 241, 0.05); border-left: 4px solid #45a29e; padding: 18px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                <p style="margin: 0 0 12px 0; font-size: 15px;"><strong style="color: #66fcf1; display: inline-block; width: 60px;">📅 Fecha:</strong> ${date}</p>
+                <p style="margin: 0; font-size: 15px;"><strong style="color: #66fcf1; display: inline-block; width: 60px;">⏰ Hora:</strong> ${time} hs</p>
+              </div>
+
+              <p style="margin-bottom: 35px; font-size: 15px; color: #a0a5a8; font-style: italic; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 6px;">
+                "${projectSummary}"
+              </p>
+
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="${link}" style="background-color: #66fcf1; color: #0b0c10; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; margin: 0 10px 15px 0; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Unirse al Meet
+                </a>
+                <a href="${siteUrl}/#projects" style="background-color: transparent; border: 2px solid #45a29e; color: #66fcf1; text-decoration: none; padding: 12px 26px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Ver Proyecto
+                </a>
+              </div>
+            </div>
+
+            <div style="background-color: #111; padding: 20px; text-align: center; font-size: 13px; color: #777;">
+              Este es un correo automático de Spider-Web ARG.<br>
+              Por favor, no respondas a esta dirección.<br>
+              © 2026 Spider-Web ARG Pasantías.
+            </div>
+          </div>
+        </div>
       `;
-      await sendNotificationEmail(email, 'Reunión de Proyecto Programada', msg).catch(console.error);
+      await sendNotificationEmail(email, \`Reunión: \${projectTitle}\`, msg).catch(console.error);
     }
 
     return res.json({ message: 'Reunión programada y notificada a los alumnos y administradores.' });
@@ -709,6 +753,82 @@ async function deleteTraining(req, res) {
   }
 }
 
+async function testEmail(req, res) {
+  try {
+    const { to, template } = req.body;
+    if (!to || !template) return res.status(400).json({ error: 'Email destino y plantilla son requeridos.' });
+
+    const { sendNotificationEmail } = require('../helpers/email');
+    const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
+    let msg = '';
+    let subject = '';
+
+    if (template === 'meeting') {
+      subject = 'Reunión de Proyecto (Prueba)';
+      msg = `
+        <div style="font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0c10; color: #c5c6c7; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #1f2833; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden;">
+            <div style="background-color: #111; padding: 25px; text-align: center; border-bottom: 4px solid #66fcf1;">
+              <img src="https://spiderwebarg.com/wp-content/uploads/2023/10/spider-web-logo.png" alt="Spider-Web ARG" style="height: 40px; margin-bottom: 10px;" />
+              <h2 style="color: #66fcf1; margin: 0; font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Reunión Programada</h2>
+            </div>
+            
+            <div style="padding: 35px 30px;">
+              <p style="font-size: 16px; line-height: 1.6; margin-top: 0; color: #e0e2e4;">
+                Hola <strong style="color: #fff;">Usuario de Prueba</strong>,<br><br>
+                Se ha agendado una nueva reunión obligatoria para el proyecto <strong style="color: #66fcf1;">Proyecto de Pruebas Spider-Web</strong>.
+              </p>
+
+              <div style="background-color: rgba(102, 252, 241, 0.05); border-left: 4px solid #45a29e; padding: 18px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                <p style="margin: 0 0 12px 0; font-size: 15px;"><strong style="color: #66fcf1; display: inline-block; width: 60px;">📅 Fecha:</strong> 2026-10-10</p>
+                <p style="margin: 0; font-size: 15px;"><strong style="color: #66fcf1; display: inline-block; width: 60px;">⏰ Hora:</strong> 15:30 hs</p>
+              </div>
+
+              <p style="margin-bottom: 35px; font-size: 15px; color: #a0a5a8; font-style: italic; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 6px;">
+                "Esta es una reunión generada desde el panel de pruebas del sistema."
+              </p>
+
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="#" style="background-color: #66fcf1; color: #0b0c10; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; margin: 0 10px 15px 0; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Unirse al Meet
+                </a>
+                <a href="${siteUrl}/#projects" style="background-color: transparent; border: 2px solid #45a29e; color: #66fcf1; text-decoration: none; padding: 12px 26px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Ver Proyecto
+                </a>
+              </div>
+            </div>
+
+            <div style="background-color: #111; padding: 20px; text-align: center; font-size: 13px; color: #777;">
+              Este es un correo automático de Spider-Web ARG.<br>
+              Por favor, no respondas a esta dirección.<br>
+              © 2026 Spider-Web ARG Pasantías.
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (template === 'basic') {
+      subject = 'Correo de Prueba (Básico)';
+      msg = `
+        <div style="font-family: 'Inter', Arial, sans-serif; padding: 30px; background: #f4f4f5; color: #333;">
+          <div style="max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #2563eb; margin-top: 0;">Prueba de Sistema</h2>
+            <p style="font-size: 16px;">Este es un correo de prueba generado exitosamente desde el panel de administración.</p>
+            <p style="font-size: 14px; color: #666;">Si recibiste este mensaje, significa que los credenciales SMTP y el servicio de correos están funcionando correctamente.</p>
+          </div>
+        </div>
+      `;
+    } else {
+      return res.status(400).json({ error: 'Plantilla desconocida.' });
+    }
+
+    await sendNotificationEmail(to, subject, msg);
+    return res.json({ message: 'Correo de prueba enviado con éxito.' });
+  } catch (err) {
+    console.error('[ADMIN/TEST-EMAIL]', err.message);
+    return res.status(500).json({ error: 'Error enviando correo de prueba.' });
+  }
+}
+
 module.exports = {
   listAllUsers, listPendingUsers, updateUserRole, deleteUser, validateUser,
   generateToken, listTokens,
@@ -719,5 +839,6 @@ module.exports = {
   uploadMedia,
   createProjectProgress, listProjectProgress,
   scheduleProjectMeeting, createProjectMeetingRecord,
-  listTrainings, createTraining, scheduleTraining, updateTraining, deleteTraining
+  listTrainings, createTraining, scheduleTraining, updateTraining, deleteTraining,
+  testEmail
 };
