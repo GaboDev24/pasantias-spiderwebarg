@@ -164,13 +164,21 @@ async function applyToProject(req, res) {
 
     // Verificar que el proyecto exista y este abierto
     const projectResult = await sql.query(
-      `SELECT id, status, required_tags FROM projects WHERE id = ${parseInt(projectId)}`
+      `SELECT id, status, required_tags, start_date, end_date FROM projects WHERE id = ${parseInt(projectId)}`
     );
     if (!projectResult.data || projectResult.data.length === 0) {
       return res.status(404).json({ error: 'Proyecto no encontrado.' });
     }
 
     const project = projectResult.data[0];
+
+    // Verificar si el proyecto ya finalizó basado en fechas
+    const now = new Date();
+    const end = project.end_date ? new Date(project.end_date) : null;
+    if (end && now > end) {
+      return res.status(400).json({ error: 'El proyecto ya se encuentra finalizado. No es posible postularse.' });
+    }
+
     if (project.status !== 'open') {
       return res.status(400).json({ error: 'Este proyecto no esta abierto para inscripciones.' });
     }

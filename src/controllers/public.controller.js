@@ -100,12 +100,13 @@ async function getLatestProjects(req, res) {
       })(),
     }));
 
-    // Filtrar por tags si es pasante
+    // Filtrar por tags y estado finalizado si es pasante
     if (req.user && req.user.role === 'pasante') {
       const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
       const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
       const userTagSet = new Set(userTags.map(normalizeTag));
       projects = projects.filter(p => {
+        if (p.dynamic_status === 'Finalizado') return false;
         if (!p.required_tags || p.required_tags.length === 0) return true;
         return p.required_tags.some(t => userTagSet.has(normalizeTag(t)));
       });
@@ -140,14 +141,19 @@ async function getProject(req, res) {
     project.can_apply = canApply(project.dynamic_status);
     project.summary = project.summary || (project.description ? project.description.substring(0, 140) : '');
 
-    // Filtrar acceso por tags si es pasante
-    if (req.user && req.user.role === 'pasante' && project.required_tags.length > 0) {
-      const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
-      const userTagSet = new Set(userTags.map(normalizeTag));
-      const hasMatch = project.required_tags.some(t => userTagSet.has(normalizeTag(t)));
-      if (!hasMatch) {
-        return res.status(403).json({ error: 'No tienes los tags requeridos para ver este proyecto.' });
+    // Filtrar acceso por tags o si está finalizado si es pasante
+    if (req.user && req.user.role === 'pasante') {
+      if (project.dynamic_status === 'Finalizado') {
+        return res.status(403).json({ error: 'No puedes ver un proyecto que ya ha finalizado.' });
+      }
+      if (project.required_tags.length > 0) {
+        const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
+        const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+        const userTagSet = new Set(userTags.map(normalizeTag));
+        const hasMatch = project.required_tags.some(t => userTagSet.has(normalizeTag(t)));
+        if (!hasMatch) {
+          return res.status(403).json({ error: 'No tienes los tags requeridos para ver este proyecto.' });
+        }
       }
     }
 

@@ -2170,6 +2170,58 @@
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
     <script>
+      // ── UTILIDAD PARA COMPRIMIR IMÁGENES A WEBP ────────────────
+      window.compressImageToWebP = function(file, maxKB = 250) {
+        return new Promise((resolve, reject) => {
+          if (!file.type.startsWith('image/')) return resolve(file);
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              let quality = 0.9;
+              const maxBytes = maxKB * 1024;
+              const tryCompress = () => {
+                canvas.toBlob((blob) => {
+                  if (!blob) return reject(new Error('Error al comprimir imagen.'));
+                  if (blob.size <= maxBytes || quality <= 0.1) {
+                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                      type: 'image/webp'
+                    });
+                    resolve(newFile);
+                  } else {
+                    quality -= 0.1;
+                    tryCompress();
+                  }
+                }, 'image/webp', quality);
+              };
+              tryCompress();
+            };
+            img.onerror = () => reject(new Error('Error al cargar la imagen.'));
+          };
+          reader.onerror = () => reject(new Error('Error al leer el archivo.'));
+        });
+      };
+
       let currentChatUser = null;
       let currentAdminUser = null;
       window.adminAllUsersCache = [];
@@ -2423,8 +2475,9 @@
             let mediaFileIds = [];
             const imgFile = document.getElementById("p-image").files[0];
             if (imgFile) {
+              const compressedFile = await window.compressImageToWebP(imgFile);
               const formData = new FormData();
-              formData.append("file", imgFile);
+              formData.append("file", compressedFile);
               const uploadRes = await window.api.fetch("/admin/upload", {
                 method: "POST",
                 body: formData,
@@ -2496,8 +2549,9 @@
             let coverFileId = null;
             const imgFile = document.getElementById("n-image").files[0];
             if (imgFile) {
+              const compressedFile = await window.compressImageToWebP(imgFile);
               const formData = new FormData();
-              formData.append("file", imgFile);
+              formData.append("file", compressedFile);
               const uploadRes = await window.api.fetch("/admin/upload", {
                 method: "POST",
                 body: formData,
@@ -3382,8 +3436,9 @@
             let coverFileId = null;
             const imgFile = document.getElementById("port-image").files[0];
             if (imgFile) {
+              const compressedFile = await window.compressImageToWebP(imgFile);
               const formData = new FormData();
-              formData.append("file", imgFile);
+              formData.append("file", compressedFile);
               const uploadRes = await window.api.fetch("/admin/upload", {
                 method: "POST",
                 body: formData,
