@@ -64,6 +64,8 @@ const tablas = [
     media_file_ids TEXT DEFAULT NULL,
     required_tags TEXT DEFAULT NULL,
     conf_link VARCHAR(500) DEFAULT NULL,
+    next_meeting_date DATETIME DEFAULT NULL,
+    next_meeting_link VARCHAR(500) DEFAULT NULL,
     start_date DATETIME NULL,
     end_date DATETIME NULL,
     status ENUM('open', 'closed', 'in_progress') DEFAULT 'open',
@@ -130,6 +132,44 @@ const tablas = [
     friend_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_friend (user_id, friend_id)
+  )`,
+
+  // ──────────────────────────────────────────────
+  // REGISTRO DE REUNIONES DE PROYECTOS
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS project_meetings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    meeting_date DATETIME NOT NULL,
+    meeting_link VARCHAR(500),
+    record_notes TEXT NOT NULL,
+    attendees_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  // ──────────────────────────────────────────────
+  // CAPACITACIONES
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS trainings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    min_quota INT DEFAULT 2,
+    status ENUM('open', 'quota_filled', 'scheduled', 'completed') DEFAULT 'open',
+    meeting_date DATETIME DEFAULT NULL,
+    meeting_link VARCHAR(500) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  // ──────────────────────────────────────────────
+  // POSTULACIONES A CAPACITACIONES
+  // ──────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS training_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    training_id INT NOT NULL,
+    user_id INT NOT NULL,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_application (training_id, user_id)
   )`,
 ];
 

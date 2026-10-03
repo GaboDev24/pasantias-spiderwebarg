@@ -9,5 +9,6 @@ router.get('/projects', optionalAuth, publicCtrl.getLatestProjects);
 router.get('/projects/:id', optionalAuth, publicCtrl.getProject);
 router.get('/skills', publicCtrl.getSkills);
 router.get('/portfolio', publicCtrl.getPortfolioProjects);
+router.get('/trainings', optionalAuth, publicCtrl.getTrainings);
 
 module.exports = router;

@@ -34,6 +34,15 @@ router.get('/projects/:projectId/applications', requireAdmin, adminCtrl.listProj
 router.patch('/applications/:appId/status', requireAdmin, adminCtrl.updateApplicationStatus);
 router.get('/projects/:projectId/progress', requireAdmin, adminCtrl.listProjectProgress);
 router.post('/projects/:projectId/progress', requireAdmin, adminCtrl.createProjectProgress);
+router.post('/projects/:projectId/schedule-meeting', requireAdmin, adminCtrl.scheduleProjectMeeting);
+router.post('/projects/:projectId/meeting-record', requireAdmin, adminCtrl.createProjectMeetingRecord);
+
+// Capacitaciones
+router.get('/trainings', requireAdmin, adminCtrl.listTrainings);
+router.post('/trainings', requireAdmin, adminCtrl.createTraining);
+router.post('/trainings/:trainingId/schedule', requireAdmin, adminCtrl.scheduleTraining);
+router.put('/trainings/:trainingId', requireAdmin, adminCtrl.updateTraining);
+router.delete('/trainings/:trainingId', requireAdmin, adminCtrl.deleteTraining);
 
 // Noticias
 router.post('/news', requireAdmin, adminCtrl.createNews);

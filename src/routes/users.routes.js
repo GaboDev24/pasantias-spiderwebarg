@@ -25,4 +25,8 @@ router.get('/my-applications', requireAuth, usersCtrl.getMyApplications);
 const adminCtrl = require('../controllers/admin.controller');
 router.post('/projects/:projectId/progress', requireAdmin, adminCtrl.createProjectProgress);
 
+// Capacitaciones
+router.post('/trainings', requireAuth, usersCtrl.requestTraining);
+router.post('/trainings/:trainingId/apply', requireAuth, usersCtrl.applyToTraining);
+
 module.exports = router;

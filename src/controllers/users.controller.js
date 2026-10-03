@@ -242,7 +242,7 @@ async function cancelApplication(req, res) {
 async function getMyApplications(req, res) {
   try {
     const result = await sql.query(
-      `SELECT pa.id, pa.status, pa.applied_at, p.id AS project_id, p.title, p.description, p.start_date, p.end_date, p.status AS project_status
+      `SELECT pa.id, pa.status, pa.applied_at, p.id AS project_id, p.title, p.description, p.start_date, p.end_date, p.status AS project_status, p.next_meeting_date, p.next_meeting_link
        FROM project_applications pa
        JOIN projects p ON p.id = pa.project_id
        WHERE pa.user_id = ${req.user.id}
@@ -319,8 +319,106 @@ async function getUserPublicProfile(req, res) {
   }
 }
 
+// ──────────────────────────────────────────────
+// CAPACITACIONES
+// ──────────────────────────────────────────────
+async function applyToTraining(req, res) {
+  try {
+    const { trainingId } = req.params;
+    const userId = req.user.id;
+
+    // Validar estado de la capacitación
+    const statusCheck = await sql.query(`SELECT status FROM trainings WHERE id = ${parseInt(trainingId)}`);
+    if (!statusCheck.data || statusCheck.data.length === 0) {
+      return res.status(404).json({ error: 'Capacitación no encontrada.' });
+    }
+    const currentStatus = statusCheck.data[0].status;
+    if (currentStatus !== 'open' && currentStatus !== 'quota_filled') {
+      return res.status(400).json({ error: 'Ya no es posible unirse a esta capacitación.' });
+    }
+
+    // Verificar si ya se postuló
+    const existing = await sql.query(`SELECT id FROM training_applications WHERE user_id = ${userId} AND training_id = ${parseInt(trainingId)}`);
+    if (existing.data && existing.data.length > 0) {
+      return res.status(400).json({ error: 'Ya solicitaste esta capacitación.' });
+    }
+
+    // Insertar postulación
+    await sql.query(`INSERT INTO training_applications (training_id, user_id) VALUES (${parseInt(trainingId)}, ${userId})`);
+
+    // Verificar cupos
+    const tr = await sql.query(`
+      SELECT t.min_quota, t.status, t.title,
+        (SELECT COUNT(*) FROM training_applications ta WHERE ta.training_id = t.id) as applied_count
+      FROM trainings t WHERE t.id = ${parseInt(trainingId)}
+    `);
+    
+    if (tr.data && tr.data.length > 0) {
+      const training = tr.data[0];
+      
+      // Si justo en esta postulación se alcanza el mínimo
+      if (training.status === 'open' && training.applied_count === training.min_quota) {
+        // Marcamos como lista para programar, pero los usuarios aún pueden seguir uniéndose
+        await sql.query(`UPDATE trainings SET status = 'quota_filled' WHERE id = ${parseInt(trainingId)}`);
+        
+        // Avisar a admins y CEOs
+        const admins = await sql.query(`SELECT email FROM users WHERE role IN ('admin', 'ceo')`);
+        const { sendNotificationEmail } = require('../helpers/email');
+        const adminEmails = (admins.data || []).map(u => u.email).join(', ');
+        
+        if (adminEmails) {
+          const msg = `
+            <h3>Capacitación Lista para Programar</h3>
+            <p>La capacitación "<strong>${training.title}</strong>" ha alcanzado su mínimo (${training.min_quota} solicitantes).</p>
+            <p>Los pasantes pueden seguir uniéndose, pero ya puede ingresar al panel de administración para programar la reunión.</p>
+          `;
+          await sendNotificationEmail(adminEmails, 'Capacitación Lista para Programar', msg).catch(console.error);
+        }
+      }
+    }
+
+    return res.status(201).json({ message: 'Solicitud enviada correctamente.' });
+  } catch (err) {
+    console.error('[USERS/APPLY-TRAINING]', err.message);
+    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+  }
+}
+
+async function requestTraining(req, res) {
+  try {
+    const { title, description } = req.body;
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Faltan datos de la capacitacion (título o descripción).' });
+    }
+    
+    const safeTitle = title.replace(/'/g, "''");
+    const safeDesc = description.replace(/'/g, "''");
+
+    // Crear la capacitacion
+    const insertRes = await sql.query(
+      `INSERT INTO trainings (title, description, min_quota, status, created_at) VALUES ('${safeTitle}', '${safeDesc}', 2, 'open', NOW())`
+    );
+    const trainingId = insertRes.insertId || (insertRes.data && insertRes.data.insertId);
+
+    if (!trainingId) {
+      throw new Error('No se pudo obtener el ID de la capacitación creada.');
+    }
+
+    // Auto-postular al creador
+    await sql.query(
+      `INSERT INTO training_applications (training_id, user_id, applied_at) VALUES (${trainingId}, ${req.user.id}, NOW())`
+    );
+
+    return res.status(201).json({ message: 'Capacitación solicitada correctamente.', id: trainingId });
+  } catch (err) {
+    console.error('[USERS/REQUEST-TRAINING]', err);
+    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+  }
+}
+
 module.exports = {
   getMyProfile, updateProfile, changePassword, uploadAvatar,
   uploadCV, getUserPublicProfile,
   applyToProject, cancelApplication, getMyApplications,
+  applyToTraining, requestTraining
 };
