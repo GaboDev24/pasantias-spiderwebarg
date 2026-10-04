@@ -271,8 +271,10 @@
         background: var(--sw-black);
         padding: 1rem 1.25rem;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 1rem;
+        justify-content: center;
+        align-content: center;
       }
       .pub-item-info {
         flex: 1;
@@ -300,6 +302,7 @@
         gap: 6px;
         flex-shrink: 0;
         flex-wrap: wrap;
+        flex-direction: column;
       }
       /* Modal */
       .sw-modal-overlay {
@@ -2928,10 +2931,22 @@
         }
       });
       function openScheduleProjectMeeting(id) {
+        const p = (window.adminProjectsCache || []).find(x => x.id === id);
         document.getElementById('sch-proj-id').value = id;
-        document.getElementById('sch-proj-date').value = '';
-        document.getElementById('sch-proj-link').value = '';
+        document.getElementById('sch-proj-date').value = (p && p.next_meeting_date) ? String(p.next_meeting_date).slice(0,16) : '';
+        document.getElementById('sch-proj-link').value = (p && p.next_meeting_link) ? p.next_meeting_link : '';
         openModalById('modal-schedule-project-meeting');
+      }
+
+      async function cancelProjectMeeting(id, title) {
+        if (!confirm(`¿Estás seguro que deseas CANCELAR la reunión programada para "${decodeURIComponent(title)}"?\n\nSe enviará un correo notificando a los pasantes.`)) return;
+        try {
+          await window.api.fetch(`/admin/projects/${id}/cancel-meeting`, { method: 'POST' });
+          window.app.showToast('Reunión cancelada y usuarios notificados.');
+          loadProjectsList();
+        } catch (err) {
+          window.app.showToast(err.message, true);
+        }
       }
 
       function openRecordProjectMeeting(id) {
@@ -3007,6 +3022,10 @@
             '<p style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">No hay proyectos publicados o que coincidan con la búsqueda.</p>';
           return;
         }
+
+        const activeProjects = projects.filter(p => p.dynamic_status !== 'Finalizado');
+        const finishedProjects = projects.filter(p => p.dynamic_status === 'Finalizado');
+
         const statusColors = {
           "Por comenzar": {
             bg: "rgba(59,130,246,0.12)",
@@ -3024,44 +3043,60 @@
             text: "#4ade80",
           },
         };
-        list.innerHTML = projects
-          .map((p) => {
-            const sc = statusColors[p.dynamic_status] || {
-              bg: "rgba(163,0,0,0.1)",
-              border: "var(--sw-border)",
-              text: "var(--sw-white)",
-            };
-            const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${p.dynamic_status}</span>`;
-            const coverThumb = p.cover_url
-              ? `<img src="${p.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">`
-              : "";
-            const showProgress =
-              p.dynamic_status === "En proceso" ||
-              p.dynamic_status === "Finalizado";
-            return `
-        <div class="pub-item">
-          ${coverThumb}
-          <div class="pub-item-info">
-            <div class="pub-item-title">${p.title}</div>
-            <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
-              ${statusBadge}
-              <span>${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}</span>
-              <span>${p.applicant_count || 0} postulado(s)</span>
+
+        const renderItem = (p) => {
+          const sc = statusColors[p.dynamic_status] || {
+            bg: "rgba(163,0,0,0.1)",
+            border: "var(--sw-border)",
+            text: "var(--sw-white)",
+          };
+          const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${p.dynamic_status}</span>`;
+          const coverThumb = p.cover_url
+            ? `<img src="${p.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">`
+            : "";
+          const showProgress =
+            p.dynamic_status === "En proceso" ||
+            p.dynamic_status === "Finalizado";
+          return `
+            <div class="pub-item">
+              ${coverThumb}
+              <div class="pub-item-info">
+                <div class="pub-item-title">${p.title}</div>
+                <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                  ${statusBadge}
+                  <span>${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}</span>
+                  <span>${p.applicant_count || 0} postulado(s)</span>
+                </div>
+              </div>
+                <div class="pub-item-actions">
+                  <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
+                  <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id})">EDITAR</button>
+                  <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
+                  ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ""}
+                  ${p.next_meeting_date ? 
+                    `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleProjectMeeting(${p.id})" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);"><i class="fa-solid fa-clock-rotate-left"></i> REPROGRAMAR</button>
+                     <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelProjectMeeting(${p.id}, '${encodeURIComponent(p.title)}')" style="color:#f87171;border-color:rgba(248,113,113,0.3);"><i class="fa-solid fa-ban"></i> CANCELAR REUNIÓN</button>` 
+                  : ((p.dynamic_status === 'En proceso' || p.dynamic_status === 'Por comenzar') ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleProjectMeeting(${p.id})" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);"><i class="fa-solid fa-video"></i> AGENDAR REUNIÓN</button>` : "")}
+                  <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openRecordProjectMeeting(${p.id})" style="color:#2dd4bf;border-color:rgba(45,212,191,0.3);"><i class="fa-solid fa-file-signature"></i> ACTA REUNIÓN</button>
+                  <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
+                </div>
             </div>
-          </div>
-            <div class="pub-item-actions">
-              <a href="/project.html?id=${p.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openEditProject(${p.id})">EDITAR</button>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openApplicants(${p.id},'${encodeURIComponent(p.title)}')" style="color:#fbbf24;border-color:rgba(251,191,36,0.3);">POSTULADOS</button>
-              ${showProgress ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openProgress(${p.id},'${encodeURIComponent(p.title)}')" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);"><i class="fa-solid fa-chart-line"></i> PROGRESO</button>` : ""}
-              ${!p.next_meeting_date && (p.dynamic_status === 'En proceso' || p.dynamic_status === 'Por comenzar') ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openScheduleProjectMeeting(${p.id})" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);"><i class="fa-solid fa-video"></i> AGENDAR REUNIÓN</button>` : ""}
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="openRecordProjectMeeting(${p.id})" style="color:#2dd4bf;border-color:rgba(45,212,191,0.3);"><i class="fa-solid fa-file-signature"></i> ACTA REUNIÓN</button>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="deleteProject(${p.id})" style="color:#f87171;border-color:rgba(248,113,113,0.3);">ELIMINAR</button>
-            </div>
-        </div>
-      `;
-          })
-          .join("");
+          `;
+        };
+
+        let html = "";
+        
+        if (activeProjects.length > 0) {
+          html += '<h3 style="color:var(--sw-white); margin-bottom: 0.5rem; margin-top: 1rem; border-bottom: 1px solid var(--sw-border); padding-bottom: 0.5rem; font-size: 1.1rem;">Proyectos Activos / En Progreso</h3>';
+          html += activeProjects.map(renderItem).join("");
+        }
+        
+        if (finishedProjects.length > 0) {
+          html += '<h3 style="color:var(--sw-text-muted); margin-bottom: 0.5rem; margin-top: 2rem; border-bottom: 1px solid var(--sw-border); padding-bottom: 0.5rem; font-size: 1.1rem;">Proyectos Finalizados</h3>';
+          html += finishedProjects.map(renderItem).join("");
+        }
+        
+        list.innerHTML = html;
       }
 
       function filterProjectsList(query) {

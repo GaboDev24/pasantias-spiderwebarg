@@ -609,13 +609,84 @@ async function scheduleProjectMeeting(req, res) {
           </div>
         </div>
       `;
-      await sendNotificationEmail(email, \`Reunión: \${projectTitle}\`, msg).catch(console.error);
+      await sendNotificationEmail(email, `Reunión: ${projectTitle}`, msg).catch(console.error);
     }
 
     return res.json({ message: 'Reunión programada y notificada a los alumnos y administradores.' });
   } catch (err) {
     console.error('[ADMIN/SCHEDULE-MEETING]', err.message);
     return res.status(500).json({ error: 'Error programando reunión.' });
+  }
+}
+
+async function cancelProjectMeeting(req, res) {
+  try {
+    const { projectId } = req.params;
+
+    // Obtener información del proyecto
+    const projectRes = await sql.query(`SELECT title FROM projects WHERE id = ${parseInt(projectId)}`);
+    const projectTitle = projectRes.data && projectRes.data.length > 0 ? projectRes.data[0].title : 'Proyecto';
+
+    // Borrar la fecha y enlace de la base de datos
+    await sql.query(`UPDATE projects SET next_meeting_date = NULL, next_meeting_link = NULL WHERE id = ${parseInt(projectId)}`);
+
+    // Obtener postulados aceptados
+    const apps = await sql.query(`
+      SELECT u.email, u.name 
+      FROM project_applications pa
+      JOIN users u ON u.id = pa.user_id
+      WHERE pa.project_id = ${parseInt(projectId)} AND pa.status = 'accepted'
+    `);
+
+    // Obtener administradores y CEOs
+    const admins = await sql.query(`
+      SELECT email, name 
+      FROM users 
+      WHERE role IN ('admin', 'ceo')
+    `);
+
+    const { sendNotificationEmail } = require('../helpers/email');
+    
+    // Unir ambas listas sin duplicados
+    const recipientsMap = new Map();
+    for (const u of (apps.data || [])) recipientsMap.set(u.email, u.name);
+    for (const u of (admins.data || [])) recipientsMap.set(u.email, u.name);
+
+    for (const [email, name] of recipientsMap) {
+      const msg = `
+        <div style="font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0c10; color: #c5c6c7; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #1f2833; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden;">
+            <div style="background-color: #111; padding: 25px; text-align: center; border-bottom: 4px solid #f87171;">
+              <img src="https://spiderwebarg.com/wp-content/uploads/2023/10/spider-web-logo.png" alt="Spider-Web ARG" style="height: 40px; margin-bottom: 10px;" />
+              <h2 style="color: #f87171; margin: 0; font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Reunión Cancelada</h2>
+            </div>
+            
+            <div style="padding: 35px 30px;">
+              <p style="font-size: 16px; line-height: 1.6; margin-top: 0; color: #e0e2e4;">
+                Hola <strong style="color: #fff;">${name}</strong>,<br><br>
+                Te informamos que la reunión programada para el proyecto <strong style="color: #66fcf1;">${projectTitle}</strong> ha sido <strong>CANCELADA</strong> o pospuesta.
+              </p>
+
+              <p style="margin-bottom: 35px; font-size: 15px; color: #a0a5a8;">
+                Recibirás una nueva notificación por este medio cuando los administradores programen una nueva fecha para el encuentro. Por el momento, la reunión previa ya no está en pie.
+              </p>
+            </div>
+
+            <div style="background-color: #111; padding: 20px; text-align: center; font-size: 13px; color: #777;">
+              Este es un correo automático de Spider-Web ARG.<br>
+              Por favor, no respondas a esta dirección.<br>
+              © 2026 Spider-Web ARG Pasantías.
+            </div>
+          </div>
+        </div>
+      `;
+      await sendNotificationEmail(email, `Reunión Cancelada: ${projectTitle}`, msg).catch(console.error);
+    }
+
+    return res.json({ message: 'Reunión cancelada y notificada a los participantes.' });
+  } catch (err) {
+    console.error('[ADMIN/CANCEL-MEETING]', err.message);
+    return res.status(500).json({ error: 'Error cancelando reunión.' });
   }
 }
 
@@ -838,7 +909,7 @@ module.exports = {
   createPortfolioProject, updatePortfolioProject, deletePortfolioProject,
   uploadMedia,
   createProjectProgress, listProjectProgress,
-  scheduleProjectMeeting, createProjectMeetingRecord,
+  scheduleProjectMeeting, cancelProjectMeeting, createProjectMeetingRecord,
   listTrainings, createTraining, scheduleTraining, updateTraining, deleteTraining,
   testEmail
 };

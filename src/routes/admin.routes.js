@@ -35,6 +35,7 @@ router.patch('/applications/:appId/status', requireAdmin, adminCtrl.updateApplic
 router.get('/projects/:projectId/progress', requireAdmin, adminCtrl.listProjectProgress);
 router.post('/projects/:projectId/progress', requireAdmin, adminCtrl.createProjectProgress);
 router.post('/projects/:projectId/schedule-meeting', requireAdmin, adminCtrl.scheduleProjectMeeting);
+router.post('/projects/:projectId/cancel-meeting', requireAdmin, adminCtrl.cancelProjectMeeting);
 router.post('/projects/:projectId/meeting-record', requireAdmin, adminCtrl.createProjectMeetingRecord);
 
 // Capacitaciones
