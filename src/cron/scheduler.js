@@ -1,16 +1,12 @@
 const cron = require('node-cron');
 const { sql } = require('../api-client/index');
-const { sendNotificationEmail } = require('../helpers/email');
+const { sendNotificationEmail, escapeHtml } = require('../helpers/email');
+const { sqlEscape } = require('../helpers/sqlSanitizer');
 
 function initScheduler() {
   // Tarea de reuniones: Desactivar reuniones de proyectos que ya pasaron
   cron.schedule('*/5 * * * *', async () => {
     try {
-      // Si la fecha de la próxima reunión es menor o igual a AHORA, lo pasamos al historial para que se complete el acta.
-      // O simplemente se puede dejar ahí, pero para que el frontend lo sepa, podemos enviar un evento.
-      // Según requerimiento: "cuando llegue la fecha y la hora se desactiva el recordatorio y queda guardada la fecha de la reunion y con el respectivo registro de lo que sucedio"
-      // Lo creamos como "pendiente de registro" y limpiamos en el proyecto.
-      
       const pastMeetings = await sql.query(`
         SELECT id, next_meeting_date, next_meeting_link 
         FROM projects 
@@ -18,18 +14,18 @@ function initScheduler() {
       `);
       
       for (const proj of (pastMeetings.data || [])) {
-        const mDate = proj.next_meeting_date ? `'${String(proj.next_meeting_date).replace('T', ' ').slice(0,19)}'` : 'NOW()';
-        const mLink = proj.next_meeting_link ? `'${proj.next_meeting_link.replace(/'/g, "''")}'` : 'NULL';
+        const mDate = proj.next_meeting_date ? sqlEscape(proj.next_meeting_date) : 'NOW()';
+        const mLink = proj.next_meeting_link ? sqlEscape(proj.next_meeting_link) : 'NULL';
         
-        // Creamos el registro vacío indicando que está pendiente de cargar el acta
+        // Creamos el registro indicando que está pendiente de cargar el acta
         await sql.query(`
           INSERT INTO project_meetings (project_id, meeting_date, meeting_link, record_notes, attendees_json)
-          VALUES (${proj.id}, ${mDate}, ${mLink}, 'Pendiente de registrar acta...', '[]')
+          VALUES (${sqlEscape(proj.id)}, ${mDate}, ${mLink}, 'Pendiente de registrar acta...', '[]')
         `);
         
         // Limpiamos del proyecto
         await sql.query(`
-          UPDATE projects SET next_meeting_date = NULL, next_meeting_link = NULL WHERE id = ${proj.id}
+          UPDATE projects SET next_meeting_date = NULL, next_meeting_link = NULL WHERE id = ${sqlEscape(proj.id)}
         `);
       }
     } catch (err) {
@@ -58,14 +54,17 @@ function initScheduler() {
           SELECT u.email, u.name 
           FROM training_applications ta
           JOIN users u ON u.id = ta.user_id
-          WHERE ta.training_id = ${t.id}
+          WHERE ta.training_id = ${sqlEscape(t.id)}
         `);
         
         for (const user of (apps.data || [])) {
+          const safeName = escapeHtml(user.name);
+          const safeTitle = escapeHtml(t.title);
+          const safeLink = escapeHtml(t.meeting_link || '');
           const msg = `
             <h3>Recordatorio de Capacitación</h3>
-            <p>Hola ${user.name}, te recordamos que en aproximadamente 1 hora comenzará tu capacitación: "<strong>${t.title}</strong>".</p>
-            <p><strong>Link de la reunión:</strong> <a href="${t.meeting_link}">${t.meeting_link}</a></p>
+            <p>Hola ${safeName}, te recordamos que en aproximadamente 1 hora comenzará tu capacitación: "<strong>${safeTitle}</strong>".</p>
+            <p><strong>Link de la reunión:</strong> <a href="${safeLink}">${safeLink}</a></p>
           `;
           await sendNotificationEmail(user.email, 'Recordatorio: Capacitación en 1 Hora', msg).catch(console.error);
         }

@@ -9,9 +9,5 @@
     { "source": "/verify-email", "destination": "/server.js" },
     { "source": "/", "destination": "/public/index.html" },
     { "source": "/(.*)", "destination": "/public/$1" }
-  ],
-  "crons": [
-    { "path": "/api/cron/check-meetings",  "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/check-trainings", "schedule": "*/5 * * * *" }
   ]
 }

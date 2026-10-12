@@ -179,12 +179,6 @@ app.get('/verify-email', (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// CRON HTTP — compatible con Vercel Cron Jobs
-// Se protegen con CRON_SECRET en el header X-Cron-Secret
-// ──────────────────────────────────────────────
-app.use('/api/cron', require('./src/routes/cron.routes'));
-
-// ──────────────────────────────────────────────
 // SPA FALLBACK — rutas no API devuelven 404.html
 // ──────────────────────────────────────────────
 app.use((req, res) => {
@@ -201,7 +195,9 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   const { initDB }        = require('./src/database/init');
+  const { initScheduler } = require('./src/cron/scheduler');
   initDB().catch(err => console.error('[DB-INIT WARNING]', err.message));
+  initScheduler();
   app.listen(PORT, () => {
     console.log(`[SERVER] Spider-Web ARG Pasantias corriendo en http://localhost:${PORT}`);
   });
