@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const adminCtrl = require('../controllers/admin.controller');
 const { requireAdmin } = require('../middleware/auth');
+const { mailLimiter } = require('../middleware/rateLimiters');
 
 // Multer en memoria para archivos
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -58,7 +59,7 @@ router.delete('/portfolio/:portfolioId', requireAdmin, adminCtrl.deletePortfolio
 // Upload de medios
 router.post('/upload', requireAdmin, upload.single('file'), adminCtrl.uploadMedia);
 
-// Test
-router.post('/test-email', requireAdmin, adminCtrl.testEmail);
+// Test — rate limited para evitar uso como relay de spam
+router.post('/test-email', requireAdmin, mailLimiter, adminCtrl.testEmail);
 
 module.exports = router;

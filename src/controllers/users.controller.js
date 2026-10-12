@@ -1,48 +1,36 @@
 /**
  * Controlador de usuarios (pasantes)
- * Gestión de perfil, foto, tags y aplicaciones a proyectos
+ * Gestion de perfil, foto, tags y aplicaciones a proyectos.
+ *
+ * CAMBIOS DE SEGURIDAD:
+ * - Eliminado el bypass de id:9999 (admin existe ahora en BD).
+ * - SQL construido con sqlEscape() / toInt().
+ * - JSON.parse reemplazado por safeJsonParse() en todos los puntos.
+ * - toBool() para normalizar TINYINT de la API.
+ * - Race condition en applyToTraining corregida con >= en lugar de ===.
  */
 
 const bcrypt = require('bcryptjs');
 const { sql, storage } = require('../api-client/index');
+const { sqlEscape, toInt, safeJsonParse, toBool } = require('../helpers/sqlSanitizer');
 
 // ──────────────────────────────────────────────
 // PERFIL
 // ──────────────────────────────────────────────
 async function getMyProfile(req, res) {
   try {
-    // Admin bypass: id 9999 no existe en BD, devolver perfil desde el JWT
-    if (req.user.id === 9999) {
-      return res.json({
-        user: {
-          id: 9999,
-          name: req.user.name || 'Admin Master',
-          email: req.user.email,
-          role: 'ceo',
-          is_email_verified: 1,
-          is_token_validated: 1,
-          avatar_file_id: null,
-          avatar_url: null,
-          tags: [],
-          created_at: new Date().toISOString(),
-        }
-      });
-    }
-
     const result = await sql.query(
       `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
-       FROM users WHERE id = ${req.user.id}`
+       FROM users WHERE id = ${sqlEscape(req.user.id)}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = user.tags ? JSON.parse(user.tags) : [];
-    // Usar avatar_url directo si existe, sino construir desde file_id
+    user.tags = safeJsonParse(user.tags, []);
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? storage.getFileUrl(user.avatar_file_id) : null);
     user.cv_url = user.cv_url || (user.cv_file_id ? storage.getFileUrl(user.cv_file_id) : null);
     return res.json({ user });
-
   } catch (err) {
     console.error('[USERS/PROFILE]', err.message);
     return res.status(500).json({ error: 'Error obteniendo perfil.' });
@@ -54,12 +42,14 @@ async function updateProfile(req, res) {
     const { name, tags } = req.body;
     const updates = [];
 
-    if (name) updates.push(`name = '${name.replace(/'/g, "''")}'`);
-    if (tags !== undefined) updates.push(`tags = '${JSON.stringify(tags)}'`);
+    if (name) updates.push(`name = ${sqlEscape(name)}`);
+    if (tags !== undefined) updates.push(`tags = ${sqlEscape(JSON.stringify(tags))}`);
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });
 
-    await sql.query(`UPDATE users SET ${updates.join(', ')} WHERE id = ${req.user.id}`);
+    await sql.query(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = ${sqlEscape(req.user.id)}`
+    );
     return res.json({ message: 'Perfil actualizado correctamente.' });
   } catch (err) {
     console.error('[USERS/UPDATE-PROFILE]', err.message);
@@ -78,7 +68,9 @@ async function changePassword(req, res) {
       return res.status(400).json({ error: 'La nueva contrasena debe tener al menos 8 caracteres.' });
     }
 
-    const result = await sql.query(`SELECT password_hash FROM users WHERE id = ${req.user.id}`);
+    const result = await sql.query(
+      `SELECT password_hash FROM users WHERE id = ${sqlEscape(req.user.id)}`
+    );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
@@ -87,7 +79,9 @@ async function changePassword(req, res) {
     if (!valid) return res.status(401).json({ error: 'Contrasena actual incorrecta.' });
 
     const newHash = await bcrypt.hash(new_password, 12);
-    await sql.query(`UPDATE users SET password_hash = '${newHash}' WHERE id = ${req.user.id}`);
+    await sql.query(
+      `UPDATE users SET password_hash = ${sqlEscape(newHash)} WHERE id = ${sqlEscape(req.user.id)}`
+    );
 
     return res.json({ message: 'Contrasena actualizada correctamente.' });
   } catch (err) {
@@ -100,11 +94,16 @@ async function uploadAvatar(req, res) {
   try {
     if (!req.file) return res.status(400).json({ error: 'Imagen requerida.' });
 
-    const userQ = await sql.query(`SELECT avatar_file_id FROM users WHERE id = ${req.user.id}`);
+    const userQ = await sql.query(
+      `SELECT avatar_file_id FROM users WHERE id = ${sqlEscape(req.user.id)}`
+    );
     const oldFileId = userQ.data && userQ.data[0] ? userQ.data[0].avatar_file_id : null;
 
     const avatarExt = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase();
-    const avatarMime = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp' }[avatarExt] || req.file.mimetype;
+    const avatarMime = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp',
+    }[avatarExt] || req.file.mimetype;
     const crypto = require('crypto');
     const safeName = `avatar_${crypto.randomBytes(8).toString('hex')}.${avatarExt}`;
 
@@ -112,12 +111,10 @@ async function uploadAvatar(req, res) {
     if (oldFileId) {
       try {
         const result = await storage.replaceFile(oldFileId, req.file.buffer, safeName, avatarMime);
-        // replaceFile puede devolver la URL actualizada
         const files = result.files || [];
         publicUrl = Array.isArray(files) && files[0] ? files[0].url : null;
         fileId = oldFileId;
       } catch (_) {
-        // Si falla el reemplazo, subir como nuevo
         const result = await storage.uploadFile(req.file.buffer, safeName, avatarMime);
         const files = result.files || [];
         const fileData = Array.isArray(files) ? files[0] : files;
@@ -132,14 +129,12 @@ async function uploadAvatar(req, res) {
       publicUrl = fileData.url;
     }
 
-    // Guardar SIEMPRE la URL a traves del proxy
     const proxyUrl = `/api/media/${fileId}`;
-    await sql.query(`UPDATE users SET avatar_file_id = '${fileId}', avatar_url = '${proxyUrl}' WHERE id = ${req.user.id}`);
+    await sql.query(
+      `UPDATE users SET avatar_file_id = ${sqlEscape(fileId)}, avatar_url = ${sqlEscape(proxyUrl)} WHERE id = ${sqlEscape(req.user.id)}`
+    );
 
-    return res.json({
-      avatar_file_id: fileId,
-      avatar_url: proxyUrl,
-    });
+    return res.json({ avatar_file_id: fileId, avatar_url: proxyUrl });
   } catch (err) {
     console.error('[USERS/UPLOAD-AVATAR]', err.message);
     return res.status(500).json({ error: 'Error subiendo foto de perfil.' });
@@ -151,20 +146,20 @@ async function uploadAvatar(req, res) {
 // ──────────────────────────────────────────────
 async function applyToProject(req, res) {
   try {
-    const { projectId } = req.params;
+    const projectId = toInt(req.params.projectId);
     const userId = req.user.id;
 
-    // Verificar is_token_validated directo en BD (no en el JWT, que puede estar desactualizado)
-    const dbUserRes = await sql.query(`SELECT is_token_validated FROM users WHERE id = ${userId}`);
+    const dbUserRes = await sql.query(
+      `SELECT is_token_validated FROM users WHERE id = ${sqlEscape(userId)}`
+    );
     const dbUser = dbUserRes.data && dbUserRes.data[0];
 
-    if (!dbUser || parseInt(dbUser.is_token_validated) !== 1) {
-      return res.status(403).json({ error: 'Debes validar tu cuenta con el administrador para inscribirte en proyectos (Error actualizado).' });
+    if (!dbUser || !toBool(dbUser.is_token_validated)) {
+      return res.status(403).json({ error: 'Debes validar tu cuenta con el administrador para inscribirte en proyectos.' });
     }
 
-    // Verificar que el proyecto exista y este abierto
     const projectResult = await sql.query(
-      `SELECT id, status, required_tags, start_date, end_date FROM projects WHERE id = ${parseInt(projectId)}`
+      `SELECT id, status, required_tags, start_date, end_date FROM projects WHERE id = ${sqlEscape(projectId)}`
     );
     if (!projectResult.data || projectResult.data.length === 0) {
       return res.status(404).json({ error: 'Proyecto no encontrado.' });
@@ -172,7 +167,6 @@ async function applyToProject(req, res) {
 
     const project = projectResult.data[0];
 
-    // Verificar si el proyecto ya finalizó basado en fechas
     const now = new Date();
     const end = project.end_date ? new Date(project.end_date) : null;
     if (end && now > end) {
@@ -184,10 +178,12 @@ async function applyToProject(req, res) {
     }
 
     const normalizeTag = t => (t || '').toString().trim().toLowerCase();
-    const requiredTags = project.required_tags ? JSON.parse(project.required_tags) : [];
+    const requiredTags = safeJsonParse(project.required_tags, []);
     if (req.user.role === 'pasante' && requiredTags.length > 0) {
-      const uRes = await sql.query(`SELECT tags FROM users WHERE id = ${req.user.id}`);
-      const userTags = (uRes.data && uRes.data[0] && uRes.data[0].tags) ? JSON.parse(uRes.data[0].tags) : [];
+      const uRes = await sql.query(
+        `SELECT tags FROM users WHERE id = ${sqlEscape(req.user.id)}`
+      );
+      const userTags = safeJsonParse(uRes.data && uRes.data[0] ? uRes.data[0].tags : null, []);
       const userTagSet = new Set(userTags.map(normalizeTag));
       const hasMatch = requiredTags.some(t => userTagSet.has(normalizeTag(t)));
       if (!hasMatch) {
@@ -195,50 +191,40 @@ async function applyToProject(req, res) {
       }
     }
 
-    // 1. VALIDACIÓN: Verificar si el usuario ya se postuló a este proyecto
     const existingApplication = await sql.query(
-      `SELECT id, status, applied_at FROM project_applications WHERE user_id = ${userId} AND project_id = ${parseInt(projectId)}`
+      `SELECT id, status, applied_at FROM project_applications WHERE user_id = ${sqlEscape(userId)} AND project_id = ${sqlEscape(projectId)}`
     );
 
     if (existingApplication.data && existingApplication.data.length > 0) {
       const application = existingApplication.data[0];
-      let message = '';
-
-      // Lógica de respuesta basada en el estado actual
-      switch (application.status) {
-        case 'pending':
-          message = 'Ya te has postulado a este proyecto. Tu postulación está pendiente de revisión.';
-          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-        case 'accepted':
-          message = 'Tu postulación fue aceptada. ¡Felicitaciones! Has sido seleccionado.';
-          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-        case 'rejected':
-          message = 'Tu postulación fue rechazada. Por favor, revisa los requisitos o postúlate a otro proyecto.';
-          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-        default:
-          // Manejo para cualquier estado futuro o desconocido
-          message = 'Ya tienes una postulación registrada para este proyecto. Estado actual: ' + application.status;
-          return res.status(200).json({ message: message, application: { id: application.id, status: application.status, applied_at: application.applied_at } });
-      }
+      const messages = {
+        pending:  'Ya te has postulado a este proyecto. Tu postulacion esta pendiente de revision.',
+        accepted: 'Tu postulacion fue aceptada. ¡Felicitaciones!',
+        rejected: 'Tu postulacion fue rechazada. Por favor, revisa los requisitos o postulate a otro proyecto.',
+      };
+      const message = messages[application.status] || `Ya tienes una postulacion registrada. Estado: ${application.status}`;
+      return res.status(200).json({
+        message,
+        application: { id: application.id, status: application.status, applied_at: application.applied_at },
+      });
     }
 
-    // 2. POSTULACIÓN NUEVA (No existe registro previo)
     await sql.query(
-      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${userId}, ${parseInt(projectId)}, 'pending', NOW())`
+      `INSERT INTO project_applications (user_id, project_id, status, applied_at) VALUES (${sqlEscape(userId)}, ${sqlEscape(projectId)}, 'pending', NOW())`
     );
 
-    return res.status(201).json({ message: 'Postulación exitosa. Estaremos revisando tu candidatura.', application_status: 'pending' });
-
+    return res.status(201).json({ message: 'Postulacion exitosa. Estaremos revisando tu candidatura.', application_status: 'pending' });
   } catch (err) {
     console.error('[USERS/APPLY-TO-PROJECT]', err.message, err.stack);
-    return res.status(500).json({ error: 'Error al postularse. Por favor, inténtalo más tarde o contacta al soporte.' });
+    return res.status(500).json({ error: 'Error al postularse. Por favor, intentalo mas tarde.' });
   }
 }
+
 async function cancelApplication(req, res) {
   try {
-    const { projectId } = req.params;
+    const projectId = toInt(req.params.projectId);
     await sql.query(
-      `DELETE FROM project_applications WHERE project_id = ${parseInt(projectId)} AND user_id = ${req.user.id} AND status = 'pending'`
+      `DELETE FROM project_applications WHERE project_id = ${sqlEscape(projectId)} AND user_id = ${sqlEscape(req.user.id)} AND status = 'pending'`
     );
     return res.json({ message: 'Inscripcion cancelada.' });
   } catch (err) {
@@ -253,7 +239,7 @@ async function getMyApplications(req, res) {
       `SELECT pa.id, pa.status, pa.applied_at, p.id AS project_id, p.title, p.description, p.start_date, p.end_date, p.status AS project_status, p.next_meeting_date, p.next_meeting_link
        FROM project_applications pa
        JOIN projects p ON p.id = pa.project_id
-       WHERE pa.user_id = ${req.user.id}
+       WHERE pa.user_id = ${sqlEscape(req.user.id)}
        ORDER BY pa.applied_at DESC`
     );
     return res.json({ applications: result.data || [] });
@@ -278,7 +264,6 @@ async function uploadCV(req, res) {
       return res.status(400).json({ error: 'Solo se aceptan archivos PDF, DOC o DOCX.' });
     }
 
-    // Usar nombre aleatorio para evitar problemas de firma con caracteres especiales
     const crypto = require('crypto');
     const randomName = `cv_${crypto.randomBytes(8).toString('hex')}.${ext}`;
     const result = await storage.uploadFile(req.file.buffer, randomName, resolvedMime);
@@ -289,35 +274,30 @@ async function uploadCV(req, res) {
       return res.status(500).json({ error: 'El storage no devolvio el archivo.' });
     }
     const fileId = fileData.id;
-
-    // Usar proxy local para servir con los headers correctos
     const proxyUrl = `/api/media/${fileId}`;
-    await sql.query(`UPDATE users SET cv_file_id = '${fileId}', cv_url = '${proxyUrl}' WHERE id = ${req.user.id}`);
+    await sql.query(
+      `UPDATE users SET cv_file_id = ${sqlEscape(fileId)}, cv_url = ${sqlEscape(proxyUrl)} WHERE id = ${sqlEscape(req.user.id)}`
+    );
 
-    return res.json({
-      cv_file_id: fileId,
-      cv_url: proxyUrl,
-      message: 'CV subido correctamente.',
-    });
+    return res.json({ cv_file_id: fileId, cv_url: proxyUrl, message: 'CV subido correctamente.' });
   } catch (err) {
     console.error('[USERS/UPLOAD-CV]', err.message, err.stack);
     return res.status(500).json({ error: 'Error subiendo CV: ' + err.message });
   }
 }
 
-// Perfil público de usuario (para que admin lo vea)
 async function getUserPublicProfile(req, res) {
   try {
-    const { userId } = req.params;
+    const userId = toInt(req.params.userId);
     const result = await sql.query(
       `SELECT id, name, email, role, is_email_verified, is_token_validated, avatar_file_id, avatar_url, cv_file_id, cv_url, tags, created_at
-       FROM users WHERE id = ${parseInt(userId)}`
+       FROM users WHERE id = ${sqlEscape(userId)}`
     );
     if (!result.data || result.data.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
     const user = result.data[0];
-    user.tags = user.tags ? JSON.parse(user.tags) : [];
+    user.tags = safeJsonParse(user.tags, []);
     user.avatar_url = user.avatar_url || (user.avatar_file_id ? `/api/media/${user.avatar_file_id}` : null);
     user.cv_url = user.cv_url ? `/api/media/${user.cv_file_id}` : null;
     return res.json({ user });
@@ -332,55 +312,57 @@ async function getUserPublicProfile(req, res) {
 // ──────────────────────────────────────────────
 async function applyToTraining(req, res) {
   try {
-    const { trainingId } = req.params;
+    const trainingId = toInt(req.params.trainingId);
     const userId = req.user.id;
 
-    // Validar estado de la capacitación
-    const statusCheck = await sql.query(`SELECT status FROM trainings WHERE id = ${parseInt(trainingId)}`);
+    const statusCheck = await sql.query(
+      `SELECT status FROM trainings WHERE id = ${sqlEscape(trainingId)}`
+    );
     if (!statusCheck.data || statusCheck.data.length === 0) {
-      return res.status(404).json({ error: 'Capacitación no encontrada.' });
+      return res.status(404).json({ error: 'Capacitacion no encontrada.' });
     }
     const currentStatus = statusCheck.data[0].status;
     if (currentStatus !== 'open' && currentStatus !== 'quota_filled') {
-      return res.status(400).json({ error: 'Ya no es posible unirse a esta capacitación.' });
+      return res.status(400).json({ error: 'Ya no es posible unirse a esta capacitacion.' });
     }
 
-    // Verificar si ya se postuló
-    const existing = await sql.query(`SELECT id FROM training_applications WHERE user_id = ${userId} AND training_id = ${parseInt(trainingId)}`);
+    const existing = await sql.query(
+      `SELECT id FROM training_applications WHERE user_id = ${sqlEscape(userId)} AND training_id = ${sqlEscape(trainingId)}`
+    );
     if (existing.data && existing.data.length > 0) {
-      return res.status(400).json({ error: 'Ya solicitaste esta capacitación.' });
+      return res.status(400).json({ error: 'Ya solicitaste esta capacitacion.' });
     }
 
-    // Insertar postulación
-    await sql.query(`INSERT INTO training_applications (training_id, user_id) VALUES (${parseInt(trainingId)}, ${userId})`);
+    await sql.query(
+      `INSERT INTO training_applications (training_id, user_id) VALUES (${sqlEscape(trainingId)}, ${sqlEscape(userId)})`
+    );
 
-    // Verificar cupos
+    // BUG-03 FIX: usar >= en lugar de === para evitar race condition cuando
+    // dos postulaciones simultáneas saltan la igualdad exacta.
     const tr = await sql.query(`
       SELECT t.min_quota, t.status, t.title,
         (SELECT COUNT(*) FROM training_applications ta WHERE ta.training_id = t.id) as applied_count
-      FROM trainings t WHERE t.id = ${parseInt(trainingId)}
+      FROM trainings t WHERE t.id = ${sqlEscape(trainingId)}
     `);
-    
+
     if (tr.data && tr.data.length > 0) {
       const training = tr.data[0];
-      
-      // Si justo en esta postulación se alcanza el mínimo
-      if (training.status === 'open' && training.applied_count === training.min_quota) {
-        // Marcamos como lista para programar, pero los usuarios aún pueden seguir uniéndose
-        await sql.query(`UPDATE trainings SET status = 'quota_filled' WHERE id = ${parseInt(trainingId)}`);
-        
-        // Avisar a admins y CEOs
+      if (training.status === 'open' && parseInt(training.applied_count) >= parseInt(training.min_quota)) {
+        await sql.query(
+          `UPDATE trainings SET status = 'quota_filled' WHERE id = ${sqlEscape(trainingId)}`
+        );
+
         const admins = await sql.query(`SELECT email FROM users WHERE role IN ('admin', 'ceo')`);
         const { sendNotificationEmail } = require('../helpers/email');
         const adminEmails = (admins.data || []).map(u => u.email).join(', ');
-        
+
         if (adminEmails) {
           const msg = `
-            <h3>Capacitación Lista para Programar</h3>
-            <p>La capacitación "<strong>${training.title}</strong>" ha alcanzado su mínimo (${training.min_quota} solicitantes).</p>
-            <p>Los pasantes pueden seguir uniéndose, pero ya puede ingresar al panel de administración para programar la reunión.</p>
+            <h3>Capacitacion Lista para Programar</h3>
+            <p>La capacitacion "<strong>${training.title}</strong>" ha alcanzado su minimo (${training.min_quota} solicitantes).</p>
+            <p>Los pasantes pueden seguir uniendose, pero ya puede ingresar al panel para programar la reunion.</p>
           `;
-          await sendNotificationEmail(adminEmails, 'Capacitación Lista para Programar', msg).catch(console.error);
+          await sendNotificationEmail(adminEmails, 'Capacitacion Lista para Programar', msg).catch(console.error);
         }
       }
     }
@@ -388,7 +370,7 @@ async function applyToTraining(req, res) {
     return res.status(201).json({ message: 'Solicitud enviada correctamente.' });
   } catch (err) {
     console.error('[USERS/APPLY-TRAINING]', err.message);
-    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+    return res.status(500).json({ error: 'Error al solicitar capacitacion.' });
   }
 }
 
@@ -396,31 +378,28 @@ async function requestTraining(req, res) {
   try {
     const { title, description } = req.body;
     if (!title || !description) {
-      return res.status(400).json({ error: 'Faltan datos de la capacitacion (título o descripción).' });
+      return res.status(400).json({ error: 'Faltan datos de la capacitacion (titulo o descripcion).' });
     }
-    
-    const safeTitle = title.replace(/'/g, "''");
-    const safeDesc = description.replace(/'/g, "''");
 
-    // Crear la capacitacion
     const insertRes = await sql.query(
-      `INSERT INTO trainings (title, description, min_quota, status, created_at) VALUES ('${safeTitle}', '${safeDesc}', 2, 'open', NOW())`
+      `INSERT INTO trainings (title, description, min_quota, status, created_at)
+       VALUES (${sqlEscape(title)}, ${sqlEscape(description)}, 2, 'open', NOW())`
     );
     const trainingId = insertRes.insertId || (insertRes.data && insertRes.data.insertId);
 
     if (!trainingId) {
-      throw new Error('No se pudo obtener el ID de la capacitación creada.');
+      throw new Error('No se pudo obtener el ID de la capacitacion creada.');
     }
 
-    // Auto-postular al creador
     await sql.query(
-      `INSERT INTO training_applications (training_id, user_id, applied_at) VALUES (${trainingId}, ${req.user.id}, NOW())`
+      `INSERT INTO training_applications (training_id, user_id, applied_at)
+       VALUES (${sqlEscape(trainingId)}, ${sqlEscape(req.user.id)}, NOW())`
     );
 
-    return res.status(201).json({ message: 'Capacitación solicitada correctamente.', id: trainingId });
+    return res.status(201).json({ message: 'Capacitacion solicitada correctamente.', id: trainingId });
   } catch (err) {
     console.error('[USERS/REQUEST-TRAINING]', err);
-    return res.status(500).json({ error: 'Error al solicitar capacitación.' });
+    return res.status(500).json({ error: 'Error al solicitar capacitacion.' });
   }
 }
 
@@ -428,5 +407,5 @@ module.exports = {
   getMyProfile, updateProfile, changePassword, uploadAvatar,
   uploadCV, getUserPublicProfile,
   applyToProject, cancelApplication, getMyApplications,
-  applyToTraining, requestTraining
+  applyToTraining, requestTraining,
 };

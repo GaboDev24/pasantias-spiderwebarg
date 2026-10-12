@@ -1,6 +1,14 @@
 /**
  * Controlador de autenticacion
- * Maneja: registro, login, verificacion de email, validacion de token CEO
+ * Maneja: registro, login, verificacion de email, validacion de token CEO,
+ * aceptacion de terminos y seed del administrador.
+ *
+ * CAMBIOS DE SEGURIDAD:
+ * - SQL construido con sqlEscape() en lugar de concatenacion directa o replace naive.
+ * - JSON.parse reemplazado por safeJsonParse().
+ * - Valores TINYINT normalizados con toBool().
+ * - Eliminado bypass de admin en memoria (id: 9999). El administrador
+ *   se crea ahora como usuario real en BD mediante seedAdmin() en init.js.
  */
 
 require('dotenv').config();
@@ -9,6 +17,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sql } = require('../api-client/index');
 const { sendVerificationEmail } = require('../helpers/email');
+const { sqlEscape, toInt, safeJsonParse, toBool } = require('../helpers/sqlSanitizer');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -36,8 +45,9 @@ async function register(req, res) {
       return res.status(400).json({ error: 'La contrasena debe tener al menos 8 caracteres.' });
     }
 
-    // Verificar si ya existe el email
-    const existing = await sql.query(`SELECT id FROM users WHERE email = '${email.replace(/'/g, "''")}'`);
+    const existing = await sql.query(
+      `SELECT id FROM users WHERE email = ${sqlEscape(email)}`
+    );
     if (existing.data && existing.data.length > 0) {
       return res.status(409).json({ error: 'El email ya esta registrado.' });
     }
@@ -47,10 +57,9 @@ async function register(req, res) {
 
     await sql.query(
       `INSERT INTO users (name, email, password_hash, role, is_email_verified, is_token_validated, email_verify_token, accepted_terms)
-       VALUES ('${name.replace(/'/g, "''")}', '${email.replace(/'/g, "''")}', '${password_hash}', 'pasante', 0, 0, '${verifyToken}', 1)`
+       VALUES (${sqlEscape(name)}, ${sqlEscape(email)}, ${sqlEscape(password_hash)}, 'pasante', 0, 0, ${sqlEscape(verifyToken)}, 1)`
     );
 
-    // Enviar email de verificacion
     const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
     try {
       await sendVerificationEmail(email, name, verifyToken, baseUrl);
@@ -70,24 +79,30 @@ async function register(req, res) {
 // ──────────────────────────────────────────────
 async function verifyEmail(req, res) {
   try {
-    const { token } = req.query;
-    if (!token) return res.status(400).json({ error: 'Token requerido.' });
+    const { token, redirect } = req.query;
+    if (!token) {
+      if (redirect) return res.redirect('/login.html?error=token_invalido');
+      return res.status(400).json({ error: 'Token requerido.' });
+    }
 
     const result = await sql.query(
-      `SELECT id FROM users WHERE email_verify_token = '${token}' AND is_email_verified = 0`
+      `SELECT id FROM users WHERE email_verify_token = ${sqlEscape(token)} AND is_email_verified = 0`
     );
 
     if (!result.data || result.data.length === 0) {
+      if (redirect) return res.redirect('/login.html?error=token_invalido');
       return res.status(400).json({ error: 'Token invalido o ya utilizado.' });
     }
 
     await sql.query(
-      `UPDATE users SET is_email_verified = 1, email_verify_token = NULL WHERE email_verify_token = '${token}'`
+      `UPDATE users SET is_email_verified = 1, email_verify_token = NULL WHERE email_verify_token = ${sqlEscape(token)}`
     );
 
+    if (redirect) return res.redirect('/login.html?success=email_verificado');
     return res.json({ message: 'Email verificado correctamente. Ya puedes iniciar sesion.' });
   } catch (err) {
     console.error('[AUTH/VERIFY-EMAIL]', err.message);
+    if (req.query.redirect) return res.redirect('/login.html?error=error_servidor');
     return res.status(500).json({ error: 'Error interno del servidor.' });
   }
 }
@@ -103,37 +118,11 @@ async function login(req, res) {
       return res.status(400).json({ error: 'Email y contrasena requeridos.' });
     }
 
-    // --- BYPASS DE ADMIN POR .ENV ---
-    const adminEmailEnv = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim().toLowerCase() : null;
-    const adminPassEnv = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.trim() : null;
-    const providedEmail = email ? email.trim().toLowerCase() : null;
-
-    if (adminEmailEnv && adminPassEnv && 
-        providedEmail === adminEmailEnv && password === adminPassEnv) {
-      const token = jwt.sign(
-        { id: 9999, name: 'Admin Master', email: providedEmail, role: 'ceo', is_token_validated: true },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-      return res.json({
-        token,
-        user: {
-          id: 9999,
-          name: 'Admin Master',
-          email: email,
-          role: 'ceo',
-          is_email_verified: 1,
-          is_token_validated: 1,
-          avatar_file_id: null,
-          tags: [],
-        },
-      });
-    }
-    // ---------------------------------
+    const providedEmail = email.trim().toLowerCase();
 
     const result = await sql.query(
       `SELECT id, name, email, password_hash, role, is_email_verified, is_token_validated, avatar_file_id, tags, accepted_terms
-       FROM users WHERE email = '${providedEmail.replace(/'/g, "''")}'`
+       FROM users WHERE email = ${sqlEscape(providedEmail)}`
     );
 
     if (!result.data || result.data.length === 0) {
@@ -143,8 +132,8 @@ async function login(req, res) {
 
     const user = result.data[0];
 
-    // La API puede devolver valores como strings ("0", "1") — forzar comparación numérica
-    if (parseInt(user.is_email_verified) !== 1) {
+    // toBool normaliza "0"/"1" que la API puede devolver como string
+    if (!toBool(user.is_email_verified)) {
       console.warn(`[AUTH/LOGIN] Intento fallido (email no verificado): ${providedEmail}`);
       return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesion. Revisa tu bandeja de entrada.' });
     }
@@ -158,7 +147,14 @@ async function login(req, res) {
     console.log(`[AUTH/LOGIN] Inicio de sesion exitoso: ${user.email} (Rol: ${user.role})`);
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role, is_token_validated: user.is_token_validated, accepted_terms: user.accepted_terms },
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_token_validated: toBool(user.is_token_validated),
+        accepted_terms: toBool(user.accepted_terms),
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -170,11 +166,11 @@ async function login(req, res) {
         name: user.name,
         email: user.email,
         role: user.role,
-        is_email_verified: user.is_email_verified,
-        is_token_validated: user.is_token_validated,
-        accepted_terms: user.accepted_terms,
+        is_email_verified: toBool(user.is_email_verified),
+        is_token_validated: toBool(user.is_token_validated),
+        accepted_terms: toBool(user.accepted_terms),
         avatar_file_id: user.avatar_file_id,
-        tags: user.tags ? JSON.parse(user.tags) : [],
+        tags: safeJsonParse(user.tags, []),
       },
     });
   } catch (err) {
@@ -196,7 +192,7 @@ async function validateToken(req, res) {
     }
 
     const result = await sql.query(
-      `SELECT id, assigned_to_email, is_used FROM validation_tokens WHERE token_string = '${token_string.replace(/'/g, "''")}'`
+      `SELECT id, assigned_to_email, is_used FROM validation_tokens WHERE token_string = ${sqlEscape(token_string)}`
     );
 
     if (!result.data || result.data.length === 0) {
@@ -205,21 +201,20 @@ async function validateToken(req, res) {
 
     const tokenRow = result.data[0];
 
-    if (tokenRow.is_used) {
+    // Normalizar is_used con toBool para evitar "0" evaluado como true
+    if (toBool(tokenRow.is_used)) {
       return res.status(409).json({ error: 'Este token ya fue utilizado.' });
     }
 
-    // Verificar que el token fue asignado al email del usuario si tiene assigned_to_email
     if (tokenRow.assigned_to_email && tokenRow.assigned_to_email !== req.user.email) {
       return res.status(403).json({ error: 'Este token no fue asignado a tu email.' });
     }
 
-    // Marcar token como usado y al usuario como validado
     await sql.query(
-      `UPDATE validation_tokens SET is_used = 1, used_by = ${userId}, used_at = NOW() WHERE id = ${tokenRow.id}`
+      `UPDATE validation_tokens SET is_used = 1, used_by = ${sqlEscape(userId)}, used_at = NOW() WHERE id = ${sqlEscape(toInt(tokenRow.id))}`
     );
     await sql.query(
-      `UPDATE users SET is_token_validated = 1 WHERE id = ${userId}`
+      `UPDATE users SET is_token_validated = 1 WHERE id = ${sqlEscape(userId)}`
     );
 
     const newToken = jwt.sign(
@@ -236,20 +231,26 @@ async function validateToken(req, res) {
 }
 
 // ──────────────────────────────────────────────
-// ACEPTAR TÉRMINOS Y CONDICIONES (Usuarios logueados)
+// ACEPTAR TÉRMINOS Y CONDICIONES
 // ──────────────────────────────────────────────
 async function acceptTerms(req, res) {
   try {
     const userId = req.user.id;
-    await sql.query(`UPDATE users SET accepted_terms = 1 WHERE id = ${userId}`);
-    
-    // Generar nuevo token con accepted_terms = 1
+    await sql.query(`UPDATE users SET accepted_terms = 1 WHERE id = ${sqlEscape(userId)}`);
+
     const token = jwt.sign(
-      { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role, is_token_validated: req.user.is_token_validated, accepted_terms: 1 },
+      {
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        is_token_validated: req.user.is_token_validated,
+        accepted_terms: true,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
-    
+
     return res.json({ message: 'Terminos aceptados correctamente.', token });
   } catch (err) {
     console.error('[AUTH/ACCEPT-TERMS]', err.message);
