@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const { sql } = require('../api-client/index');
-const { sendNotificationEmail, escapeHtml } = require('../helpers/email');
-const { sqlEscape } = require('../helpers/sqlSanitizer');
+const { sendNotificationEmail } = require('../helpers/email');
+const { sqlEscape, escapeHtml } = require('../helpers/sqlSanitizer');
 
 function initScheduler() {
   // Tarea de reuniones: Desactivar reuniones de proyectos que ya pasaron
@@ -60,11 +60,15 @@ function initScheduler() {
         for (const user of (apps.data || [])) {
           const safeName = escapeHtml(user.name);
           const safeTitle = escapeHtml(t.title);
-          const safeLink = escapeHtml(t.meeting_link || '');
+          const rawLink = (t.meeting_link || '').trim();
+          const safeLink = /^https?:\/\//i.test(rawLink) ? escapeHtml(rawLink) : '';
+          const linkHtml = safeLink
+            ? `<p><strong>Link de la reunión:</strong> <a href="${safeLink}">${safeLink}</a></p>`
+            : '';
           const msg = `
             <h3>Recordatorio de Capacitación</h3>
             <p>Hola ${safeName}, te recordamos que en aproximadamente 1 hora comenzará tu capacitación: "<strong>${safeTitle}</strong>".</p>
-            <p><strong>Link de la reunión:</strong> <a href="${safeLink}">${safeLink}</a></p>
+            ${linkHtml}
           `;
           await sendNotificationEmail(user.email, 'Recordatorio: Capacitación en 1 Hora', msg).catch(console.error);
         }

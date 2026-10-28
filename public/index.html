@@ -179,12 +179,12 @@
         const portfolio = portRes.portfolio || [];
         if (portfolio.length > 0) {
           document.getElementById('portfolio').style.display = 'block';
-          portGrid.innerHTML = portfolio.map(p => `
+        portGrid.innerHTML = portfolio.map(p => `
             <article class="feature-dossier">
-              ${p.cover_url ? `<img src="${p.cover_url}" class="dossier-image" alt="Cover">` : ''}
+              ${p.cover_url ? `<img src="${window.app.escapeHtml(p.cover_url)}" class="dossier-image" alt="Cover">` : ''}
               <div class="dossier-meta">FECHA: ${window.app.parseDate(p.created_at).toLocaleDateString('es-AR')} — REALIZADO</div>
-              <h3 class="dossier-title">${p.title}</h3>
-              <p class="dossier-desc">${p.description}</p>
+              <h3 class="dossier-title">${window.app.escapeHtml(p.title)}</h3>
+              <p class="dossier-desc">${window.app.escapeHtml(p.description)}</p>
             </article>
           `).join('');
         }
@@ -196,12 +196,12 @@
         } else {
           newsGrid.innerHTML = news.map(n => `
             <article class="feature-dossier">
-              ${n.cover_url ? `<div class="dossier-banner"><img src="${n.cover_url}" class="dossier-banner-img" alt="Portada"></div>` : ''}
+              ${n.cover_url ? `<div class="dossier-banner"><img src="${window.app.escapeHtml(n.cover_url)}" class="dossier-banner-img" alt="Portada"></div>` : ''}
               <div class="dossier-body">
-                <div class="dossier-meta">${window.app.parseDate(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${n.author}</div>
-                <h3 class="dossier-title">${n.title}</h3>
-                <p class="dossier-desc">${n.summary || n.content.substring(0, 140)}...</p>
-                <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.location.href='/news.html?id=${n.id}'">LEER INFORME</button>
+                <div class="dossier-meta">${window.app.parseDate(n.created_at).toLocaleDateString('es-AR')} — AUTOR: ${window.app.escapeHtml(n.author)}</div>
+                <h3 class="dossier-title">${window.app.escapeHtml(n.title)}</h3>
+                <p class="dossier-desc">${window.app.escapeHtml(n.summary || n.content.substring(0, 140))}...</p>
+                <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="window.location.href='/news.html?id=${encodeURIComponent(n.id)}'">LEER INFORME</button>
               </div>
             </article>
           `).join('');
@@ -223,17 +223,17 @@
               const sc = statusColors[ds] || { bg:'rgba(163,0,0,0.1)', border:'var(--sw-border)', text:'#fff' };
               return `
               <article class="feature-dossier">
-                ${p.cover_url ? `<div class="dossier-banner"><img src="${p.cover_url}" class="dossier-banner-img" alt="Banner"></div>` : ''}
+                ${p.cover_url ? `<div class="dossier-banner"><img src="${window.app.escapeHtml(p.cover_url)}" class="dossier-banner-img" alt="Banner"></div>` : ''}
                 <div class="dossier-body">
                   <div class="dossier-meta" style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;font-family:var(--sw-font-m);">${ds}</span>
+                    <span style="font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;font-family:var(--sw-font-m);">${window.app.escapeHtml(ds)}</span>
                   </div>
-                  <h3 class="dossier-title">${p.title}</h3>
+                  <h3 class="dossier-title">${window.app.escapeHtml(p.title)}</h3>
                   <div class="tags-list">
-                    ${(p.required_tags || []).map(t => `<span class="tag-item">${t}</span>`).join('')}
+                    ${(p.required_tags || []).map(t => `<span class="tag-item">${window.app.escapeHtml(t)}</span>`).join('')}
                   </div>
-                  <p class="dossier-desc">${p.summary || p.description.substring(0, 140)}...</p>
-                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.location.href='/project.html?id=${p.id}'">VER DETALLES</button>
+                  <p class="dossier-desc">${window.app.escapeHtml(p.summary || p.description.substring(0, 140))}...</p>
+                  <button class="sw-btn sw-btn--primary sw-btn--sm" onclick="window.location.href='/project.html?id=${encodeURIComponent(p.id)}'">VER DETALLES</button>
                 </div>
               </article>
             `}).join('');
@@ -282,11 +282,11 @@
                 if (t.user_applied) {
                   btnHtml = `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>YA SOLICITASTE</button>`;
                 } else {
-                  btnHtml = `<button class="sw-btn sw-btn--primary sw-btn--sm" onclick="applyToTraining(event, ${t.id})">SOLICITAR CAPACITACIÓN</button>`;
+                  btnHtml = `<button class="sw-btn sw-btn--primary sw-btn--sm" onclick="applyToTraining(event, ${encodeURIComponent(t.id)})">SOLICITAR CAPACITACIÓN</button>`;
                 }
               } else if (t.status === 'scheduled') {
                 const md = t.meeting_date ? new Date(t.meeting_date).toLocaleString('es-AR') : '';
-                statusText = `PROGRAMADA: ${md}`;
+                statusText = `PROGRAMADA: ${window.app.escapeHtml(md)}`;
                 statusColor = '#4ade80'; // green
                 btnHtml = t.user_applied ? `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>AGENDADA</button>` : `<button class="sw-btn sw-btn--ghost sw-btn--sm" disabled>CERRADA</button>`;
               } else {
@@ -299,8 +299,8 @@
               <article class="feature-dossier">
                 <div class="dossier-body">
                   <div class="dossier-meta" style="color:${statusColor}; font-weight:bold;">${statusText}</div>
-                  <h3 class="dossier-title">${t.title}</h3>
-                  <p class="dossier-desc">${t.description || 'Sin descripción.'}</p>
+                  <h3 class="dossier-title">${window.app.escapeHtml(t.title)}</h3>
+                  <p class="dossier-desc">${window.app.escapeHtml(t.description || 'Sin descripción.')}</p>
                   <div style="margin-top:1rem;">${btnHtml}</div>
                 </div>
               </article>

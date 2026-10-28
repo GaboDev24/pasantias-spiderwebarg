@@ -42,7 +42,13 @@ async function updateProfile(req, res) {
     const { name, tags } = req.body;
     const updates = [];
 
-    if (name) updates.push(`name = ${sqlEscape(name)}`);
+    if (name) {
+      // SEC: respetar limite del esquema VARCHAR(100)
+      if (name.length > 100) {
+        return res.status(400).json({ error: 'El nombre no puede superar los 100 caracteres.' });
+      }
+      updates.push(`name = ${sqlEscape(name)}`);
+    }
     if (tags !== undefined) updates.push(`tags = ${sqlEscape(JSON.stringify(tags))}`);
 
     if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar.' });

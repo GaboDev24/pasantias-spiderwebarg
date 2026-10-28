@@ -2391,12 +2391,12 @@
             .map(
               (u) => `
           <tr>
-            <td>${u.name}</td>
-            <td style="color:var(--sw-text-muted);">${u.email}</td>
+            <td>${window.app.escapeHtml(u.name)}</td>
+            <td style="color:var(--sw-text-muted);">${window.app.escapeHtml(u.email)}</td>
             <td>${window.app.parseDate(u.created_at).toLocaleDateString("es-AR")}</td>
-            <td><span class="tac-badge ${parseInt(u.is_email_verified) ? "ok" : "warn"}">${parseInt(u.is_email_verified) ? "SÍ" : "NO"}</span></td>
+            <td><span class="tac-badge ${parseInt(u.is_email_verified) ? "ok" : "warn'}">${parseInt(u.is_email_verified) ? "SÍ" : "NO"}</span></td>
             <td>
-              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="goToChat(${u.id},'${u.name}')" style="margin-right:4px;">CHAT</button>
+              <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="goToChat(${u.id},'${window.app.escapeHtml(u.name).replace(/'/g,'&#39;')}')" style="margin-right:4px;">CHAT</button>
               <button class="sw-btn sw-btn--sm" style="background:#22c55e;color:#fff;border:none;" onclick="validateUser(${u.id})"><i class="fa-solid fa-check"></i> ACEPTAR</button>
             </td>
           </tr>
@@ -2427,10 +2427,10 @@
           .map(
             (u) => `
         <tr>
-          <td>${u.name}</td>
-          <td style="color:var(--sw-text-muted);font-size:0.75rem;">${u.email}</td>
+          <td>${window.app.escapeHtml(u.name)}</td>
+          <td style="color:var(--sw-text-muted);font-size:0.75rem;">${window.app.escapeHtml(u.email)}</td>
           <td>
-            <select class="tac-input" style="margin:0;padding:0.28rem 0.5rem;font-size:0.75rem;" onchange="changeRole(${u.id}, this.value)" aria-label="Cambiar rol para ${u.name}">
+            <select class="tac-input" style="margin:0;padding:0.28rem 0.5rem;font-size:0.75rem;" onchange="changeRole(${u.id}, this.value)" aria-label="Cambiar rol para ${window.app.escapeHtml(u.name)}">
               <option ${u.role === "pasante" ? "selected" : ""}>pasante</option>
               <option ${u.role === "admin" ? "selected" : ""}>admin</option>
               <option ${u.role === "ceo" ? "selected" : ""}>ceo</option>
@@ -2660,12 +2660,12 @@
           users
             .map(
               (u) => `
-        <div class="chat-user-item ${currentChatUser === u.id ? "active" : ""}" onclick="openAdminChat(${u.id}, '${u.name.replace(/'/g, "\\'")}', ${u.is_friend ? 1 : 0}, this)">
+        <div class="chat-user-item ${currentChatUser === u.id ? "active" : ""}" onclick="openAdminChat(${u.id}, '${window.app.escapeHtml(u.name).replace(/'/g,'&#39;')}', ${u.is_friend ? 1 : 0}, this)">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${u.name}</span>
+            <span>${window.app.escapeHtml(u.name)}</span>
             ${u.is_friend ? '<i class="fa-solid fa-star" style="color:var(--sw-red); font-size:0.65rem;" title="Amigo"></i>' : ""}
           </div>
-          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${u.email} (${u.role.toUpperCase()})</div>
+          <div style="font-size:0.6rem;color:var(--sw-text-muted);margin-top:2px;">${window.app.escapeHtml(u.email)} (${window.app.escapeHtml(u.role.toUpperCase())})</div>
         </div>
       `,
             )
@@ -2760,13 +2760,14 @@
           const res = await window.api.fetch(`/chat/${userId}`);
           const box = document.getElementById("chat-messages-admin");
           if (!res.messages || res.messages.length === 0) {
-            box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${userName}</span>`;
+            box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${window.app.escapeHtml(userName)}</span>`;
           } else {
             const myId = currentAdminUser.id;
             box.innerHTML = res.messages
               .map((m) => {
                 const isMe = m.sender_id === myId || m.sender_id === 9999;
-                return `<div class="${isMe ? "chat-msg-me" : "chat-msg-other"}">${m.content}</div>`;
+                // SEC: escapar contenido del mensaje para prevenir XSS stored
+                return `<div class="${isMe ? "chat-msg-me" : "chat-msg-other'}">${window.app.escapeHtml(m.content)}</div>`;
               })
               .join("");
             box.scrollTop = box.scrollHeight;
@@ -2819,11 +2820,11 @@
           }
           list.innerHTML = trainings.map(t => {
             const md = t.meeting_date ? new Date(t.meeting_date).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'}) : 'No programada';
-            const ml = t.meeting_link ? `<a href="${t.meeting_link}" target="_blank" style="color:var(--sw-red);"><i class="fa-solid fa-link"></i></a>` : '';
+            const ml = t.meeting_link ? `<a href="${window.app.safeUrl(t.meeting_link)}" target="_blank" style="color:var(--sw-red);"><i class="fa-solid fa-link"></i></a>` : '';
             return `
               <tr>
-                <td><strong>${t.title}</strong></td>
-                <td><span class="tac-badge ${t.status === 'open' ? 'info' : (t.status === 'scheduled' ? 'ok' : 'warn')}">${t.status.toUpperCase()}</span></td>
+                <td><strong>${window.app.escapeHtml(t.title)}</strong></td>
+                <td><span class="tac-badge ${t.status === 'open' ? 'info' : (t.status === 'scheduled' ? 'ok' : 'warn')}">${window.app.escapeHtml(t.status.toUpperCase())}</span></td>
                 <td>${t.applied_count || 0} / ${t.min_quota || 2}</td>
                 <td>${md} ${ml}</td>
                 <td>
@@ -3050,9 +3051,9 @@
             border: "var(--sw-border)",
             text: "var(--sw-white)",
           };
-          const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${p.dynamic_status}</span>`;
+          const statusBadge = `<span style="font-family:var(--sw-font-m);font-size:0.55rem;padding:2px 8px;border:1px solid ${sc.border};background:${sc.bg};color:${sc.text};letter-spacing:0.1em;text-transform:uppercase;">${window.app.escapeHtml(p.dynamic_status)}</span>`;
           const coverThumb = p.cover_url
-            ? `<img src="${p.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">`
+            ? `<img src="${window.app.safeUrl(p.cover_url)}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Banner">`
             : "";
           const showProgress =
             p.dynamic_status === "En proceso" ||
@@ -3061,7 +3062,7 @@
             <div class="pub-item">
               ${coverThumb}
               <div class="pub-item-info">
-                <div class="pub-item-title">${p.title}</div>
+                <div class="pub-item-title">${window.app.escapeHtml(p.title)}</div>
                 <div class="pub-item-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;">
                   ${statusBadge}
                   <span>${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}</span>
@@ -3275,12 +3276,12 @@
             .map(
               (a) => `
           <div class="applicant-row">
-            <img class="applicant-avatar" src="${a.avatar_file_id ? "/api/media/" + a.avatar_file_id : "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" alt="Avatar" onerror="this.style.display='none'">
+            <img class="applicant-avatar" src="${a.avatar_file_id ? "/api/media/" + window.app.escapeHtml(a.avatar_file_id) : "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" alt="Avatar" onerror="this.style.display='none'">
             <div class="applicant-info">
-              <div class="applicant-name">${a.name}</div>
-              <div class="applicant-email">${a.email}</div>
+              <div class="applicant-name">${window.app.escapeHtml(a.name)}</div>
+              <div class="applicant-email">${window.app.escapeHtml(a.email)}</div>
             </div>
-            <span class="status-badge ${a.status}">${a.status.toUpperCase()}</span>
+            <span class="status-badge ${window.app.escapeHtml(a.status)}">${window.app.escapeHtml(a.status.toUpperCase())}</span>
             <div style="display:flex;gap:4px;flex-wrap:wrap;">
               <button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="viewUserProfile(${a.user_id})">PERFIL</button>
               <button class="sw-btn sw-btn--ghost sw-btn--sm" style="color:#4ade80;border-color:rgba(74,222,128,0.3);" onclick="updateAppStatus(${a.id},'accepted')"><i class="fa-solid fa-check"></i></button>
@@ -3338,16 +3339,16 @@
           const tags = (u.tags || [])
             .map(
               (t) =>
-                `<span style="font-family:var(--sw-font-m);font-size:0.6rem;padding:2px 8px;border:1px solid var(--sw-border);margin:2px;">${t}</span>`,
+                `<span style="font-family:var(--sw-font-m);font-size:0.6rem;padding:2px 8px;border:1px solid var(--sw-border);margin:2px;">${window.app.escapeHtml(t)}</span>`,
             )
             .join("");
           body.innerHTML = `
           <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
-            ${u.avatar_url ? `<img src="${u.avatar_url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);" alt="Avatar">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--sw-steel);border:1px solid var(--sw-border);"></div>'}
+            ${u.avatar_url ? `<img src="${window.app.safeUrl(u.avatar_url)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);" alt="Avatar">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--sw-steel);border:1px solid var(--sw-border);"></div>'}
             <div>
-              <div style="font-family:var(--sw-font-h);font-size:1.5rem;font-weight:800;text-transform:uppercase;">${u.name}</div>
-              <div style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">${u.email}</div>
-              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-red);letter-spacing:0.1em;margin-top:2px;">${u.role.toUpperCase()}</div>
+              <div style="font-family:var(--sw-font-h);font-size:1.5rem;font-weight:800;text-transform:uppercase;">${window.app.escapeHtml(u.name)}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">${window.app.escapeHtml(u.email)}</div>
+              <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-red);letter-spacing:0.1em;margin-top:2px;">${window.app.escapeHtml(u.role.toUpperCase())}</div>
             </div>
           </div>
           ${tags ? `<div style="margin-bottom:1rem;"><div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">APTITUDES</div>${tags}</div>` : ""}
@@ -3355,7 +3356,7 @@
             <div style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-red);letter-spacing:0.15em;margin-bottom:6px;">CURRICULUM VITAE</div>
             ${
               u.cv_url
-                ? `<a href="${u.cv_url}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm"><i class="fa-solid fa-file-lines"></i> VER / DESCARGAR CV</a>`
+                ? `<a href="${window.app.safeUrl(u.cv_url)}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm"><i class="fa-solid fa-file-lines"></i> VER / DESCARGAR CV</a>`
                 : '<span style="font-family:var(--sw-font-m);font-size:0.72rem;color:var(--sw-text-muted);">Sin CV cargado</span>'
             }
           </div>
@@ -3393,14 +3394,14 @@
             .map(
               (entry) => `
           <div style="display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-            <img src="${entry.avatar_url || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" 
+            <img src="${entry.avatar_url ? window.app.safeUrl(entry.avatar_url) : "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>"}" 
               style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Avatar" onerror="this.style.display='none'">
             <div style="flex:1;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <span style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-white);">${entry.author_name}</span>
+                <span style="font-family:var(--sw-font-m);font-size:0.75rem;color:var(--sw-white);">${window.app.escapeHtml(entry.author_name)}</span>
                 <span style="font-family:var(--sw-font-m);font-size:0.6rem;color:var(--sw-text-muted);">${window.app.parseDate(entry.created_at).toLocaleString("es-AR")}</span>
               </div>
-              <p style="font-family:var(--sw-font-b);font-size:0.82rem;color:var(--sw-text-muted);line-height:1.6;margin:0;white-space:pre-wrap;">${entry.content}</p>
+              <p style="font-family:var(--sw-font-b);font-size:0.82rem;color:var(--sw-text-muted);line-height:1.6;margin:0;white-space:pre-wrap;">${window.app.escapeHtml(entry.content)}</p>
             </div>
           </div>
         `,
@@ -3434,11 +3435,11 @@
             .map(
               (n) => `
           <div class="pub-item">
-            ${n.cover_url ? `<img src="${n.cover_url}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Cover">` : ""}
+            ${n.cover_url ? `<img src="${window.app.safeUrl(n.cover_url)}" style="width:70px;height:54px;object-fit:cover;border:1px solid var(--sw-border);flex-shrink:0;" alt="Cover">` : ""}
             <div class="pub-item-info">
-              <div class="pub-item-title">${n.title}</div>
-              <div class="pub-item-meta">${window.app.parseDate(n.created_at).toLocaleDateString("es-AR")} &nbsp;·&nbsp; Por ${n.author}</div>
-              ${n.summary ? `<div style="font-family:var(--sw-font-b);font-size:0.72rem;color:var(--sw-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.summary}</div>` : ""}
+              <div class="pub-item-title">${window.app.escapeHtml(n.title)}</div>
+              <div class="pub-item-meta">${window.app.parseDate(n.created_at).toLocaleDateString("es-AR")} &nbsp;·&nbsp; Por ${window.app.escapeHtml(n.author)}</div>
+              ${n.summary ? `<div style="font-family:var(--sw-font-b);font-size:0.72rem;color:var(--sw-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${window.app.escapeHtml(n.summary)}</div>` : ""}
             </div>
             <div class="pub-item-actions">
               <a href="/news.html?id=${n.id}" target="_blank" class="sw-btn sw-btn--ghost sw-btn--sm">VER</a>
@@ -3565,9 +3566,9 @@
             .map(
               (p) => `
           <div class="pub-item">
-            ${p.cover_url ? `<img src="${p.cover_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;background:var(--sw-steel);" alt="Cover">` : ""}
+            ${p.cover_url ? `<img src="${window.app.safeUrl(p.cover_url)}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;background:var(--sw-steel);" alt="Cover">` : ""}
             <div class="pub-item-info">
-              <div class="pub-item-title">${p.title}</div>
+              <div class="pub-item-title">${window.app.escapeHtml(p.title)}</div>
               <div style="font-family:var(--sw-font-m);font-size:0.62rem;color:var(--sw-text-muted);margin-top:2px;">
                 Publicado: ${window.app.parseDate(p.created_at).toLocaleDateString("es-AR")}
               </div>
@@ -3700,11 +3701,11 @@
             (s) => `
           <tr>
             <td>${s.id}</td>
-            <td style="font-weight:bold;">${s.name}</td>
+            <td style="font-weight:bold;">${window.app.escapeHtml(s.name)}</td>
             <td>
-              <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sw-font-m);font-size:0.7rem;padding:2px 8px;border:1px solid ${s.color || '#A30000'};background:${s.color ? s.color + '22' : 'rgba(163,0,0,0.1)'};color:${s.color || 'var(--sw-white)'};clip-path:polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));">
-                <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#A30000'};"></span>
-                ${s.name}
+              <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sw-font-m);font-size:0.7rem;padding:2px 8px;border:1px solid ${window.app.escapeHtml(s.color || '#A30000')};background:${s.color ? window.app.escapeHtml(s.color) + '22' : 'rgba(163,0,0,0.1)'};color:${window.app.escapeHtml(s.color || 'var(--sw-white)')};clip-path:polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));">
+                <span style="width:8px;height:8px;border-radius:50%;background:${window.app.escapeHtml(s.color || '#A30000')};"></span>
+                ${window.app.escapeHtml(s.name)}
               </span>
             </td>
             <td style="color:var(--sw-text-muted);">${s.created_at ? window.app.parseDate(s.created_at).toLocaleDateString("es-AR") : '-'}</td>

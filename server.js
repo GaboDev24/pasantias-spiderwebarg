@@ -120,7 +120,11 @@ app.get('/api/media/:fileId', async (req, res) => {
 
     let fname = '';
     if (disposition.includes('filename=')) {
-      fname = disposition.split('filename=')[1].replace(/"/g, '').trim();
+      // SEC: strip CR, LF and quotes to prevent HTTP header injection
+      fname = disposition.split('filename=')[1]
+        .replace(/"/g, '')
+        .replace(/[\r\n]/g, '')
+        .trim();
     }
 
     const ext = (fname.split('.').pop() || '').toLowerCase();

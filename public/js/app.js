@@ -37,6 +37,41 @@ function parseDate(dateStr) {
 }
 
 /* ═══════════════════════════════════════
+   ESCAPE HTML — prevenir XSS al insertar
+   datos de la API en innerHTML
+═══════════════════════════════════════ */
+/**
+ * Escapa los caracteres HTML especiales para uso seguro en innerHTML.
+ * Usar siempre que se inserte un string proveniente de la API en el DOM.
+ * @param {*} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Sanitiza una URL para uso seguro en atributos href o src.
+ * Previene ataques javascript: y data: maliciosos.
+ * @param {string} url
+ * @returns {string}
+ */
+function safeUrl(url) {
+  if (!url || typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  if (/^(https?:\/\/|\/|mailto:)/i.test(trimmed)) {
+    return escapeHtml(trimmed);
+  }
+  return '#';
+}
+
+/* ═══════════════════════════════════════
    TEMA CLARO / OSCURO
 ═══════════════════════════════════════ */
 function initTheme() {
@@ -305,6 +340,8 @@ window.app = {
   acceptTerms,
   openTermsTextModal,
   parseDate,
+  escapeHtml,
+  safeUrl,
 };
 
 /* ═══════════════════════════════════════

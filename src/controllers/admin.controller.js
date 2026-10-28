@@ -831,6 +831,11 @@ async function testEmail(req, res) {
     const { to, template } = req.body;
     if (!to || !template) return res.status(400).json({ error: 'Email destino y plantilla son requeridos.' });
 
+    // SEC: validar formato de email para evitar uso como relay de spam
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'Email destino invalido.' });
+    }
+
     const { sendNotificationEmail } = require('../helpers/email');
     const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
     let msg = '';

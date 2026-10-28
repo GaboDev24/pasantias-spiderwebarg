@@ -52,7 +52,9 @@ async function queryCursosDB(sql) {
  * Devuelve los últimos N cursos publicados de Cursos-SpiderWebARG
  */
 async function getLatestCourses(req, res) {
-  const limit = Math.min(parseInt(req.query.limit) || 3, 9);
+  // SEC: validar como entero positivo antes de interpolarlo en el SQL
+  const rawLimit = parseInt(req.query.limit, 10);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 9) : 3;
 
   if (!CURSOS_API_KEY || !CURSOS_DB_NAME) {
     return res.status(503).json({
@@ -79,7 +81,7 @@ async function getLatestCourses(req, res) {
       LEFT JOIN categories cat ON c.category_id = cat.id
       WHERE c.is_published = 1
       ORDER BY c.created_at DESC
-      LIMIT ${limit}
+      LIMIT ${Number(limit)}
     `);
 
     const courses = (Array.isArray(rows) ? rows : []).map(course => ({

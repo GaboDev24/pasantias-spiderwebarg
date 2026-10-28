@@ -261,7 +261,7 @@
         // Tags
         const tags = project.required_tags || [];
         document.getElementById('proj-tags').innerHTML = tags.length
-          ? tags.map(t => `<span class="tag-pill">${t}</span>`).join('')
+          ? tags.map(t => `<span class="tag-pill">${window.app.escapeHtml(t)}</span>`).join('')
           : '';
 
         // Link de conferencia general
@@ -301,9 +301,9 @@
           document.getElementById('team-grid').innerHTML = accepted.map(u => `
             <div class="pasante-card">
               <img class="pasante-avatar"
-                src="${u.avatar_url || 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'}"
-                alt="${u.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'">
-              <span class="pasante-name">${u.name}</span>
+                src="${window.app.escapeHtml(u.avatar_url || 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E')}"
+                alt="${window.app.escapeHtml(u.name)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'">
+              <span class="pasante-name">${window.app.escapeHtml(u.name)}</span>
             </div>
           `).join('');
         }
@@ -315,14 +315,14 @@
           document.getElementById('progress-log').innerHTML = progressLog.map(entry => `
             <div class="progress-entry">
               <img class="progress-avatar"
-                src="${entry.avatar_url || 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'}"
-                alt="${entry.author_name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'">
+                src="${window.app.escapeHtml(entry.avatar_url || 'data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E')}"
+                alt="${window.app.escapeHtml(entry.author_name)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Ccircle cx%3D%2250%22 cy%3D%2240%22 r%3D%2225%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3Ccircle cx%3D%2250%22 cy%3D%22105%22 r%3D%2240%22 fill%3D%22%23A30000%22 opacity%3D%220.4%22%2F%3E%3C%2Fsvg%3E'">
               <div style="flex:1;">
                 <div class="progress-meta">
-                  <span class="progress-author">${entry.author_name}</span>
+                  <span class="progress-author">${window.app.escapeHtml(entry.author_name)}</span>
                   <span>${window.app.parseDate(entry.created_at).toLocaleString('es-AR')}</span>
                 </div>
-                <p class="progress-content">${entry.content}</p>
+                <p class="progress-content">${window.app.escapeHtml(entry.content)}</p>
               </div>
             </div>
           `).join('');
@@ -391,7 +391,9 @@
       document.getElementById('loading').style.display = 'none';
       const errEl = document.getElementById('error');
       if (msgText) {
-        errEl.innerHTML = `<h2 class="section-title" style="color:#f87171;">ACCESO RESTRINGIDO</h2><p style="font-family:var(--sw-font-m);color:var(--sw-text-muted);margin-top:1rem;">${msgText}</p><a href="/" class="sw-btn sw-btn--ghost" style="margin-top:1.5rem;display:inline-block;">VOLVER AL INICIO</a>`;
+        // SEC: escapar el mensaje para evitar XSS via respuestas de la API
+        const safeMsgText = window.app.escapeHtml(msgText);
+        errEl.innerHTML = `<h2 class="section-title" style="color:#f87171;">ACCESO RESTRINGIDO</h2><p style="font-family:var(--sw-font-m);color:var(--sw-text-muted);margin-top:1rem;">${safeMsgText}</p><a href="/" class="sw-btn sw-btn--ghost" style="margin-top:1.5rem;display:inline-block;">VOLVER AL INICIO</a>`;
       }
       errEl.style.display = 'block';
     }

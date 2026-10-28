@@ -33,6 +33,14 @@ async function register(req, res) {
       return res.status(400).json({ error: 'Nombre, email y contrasena son requeridos.' });
     }
 
+    // SEC: limitar longitud de name y password para prevenir DoS
+    if (name.length > 100) {
+      return res.status(400).json({ error: 'El nombre no puede superar los 100 caracteres.' });
+    }
+    if (password.length > 72) {
+      return res.status(400).json({ error: 'La contrasena no puede superar los 72 caracteres.' });
+    }
+
     if (!accepted_terms) {
       return res.status(400).json({ error: 'Debes aceptar los Terminos y Condiciones para registrarte.' });
     }
@@ -144,7 +152,7 @@ async function login(req, res) {
       return res.status(401).json({ error: 'Credenciales incorrectas.' });
     }
 
-    console.log(`[AUTH/LOGIN] Inicio de sesion exitoso: ${user.email} (Rol: ${user.role})`);
+    console.log(`[AUTH/LOGIN] Inicio de sesion exitoso: ID=${user.id} (Rol: ${user.role})`);
 
     const token = jwt.sign(
       {

@@ -519,20 +519,21 @@
             let meetingHtml = '';
             if (a.status === 'accepted' && a.next_meeting_date) {
               const mDate = new Date(a.next_meeting_date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+              const safeLink = (a.next_meeting_link || '').startsWith('http') ? window.app.escapeHtml(a.next_meeting_link) : '#';
               meetingHtml = `<div style="margin-top:8px; padding:8px; background:rgba(163,0,0,0.1); border:1px solid var(--sw-red); border-left:4px solid var(--sw-red); font-size:0.65rem;">
-                <strong style="color:var(--sw-red);"><i class="fa-solid fa-video"></i> PRÓXIMA REUNIÓN:</strong> ${mDate}<br>
-                <a href="${a.next_meeting_link}" target="_blank" style="color:var(--sw-white); text-decoration:underline; display:inline-block; margin-top:4px;">Unirse a la reunión</a>
+                <strong style="color:var(--sw-red);"><i class="fa-solid fa-video"></i> PRÓXIMA REUNIÓN:</strong> ${window.app.escapeHtml(mDate)}<br>
+                <a href="${safeLink}" target="_blank" rel="noopener noreferrer" style="color:var(--sw-white); text-decoration:underline; display:inline-block; margin-top:4px;">Unirse a la reunión</a>
               </div>`;
             }
             return `
             <tr>
               <td>
-                <strong>${a.title}</strong>
+                <strong>${window.app.escapeHtml(a.title)}</strong>
                 ${meetingHtml}
               </td>
-              <td style="vertical-align:top;"><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'')}">${a.status.toUpperCase()}</span></td>
+              <td style="vertical-align:top;"><span class="tac-badge ${a.status==='accepted'?'ok':(a.status==='rejected'?'warn':'"')}">${window.app.escapeHtml(a.status.toUpperCase())}</span></td>
               <td style="vertical-align:top;">${window.app.parseDate(a.applied_at).toLocaleDateString('es-AR')}</td>
-              <td style="vertical-align:top;">${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${a.project_id})">Cancelar</button>`:'-'}</td>
+              <td style="vertical-align:top;">${a.status==='pending'?`<button class="sw-btn sw-btn--ghost sw-btn--sm" onclick="cancelApp(${encodeURIComponent(a.project_id)})">Cancelar</button>`:'-'}</td>
             </tr>
             `;
           }).join('');
@@ -563,12 +564,12 @@
       const list = document.getElementById('chat-users');
       document.getElementById('chat-user-count').innerText = `${users.length}`;
       list.innerHTML = users.map(u => `
-        <div class="chat-user-item ${currentChatUser === u.id ? 'active' : ''}" onclick="openChat(${u.id}, '${u.name.replace(/'/g, "\\'")}', ${u.is_friend ? 1 : 0}, this)">
+        <div class="chat-user-item ${currentChatUser === u.id ? 'active' : ''}" onclick="openChat(${u.id}, '${window.app.escapeHtml(u.name).replace(/'/g, '&#39;')}', ${u.is_friend ? 1 : 0}, this)">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${u.name}</span>
+            <span>${window.app.escapeHtml(u.name)}</span>
             ${u.is_friend ? '<i class="fa-solid fa-star" style="color:var(--sw-red); font-size:0.65rem;" title="Amigo"></i>' : ''}
           </div>
-          <div style="font-size:0.6rem;color:var(--sw-red);margin-top:2px;">${u.role.toUpperCase()}</div>
+          <div style="font-size:0.6rem;color:var(--sw-red);margin-top:2px;">${window.app.escapeHtml(u.role.toUpperCase())}</div>
         </div>
       `).join('') || '<span style="font-family:var(--sw-font-m);font-size:0.68rem;color:var(--sw-text-muted);">Sin usuarios</span>';
     }
@@ -624,11 +625,12 @@
         const res = await window.api.fetch(`/chat/${userId}`);
         const box = document.getElementById('chat-messages');
         if (!res.messages || res.messages.length === 0) {
-          box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${userName}</span>`;
+          box.innerHTML = `<span style="margin:auto;font-family:var(--sw-font-m);font-size:0.7rem;color:var(--sw-text-muted);">Sin mensajes con ${window.app.escapeHtml(userName)}</span>`;
         } else {
           box.innerHTML = res.messages.map(m => {
             const isMe = m.sender_id === currentUser.id;
-            return `<div class="${isMe ? 'chat-msg-me' : 'chat-msg-other'}">${m.content}</div>`;
+            // SEC: escapar contenido del mensaje para prevenir XSS stored
+            return `<div class="${isMe ? 'chat-msg-me' : 'chat-msg-other'}">${window.app.escapeHtml(m.content)}</div>`;
           }).join('');
           box.scrollTop = box.scrollHeight;
         }
